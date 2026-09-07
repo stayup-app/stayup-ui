@@ -199,8 +199,8 @@ describe('config', () => {
   })
 })
 
-// Le middleware ne fait que des redirections de confort — le payload n'est pas
-// signé — mais il doit au moins refuser un token périmé.
+// The middleware only does convenience redirects — the payload is not signed —
+// but it must at least reject an expired token.
 describe('admin token expiry', () => {
   function tokenWithExp(role: string, exp: number) {
     const body = Buffer.from(JSON.stringify({ sub: 'u1', role, exp })).toString('base64url')

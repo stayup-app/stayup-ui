@@ -25,10 +25,9 @@ export interface InstanceView {
   expired: boolean
 }
 
-/** Sous-formulaire e-mail / mot de passe partagé par « ajouter » et « reconnecter ».
- *  `onRegister` (ajout seulement) active le basculement « se connecter / créer un
- *  compte » : en mode inscription, un champ nom s'ajoute et `onRegister` remplace
- *  `onSubmit`. */
+/** E-mail / password sub-form shared by "add" and "reconnect". `onRegister`
+ *  (add only) enables the "log in / create an account" toggle: in register
+ *  mode, a name field is added and `onRegister` replaces `onSubmit`. */
 function CredForm({
   idPrefix,
   submitLabel,
@@ -142,8 +141,8 @@ export function InstancesCard({ instances }: { instances: InstanceView[] }) {
   const [probeError, setProbeError] = useState<string | null>(null)
   const [probing, startProbe] = useTransition()
   const [reconnectId, setReconnectId] = useState<string | null>(null)
-  // Confirmation « compte créé, en attente d'un admin » : survit à la fermeture
-  // du formulaire d'ajout.
+  // "account created, awaiting an admin" confirmation: survives the close of
+  // the add form.
   const [notice, setNotice] = useState<string | null>(null)
 
   const multi = instances.length > 1

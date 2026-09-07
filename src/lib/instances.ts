@@ -2,10 +2,10 @@ import { cookies } from 'next/headers'
 import { COOKIE_NAME } from './constants'
 import { API_URL_COOKIE, DEFAULT_API_URL } from './apiUrl'
 
-/** Une instance d'API suivie par ce navigateur. `instances[0]` est la primaire :
- *  c'est la première connexion, elle ne peut pas être retirée sans une
- *  déconnexion complète, et c'est la cible par défaut d'un nouveau flux. Les
- *  secondaires s'ajoutent / se renomment / se retirent librement. */
+/** An API instance tracked by this browser. `instances[0]` is the primary: it
+ *  is the first login, it cannot be removed without a full logout, and it is the
+ *  default target for a new flux. Secondary ones are added / renamed / removed
+ *  freely. */
 export interface Instance {
   id: string
   url: string
@@ -15,7 +15,7 @@ export interface Instance {
 
 export const INSTANCES_COOKIE = 'stayup_instances'
 const CHUNK_PREFIX = 'stayup_instances_'
-// En dessous de la limite ~4 KB par cookie : au-delà on éclate en `..._0`, `..._1`…
+// Below the ~4 KB per-cookie limit: beyond it we split into `..._0`, `..._1`…
 const MAX_COOKIE_BYTES = 3500
 
 export function hostOf(url: string): string {
@@ -65,10 +65,10 @@ function parseList(raw: string): Instance[] | null {
   }
 }
 
-/** Liste ordonnée des instances. Lecture seule : un Server Component ne peut pas
- *  écrire de cookie, donc la migration depuis les clés legacy
- *  (`stayup_token` + `stayup_api_url`) est calculée en mémoire ; le nettoyage des
- *  clés legacy a lieu à la première mutation (voir `writeInstances`). */
+/** Ordered list of instances. Read-only: a Server Component cannot write a
+ *  cookie, so the migration from the legacy keys (`stayup_token` +
+ *  `stayup_api_url`) is computed in memory; the legacy keys are cleaned up on
+ *  the first mutation (see `writeInstances`). */
 export async function readInstances(): Promise<Instance[]> {
   const store = await cookies()
   const raw = readRaw(store)
@@ -89,8 +89,8 @@ export async function primaryInstance(): Promise<Instance | null> {
   return (await readInstances())[0] ?? null
 }
 
-/** Résout l'instance ciblée par une requête : celle dont l'id est passé, sinon
- *  la primaire. `null` si l'id est inconnu ou s'il n'y a aucune instance. */
+/** Resolves the instance a request targets: the one whose id is passed,
+ *  otherwise the primary. `null` if the id is unknown or there is no instance. */
 export async function resolveInstance(instanceId?: string | null): Promise<Instance | null> {
   const list = await readInstances()
   if (!instanceId) return list[0] ?? null
@@ -108,9 +108,9 @@ function tokenExpiry(token: string): number {
   }
 }
 
-/** Écrit la liste dans les cookies (chunké si besoin) et purge les clés legacy.
- *  À n'appeler que depuis une server action ou un route handler. La durée de vie
- *  du cookie suit le token qui expire le plus tard. */
+/** Writes the list to the cookies (chunked if needed) and purges the legacy
+ *  keys. Only call from a server action or a route handler. The cookie's
+ *  lifetime follows the latest-expiring token. */
 export async function writeInstances(list: Instance[]): Promise<void> {
   const store = await cookies()
   const json = JSON.stringify(list)
@@ -124,7 +124,7 @@ export async function writeInstances(list: Instance[]): Promise<void> {
     maxAge,
   }
 
-  // Repart d'une ardoise propre : évite un chunk résiduel d'une écriture plus grosse.
+  // Start from a clean slate: avoids a leftover chunk from a larger write.
   store.delete(INSTANCES_COOKIE)
   for (let i = 0; i < 12; i++) store.delete(`${CHUNK_PREFIX}${i}`)
 
@@ -136,7 +136,7 @@ export async function writeInstances(list: Instance[]): Promise<void> {
     }
   }
 
-  // Clés legacy désormais redondantes.
+  // Legacy keys now redundant.
   store.delete(COOKIE_NAME)
   store.delete(API_URL_COOKIE)
 }
@@ -149,8 +149,8 @@ export async function clearInstances(): Promise<void> {
   store.delete(API_URL_COOKIE)
 }
 
-/** Pose ou rafraîchit la primaire à partir d'un token frais (login / register /
- *  OAuth). Conserve les secondaires déjà présentes. */
+/** Sets or refreshes the primary from a fresh token (login / register / OAuth).
+ *  Keeps the secondary instances already present. */
 export async function upsertPrimaryInstance(url: string, token: string): Promise<void> {
   const clean = url.replace(/\/$/, '')
   const rest = (await readInstances()).slice(1)

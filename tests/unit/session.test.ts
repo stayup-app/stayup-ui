@@ -215,8 +215,8 @@ describe('isTokenExpired', () => {
   })
 })
 
-// Le payload d'un token n'est pas signé de ce côté : seule l'API peut dire si un
-// cookie « admin » est authentique. Sans ça, un payload fabriqué ouvrait /admin.
+// A token's payload is not signed on this side: only the API can tell whether
+// an "admin" cookie is authentic. Without this, a crafted payload opened /admin.
 describe('isAdminTokenValid', () => {
   const fetchMock = vi.fn()
 

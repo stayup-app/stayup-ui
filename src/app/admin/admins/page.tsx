@@ -8,7 +8,7 @@ import { CreateAdminDialog } from '@/components/admin/CreateAdminDialog'
 export default async function AdminsPage() {
   const session = await getAdminSession()
   if (!session || session.role !== 'admin') redirect('/admin/login')
-  // La gestion des admins est réservée au super admin.
+  // Managing admins is reserved for the super admin.
   if (!session.isSuper) redirect('/admin')
 
   const token = await getAdminToken()

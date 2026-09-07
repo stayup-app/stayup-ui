@@ -83,9 +83,9 @@ function cellFormat(raw: unknown, col: TplColumn): string {
   return col.prefix ? `${col.prefix}${formatted}` : String(formatted)
 }
 
-/** Un lien « Ouvrir » n'est rendu que si l'accesseur a produit une URL absolue
- *  saine — un gabarit dont un `{token}` s'est résolu à vide laisse un chemin
- *  malformé (`https://host//…`) qu'on ne veut pas afficher. */
+/** An "Open" link is only rendered if the accessor produced a sane absolute
+ *  URL — a template whose `{token}` resolved to empty leaves a malformed path
+ *  (`https://host//…`) that we do not want to show. */
 function absoluteUrl(s: string): string {
   try {
     const u = new URL(s)
@@ -97,7 +97,7 @@ function absoluteUrl(s: string): string {
   }
 }
 
-/** Rend le volet de lecture depuis le template — `detail.mode` pilote tout. */
+/** Renders the reading pane from the template — `detail.mode` drives everything. */
 export function TemplatedDetail({
   template,
   item,
@@ -112,8 +112,8 @@ export function TemplatedDetail({
   const fields = template.item?.fields ?? {}
 
   const title = resolveText(d.title ?? fields.title, ctx)
-  // Le sous-titre du volet est propre au `detail` : on ne réutilise pas celui de
-  // la liste, qui redonderait souvent avec le badge (ex. la version d'un changelog).
+  // The pane's subtitle is specific to `detail`: we do not reuse the list's,
+  // which would often be redundant with the badge (e.g. a changelog's version).
   const subtitle = resolveText(d.subtitle, ctx)
   const badge = resolveText(d.badge, ctx)
   const dateRaw = resolveAccessor(fields.timestamp, ctx)

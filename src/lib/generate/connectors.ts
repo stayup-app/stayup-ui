@@ -1,7 +1,7 @@
 /**
- * Catalogue des connecteurs officiels et repos utilisés par le générateur de
- * projet self-hosted (voir `buildScript.ts`). Aucune traduction ici : ce sont
- * des identifiants et des URLs.
+ * Catalog of the official connectors and repos used by the self-hosted project
+ * generator (see `buildScript.ts`). Nothing to translate here: these are
+ * identifiers and URLs.
  */
 
 export type ConnectorId = 'changelog' | 'youtube' | 'rss' | 'scrap' | 'github-trending'
@@ -10,11 +10,11 @@ export interface OfficialConnector {
   id: ConnectorId
   /** Repo GitHub `owner/name`. */
   repo: string
-  /** Planification Ofelia par défaut, proposée dans le prompt du script. */
+  /** Default Ofelia schedule, offered in the script's prompt. */
   defaultCron: string
 }
 
-/** Crons repris des workflows `daily.yml` de chaque `stayup-cmd-*`. */
+/** Crons taken from each `stayup-cmd-*`'s `daily.yml` workflow. */
 export const OFFICIAL_CONNECTORS: readonly OfficialConnector[] = [
   { id: 'changelog', repo: 'stayup-app/stayup-cmd-changelog', defaultCron: '0 0 * * *' },
   { id: 'youtube', repo: 'stayup-app/stayup-cmd-youtube', defaultCron: '0 20 * * *' },
@@ -34,5 +34,5 @@ export const CONNECTOR_IDS = OFFICIAL_CONNECTORS.map((c) => c.id)
 
 export type DbEngine = 'postgres' | 'mysql' | 'sqlite' | 'mongodb'
 
-/** Seul Postgres est branché en v1 : les 5 connecteurs sont psycopg2 + SQL PG. */
+/** Only Postgres is wired in v1: the 5 connectors are psycopg2 + PG SQL. */
 export const SUPPORTED_DB_ENGINES: readonly DbEngine[] = ['postgres'] as const

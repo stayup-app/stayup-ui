@@ -16,8 +16,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ provi
     )
   }
 
-  // La liste des providers valides est 100% dynamique : c'est la présence de la clé
-  // dans le feed (donc d'une table connector_<provider> côté API) qui fait foi.
+  // The list of valid providers is 100% dynamic: the presence of the key in the
+  // feed (i.e. a connector_<provider> table on the API side) is what counts.
   if (!(provider in connectors)) notFound()
 
   const items = (connectors[provider] ?? []).map((item) => ({ provider, item })) as TaggedItem[]

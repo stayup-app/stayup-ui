@@ -52,8 +52,8 @@ function bareRequest(url = 'http://localhost/api/x') {
   return { url } as Request
 }
 
-/** Cookie jar backing `readInstances()` : la primaire legacy
- *  (`stayup_token` + `stayup_api_url`) suffit à la résolution d'instance. */
+/** Cookie jar backing `readInstances()`: the legacy primary
+ *  (`stayup_token` + `stayup_api_url`) is enough for instance resolution. */
 function signedIn() {
   cookieGet.mockImplementation((name: string) => {
     if (name === 'stayup_token') return { value: TOKEN }
@@ -122,8 +122,8 @@ describe('POST /api/fluxes', () => {
     expect(await res.json()).toEqual({ status: 'pending' })
   })
 
-  // Le message de l'API est en anglais quelle que soit la langue : on branche sur le
-  // statut HTTP, seul contrat stable, et on traduit ici.
+  // The API message is in English whatever the language: we branch on the HTTP
+  // status, the only stable contract, and translate here.
   it('maps a 409 from the API to an already-following message', async () => {
     api.addUserRepository.mockRejectedValue(new ApiError(409, 'Already subscribed'))
     const { POST } = await import('@/app/api/fluxes/route')

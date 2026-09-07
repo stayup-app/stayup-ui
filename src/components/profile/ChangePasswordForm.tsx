@@ -16,8 +16,8 @@ export function ChangePasswordForm() {
   const { t } = useLanguage()
   const schema = z
     .object({
-      // L'API exige le mot de passe actuel : un token seul ne doit pas suffire à
-      // verrouiller le compte de son propriétaire.
+      // The API requires the current password: a token alone must not be enough
+      // to lock the owner out of their account.
       currentPassword: z.string().min(1, t.profile.currentPasswordRequired),
       newPassword: z.string().min(8, t.auth.passwordTooShort),
       confirmPassword: z.string(),

@@ -6,13 +6,13 @@ import { useLanguage } from '@/context/LanguageContext'
 export interface ServerStatus {
   id: string
   name: string
-  /** Token expiré (contrôle local sur `exp`). Le web ne peut pas distinguer
-   *  « injoignable » sans requête — vert / rouge seulement. */
+  /** Expired token (local check on `exp`). The web cannot distinguish
+   *  "unreachable" without a request — green / red only. */
   expired: boolean
 }
 
-/** Une pastille par serveur suivi, dans la Navbar, à côté du menu profil :
- *  vert = session vivante, rouge = session à reconnecter. Clic → /profile
+/** One dot per tracked server, in the Navbar, next to the profile menu:
+ *  green = live session, red = session to reconnect. Click → /profile
  *  (carte « Serveurs »). */
 export function ServerStatusDots({ servers }: { servers: ServerStatus[] }) {
   const { t } = useLanguage()
@@ -33,7 +33,7 @@ export function ServerStatusDots({ servers }: { servers: ServerStatus[] }) {
             <span
               className="h-[11px] w-[11px]"
               style={{
-                // `--sage` = le vert du thème (--teal/--green y sont remappés).
+                // `--sage` = the theme's green (--teal/--green are remapped to it).
                 backgroundColor: s.expired ? 'var(--rose)' : 'var(--sage)',
                 borderRadius: '9999px',
               }}

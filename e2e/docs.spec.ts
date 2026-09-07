@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test'
 
-// La configuration Playwright épingle le cookie de langue sur le français.
+// The Playwright config pins the language cookie to French.
 
 test.describe('Documentation index', () => {
   test('opens on the concept, not on implementation details', async ({ page }) => {
     await page.goto('/docs')
 
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-    // Le reproche fait à l'ancienne page : elle ouvrait sur du SQL.
+    // The complaint about the old page: it opened with SQL.
     await expect(page.getByText('CREATE TABLE')).toHaveCount(0)
     await expect(page.getByText('connector_')).toHaveCount(0)
   })
@@ -69,7 +69,7 @@ test.describe('Install page', () => {
 
     await schema.getByRole('tab', { name: 'MongoDB' }).click()
 
-    // MongoDB n'a pas de schéma à appliquer : la commande ne pose que les index.
+    // MongoDB has no schema to apply: the command only creates the indexes.
     await expect(schema.getByText('createIndex')).toBeVisible()
     await expect(schema.getByText('src/db/schema.sql')).toHaveCount(0)
   })
@@ -118,9 +118,9 @@ test.describe('Providers page', () => {
 
     expect(concept).not.toBeNull()
     expect(contract).not.toBeNull()
-    // Le contrat de référence arrive après l'explication, jamais avant.
+    // The reference contract comes after the explanation, never before.
     expect(contract!.y).toBeGreaterThan(concept!.y)
-    // Le contrat est une API HTTP : plus aucun DDL sur la page.
+    // The contract is an HTTP API: no more DDL on the page.
     await expect(page.getByText('CREATE TABLE')).toHaveCount(0)
   })
 
@@ -131,7 +131,7 @@ test.describe('Providers page', () => {
     await expect(contract).toBeVisible()
     await expect(contract.getByText('POST /connector-api/<name>/register').first()).toBeVisible()
     await expect(contract.getByText('POST /connector-api/<name>/items').first()).toBeVisible()
-    // La forme d'un item est décrite.
+    // The shape of an item is described.
     await expect(contract.getByText('repositoryId').first()).toBeVisible()
     await expect(page.locator('#display-templates')).toBeVisible()
   })
@@ -174,9 +174,9 @@ test.describe('Provider tutorial', () => {
   })
 })
 
-// Régression : l'en-tête est partagé avec les pages de doc, où #features et
-// #download ne correspondent à aucune section. Les liens doivent donc ramener
-// vers l'accueil, tout en continuant à défiler quand on y est déjà.
+// Regression: the header is shared with the doc pages, where #features and
+// #download match no section. So the links must lead back to the home page,
+// while still scrolling when already there.
 test.describe('Header anchors', () => {
   for (const [label, anchor] of [
     ['Fonctionnalités', 'features'],

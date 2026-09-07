@@ -19,7 +19,7 @@ export function LoginPageContent({
   const a = t.auth
   const [showServer, setShowServer] = useState(false)
 
-  // Une API trop ancienne pour /auth/config → on propose tout, comme avant.
+  // An API too old for /auth/config → we offer everything, as before.
   const oauth = config?.oauth ?? { github: true, google: true }
   const hasOAuth = oauth.github || oauth.google
 

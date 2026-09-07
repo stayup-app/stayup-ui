@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// apiFetch résout l'URL de l'API via un cookie (voir src/lib/apiUrl.ts) — aucune
-// surcharge en test, donc on retombe sur STAYUP_API_URL (non défini ici, donc '').
+// apiFetch resolves the API URL via a cookie (see src/lib/apiUrl.ts) — no
+// override in tests, so we fall back to STAYUP_API_URL (unset here, so '').
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: vi.fn() }),
 }))
@@ -422,7 +422,7 @@ describe('documentation API helpers', () => {
 
 describe('apiFetch — rejeu et cache', () => {
   it('does not replay a POST that failed with a 500', async () => {
-    // Le serveur a pu traiter la requête avant l'erreur : la rejouer créerait un
+    // The server may have processed the request before the error: replaying it would create a
     // doublon d'abonnement.
     mockFetch.mockResolvedValue({ ok: false, status: 500, json: async () => ({}) })
 
@@ -458,8 +458,8 @@ describe('apiFetch — rejeu et cache', () => {
   })
 
   it('never sets both cache and next.revalidate on the same request', async () => {
-    // Les deux options s'excluent : les poser ensemble laissait une réponse
-    // `no-store` être revalidée à 60 s.
+    // The two options are mutually exclusive: setting them together let a
+    // `no-store` response be revalidated at 60 s.
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({ repositories: [], connectors: {} }),

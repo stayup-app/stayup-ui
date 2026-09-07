@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { cn, extractIdentifier, stripUrlScheme, formatDate } from '@/lib/utils'
 
 describe('extractIdentifier', () => {
-  // Le libellé riche par provider vient désormais de `display.feedLabel` (voir
-  // providerTemplate.resolveFeedLabel) ; extractIdentifier n'est plus qu'un repli
-  // générique : le schéma et `www.` retirés.
+  // The rich per-provider label now comes from `display.feedLabel` (see
+  // providerTemplate.resolveFeedLabel); extractIdentifier is now just a generic
+  // fallback: the scheme and `www.` stripped.
   it('strips the scheme and www.', () => {
     expect(extractIdentifier('https://www.blog.example.com/feed.xml')).toBe(
       'blog.example.com/feed.xml',

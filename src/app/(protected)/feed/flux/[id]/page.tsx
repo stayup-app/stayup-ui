@@ -5,8 +5,8 @@ import type { Provider, TaggedItem } from '@/types'
 
 export default async function FluxPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  // Le lien de la sidebar encode `<instanceId>:<linkId>` pour lever l'ambiguïté
-  // quand deux instances ont des id de flux qui se chevauchent.
+  // The sidebar link encodes `<instanceId>:<linkId>` to disambiguate when two
+  // instances have overlapping flux ids.
   const sep = id.indexOf(':')
   const instanceId = sep === -1 ? null : id.slice(0, sep)
   const linkId = sep === -1 ? id : id.slice(sep + 1)

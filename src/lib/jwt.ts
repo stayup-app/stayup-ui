@@ -1,7 +1,7 @@
-// Décodeur de payload compatible edge runtime. Il NE VÉRIFIE PAS la signature :
-// n'importe qui peut fabriquer un payload. Il ne sert donc qu'à des redirections de
-// confort (middleware) ; toute décision d'accès réelle doit être confirmée par l'API,
-// seule à connaître JWT_SECRET — voir isAdminTokenValid() dans lib/session.ts.
+// Edge-runtime-compatible payload decoder. It does NOT verify the signature:
+// anyone can craft a payload. So it is only for convenience redirects
+// (middleware); any real access decision must be confirmed by the API, the only
+// one that knows JWT_SECRET — see isAdminTokenValid() in lib/session.ts.
 export function decodeJwtPayload(token: string): {
   role?: string
   sub?: string

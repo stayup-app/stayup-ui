@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { en } from '@/lib/translations'
 
-// Les messages d'erreur passent par getServerTranslations(), qui lit le cookie de
-// langue : sans ce mock, `cookies()` sort du scope de requête et lève.
+// Error messages go through getServerTranslations(), which reads the language
+// cookie: without this mock, `cookies()` escapes the request scope and throws.
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: vi.fn() }),
 }))

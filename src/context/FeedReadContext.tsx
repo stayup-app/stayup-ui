@@ -5,15 +5,15 @@ import type { TaggedItem } from '@/types'
 
 const LS_KEY = 'STAYUP_READ_ITEMS'
 
-/** Clé d'un item lu : `<instanceId>:<provider>:<id>`. Le segment instance lève
- *  l'ambiguïté quand deux instances d'API ont des id de ligne qui se chevauchent. */
+/** Key for a read item: `<instanceId>:<provider>:<id>`. The instance segment
+ *  disambiguates when two API instances have overlapping row ids. */
 export function taggedItemId(item: TaggedItem): string {
   const instanceId = typeof item.item._instance_id === 'string' ? item.item._instance_id : ''
   return `${instanceId}:${item.provider}:${item.item.id}`
 }
 
-/** Repréfixe les clés « pré-multi-instance » (`provider:id`) avec l'id de la
- *  primaire. Les clés déjà à 3 segments passent inchangées. */
+/** Re-prefixes "pre-multi-instance" keys (`provider:id`) with the primary's id.
+ *  Keys that already have 3 segments pass through unchanged. */
 export function migrateReadIds(stored: string[], primaryInstanceId: string): string[] {
   if (!primaryInstanceId) return stored
   return stored.map((id) => (id.split(':').length === 2 ? `${primaryInstanceId}:${id}` : id))

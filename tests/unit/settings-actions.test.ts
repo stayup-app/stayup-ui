@@ -27,8 +27,9 @@ describe('setApiUrlAction', () => {
     expect(cookieSet).not.toHaveBeenCalled()
   })
 
-  // Le serveur appellera vraiment cette URL, avec le token du visiteur en en-tête :
-  // sans garde, c'est une primitive SSRF vers le réseau interne de l'hébergeur.
+  // The server will actually call this URL, with the visitor's token in the
+  // header: without a guard, it is an SSRF primitive into the host's internal
+  // network.
   it('rejects a non-http scheme', async () => {
     const { setApiUrlAction } = await import('@/lib/settings-actions')
     for (const url of ['file:///etc/passwd', 'ftp://example.com', 'gopher://x']) {

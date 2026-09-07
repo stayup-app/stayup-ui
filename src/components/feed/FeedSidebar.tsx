@@ -14,7 +14,7 @@ import type { ProviderMeta } from '@/lib/providerTemplate'
 import { providerIcon, providerAccent } from './providerIcons'
 import { unreadKey, type InstanceRef } from './FeedClientLayout'
 
-/** Métadonnées d'un provider pour la sidebar, dérivées de son template. */
+/** A provider's metadata for the sidebar, derived from its template. */
 function getProviderMeta(provider: Provider, templates: Record<string, ProviderMeta>) {
   const meta = templates[provider]
   const color = providerAccent(meta)

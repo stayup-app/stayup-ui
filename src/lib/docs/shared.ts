@@ -1,8 +1,8 @@
-// Parties de la doc qui ne se traduisent pas : SQL, commandes, noms de colonnes,
-// identifiants de providers. Les garder ici évite qu'une traduction ne dérive et
-// ne publie une commande qui ne marche pas.
+// Parts of the docs that are not translated: SQL, commands, column names,
+// provider identifiers. Keeping them here prevents a translation from drifting
+// and publishing a command that does not work.
 
-// Ancres de sommaire, par page.
+// Table-of-contents anchors, per page.
 export const HOME_ANCHORS = {
   concept: 'concept',
   vocabulary: 'vocabulary',
@@ -64,9 +64,9 @@ export const TUTORIAL_ANCHORS = {
   next: 'from-here',
 } as const
 
-// Un déploiement de prod, bout à bout : Neon (Postgres) + Cloudflare Workers
-// (API) + GitHub Actions (planificateur des connecteurs). Commandes et YAML ici,
-// prose dans chaque locale.
+// An end-to-end prod deployment: Neon (Postgres) + Cloudflare Workers (API) +
+// GitHub Actions (the connectors' scheduler). Commands and YAML here, prose in
+// each locale.
 export const PROD_SNIPPETS = {
   neonBootstrap: `git clone https://github.com/stayup-app/stayup-api.git
 cd stayup-api
@@ -135,8 +135,8 @@ curl https://stayup-api.<sub>.workers.dev/connectors/providers \\
   -H "Authorization: Bearer $TOKEN"`,
 } as const
 
-// Les moteurs pris en charge par l'API. L'ordre est celui des onglets : le plus
-// courant d'abord, le NoSQL en dernier parce qu'il est le plus dépaysant.
+// The engines the API supports. The order is that of the tabs: the most common
+// first, NoSQL last because it is the most unfamiliar.
 export const ENGINES = [
   {
     id: 'postgres',
@@ -170,7 +170,7 @@ export const ENGINES = [
 
 export type EngineId = (typeof ENGINES)[number]['id']
 
-/** Application du schéma de base, une commande par moteur. */
+/** Applying the base schema, one command per engine. */
 export const SCHEMA_COMMANDS: Record<EngineId, string> = {
   postgres: `psql "$DATABASE_URL" -f src/db/schema.sql`,
   mysql: `mysql -h <host> -u <user> -p <database> < src/db/schema.mysql.sql`,
@@ -181,10 +181,10 @@ export const SCHEMA_COMMANDS: Record<EngineId, string> = {
 '`,
 }
 
-// ─── Le contrat HTTP d'un connecteur ─────────────────────────────────────────
-// Un connecteur ne touche jamais la base : il appelle /connector-api/<name>/*,
-// authentifié par une clé scopée à son seul provider. Une entrée = une ligne du
-// tableau de la page providers ; l'ordre est celui d'un run.
+// ─── A connector's HTTP contract ────────────────────────────────────────────
+// A connector never touches the database: it calls /connector-api/<name>/*,
+// authenticated by a key scoped to its single provider. One entry = one row of
+// the providers page table; the order is that of a run.
 
 export interface ConnectorEndpoint {
   call: string
@@ -201,8 +201,8 @@ export const CONNECTOR_ENDPOINTS: readonly ConnectorEndpoint[] = [
   { call: 'POST /connector-api/<name>/errors' },
 ] as const
 
-// Les champs d'une ligne envoyée dans POST /connector-api/<name>/items. Le nom
-// et « requis ? » ne se traduisent pas ; la description vit dans chaque locale.
+// The fields of a row sent in POST /connector-api/<name>/items. The name and
+// "required?" are not translated; the description lives in each locale.
 export const CONNECTOR_ITEM_FIELDS = [
   { field: 'repositoryId', required: true },
   { field: 'content', required: true },
@@ -285,11 +285,11 @@ export const CHECKLIST_CODE = [
   'GET /connectors/providers',
 ] as const
 
-// ─── /docs/providers/tutorial — un connecteur Hacker News, de zéro ────────────
-// Un vrai connecteur, court, sans clé d'API externe : chaque source suivie est
-// un endpoint de liste HN (topstories.json, beststories.json…), le collecteur en
-// lit les stories et envoie les nouvelles à stayup-api. Le code n'est pas
-// traduit ; la prose de chaque étape vit dans les locales (`tutorial.steps.*`).
+// ─── /docs/providers/tutorial — a Hacker News connector, from scratch ────────
+// A real connector, short, with no external API key: each tracked source is an
+// HN list endpoint (topstories.json, beststories.json…), the collector reads
+// its stories and sends the new ones to stayup-api. The code is not translated;
+// the prose of each step lives in the locales (`tutorial.steps.*`).
 
 export const TUTORIAL = {
   head: `#!/usr/bin/env python3

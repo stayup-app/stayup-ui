@@ -8,8 +8,8 @@ import { taggedItemId } from '@/context/FeedReadContext'
 import { TemplatedEntry } from './TemplatedEntry'
 import { providerIcon, providerAccent, providerLabel } from './providerIcons'
 
-/** Clé de source par ligne : `<instanceId>:<repository_id>` — `repository_id`
- *  n'est unique qu'au sein d'une instance. */
+/** Per-row source key: `<instanceId>:<repository_id>` — `repository_id`
+ *  is only unique within an instance. */
 function sourceKey(instanceId: string | undefined, repositoryId: number | string): string {
   return `${instanceId ?? ''}:${repositoryId}`
 }

@@ -31,8 +31,8 @@ describe('translation dictionaries', () => {
     }
   })
 
-  // Le lien « Docs » a été rétabli quand la page d'auto-hébergement est arrivée :
-  // ce test vérifiait son absence, il vérifie maintenant sa présence partout.
+  // The "Docs" link was restored when the self-hosting page arrived: this test
+  // checked for its absence, it now checks for its presence everywhere.
   it('exposes the documentation link in every language', () => {
     for (const [lang, dict] of Object.entries(dictionaries)) {
       expect(dict.landing.header.docs, lang).toBeTruthy()

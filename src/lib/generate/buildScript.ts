@@ -1,19 +1,19 @@
 /**
- * Générateur du script d'installation self-hosted.
+ * Self-hosted install script generator.
  *
- * `buildSetupScript(input)` renvoie un unique `stayup-setup.sh`. Le script est
- * *entièrement figé* : le `docker-compose.yml` et le `ofelia.ini` sont écrits
- * bloc par bloc (un par connecteur choisi), pas construits par des boucles au
- * runtime. La seule interactivité est le prompt (identifiants super admin +
- * fréquence de chaque cron) ; les crons alimentent des variables `CRON_<name>`
- * pré-remplies avec leur défaut.
+ * `buildSetupScript(input)` returns a single `stayup-setup.sh`. The script is
+ * *fully static*: the `docker-compose.yml` and the `ofelia.ini` are written
+ * block by block (one per chosen connector), not built by runtime loops. The
+ * only interactivity is the prompt (super admin credentials + each cron's
+ * frequency); the crons feed `CRON_<name>` variables pre-filled with their
+ * default.
  *
- * Fonction pure et déterministe (couverte par snapshot). Sortie = bash/YAML/INI
- * pour un usage technique — rien à traduire.
+ * Pure, deterministic function (covered by snapshot). Output = bash/YAML/INI
+ * for technical use — nothing to translate.
  *
- * Échappement (corps en template literal) : `$VAR`, `$1`, `$(cmd)` passent tels
- * quels ; un `${...}` bash littéral doit être écrit `\${...}` ; `\\n` / `\\033`
- * pour les séquences de `printf`.
+ * Escaping (body in a template literal): `$VAR`, `$1`, `$(cmd)` pass through
+ * as-is; a literal bash `${...}` must be written `\${...}`; `\\n` / `\\033`
+ * for `printf` sequences.
  */
 
 import {
@@ -27,7 +27,7 @@ import {
 export interface CustomConnector {
   /** URL clonable (https:// ou git@). */
   gitUrl: string
-  /** Nom de service ; déduit du repo si vide. */
+  /** Service name; derived from the repo if empty. */
   serviceName?: string
 }
 
@@ -38,11 +38,11 @@ export interface GeneratorInput {
   connectors: ConnectorId[]
   customConnectors: CustomConnector[]
   includeAdminUi: boolean
-  /** `open` : l'inscription active le compte tout de suite. `approval` : le
-   *  compte attend qu'un admin le valide. */
+  /** `open`: signing up activates the account right away. `approval`: the
+   *  account waits for an admin to approve it. */
   registrationMode: RegistrationMode
-  /** Fournisseurs OAuth à activer. Le script demandera les client id/secret à
-   *  l'exécution — ils ne sont jamais écrits dans le script lui-même. */
+  /** OAuth providers to enable. The script will ask for the client id/secret
+   *  at runtime — they are never written into the script itself. */
   oauth: { google: boolean; github: boolean }
   ports: { api: number; ui: number; db: number }
 }
@@ -79,11 +79,11 @@ export function deriveServiceName(gitUrl: string): string {
 
 interface ResolvedConnector {
   name: string
-  /** Nom du provider tel que le collecteur l'utilise dans `/connector-api/<provider>/*`
-   *  et dans `provider_registry` — c'est ce que scope la clé connecteur. Dérivé du
-   *  nom de service en repassant les `-` en `_` (ex. `github-trending` →
-   *  `github_trending`). Pour un connecteur perso, suppose que son `PROVIDER_TYPE`
-   *  suit la même règle. */
+  /** The provider name as the collector uses it in `/connector-api/<provider>/*`
+   *  and in `provider_registry` — this is what the connector key is scoped to.
+   *  Derived from the service name by turning `-` back into `_` (e.g.
+   *  `github-trending` → `github_trending`). For a custom connector, assumes its
+   *  `PROVIDER_TYPE` follows the same rule. */
   provider: string
   gitUrl: string
   cron: string
@@ -129,9 +129,9 @@ function validate(input: GeneratorInput): void {
 }
 
 function composeConnectorBlock(c: ResolvedConnector, projectDir: string): string {
-  // Le connecteur ne touche plus la base : il parle à l'API. La clé est
-  // interpolée par Compose depuis `.env` (`_KEY_<provider>=…`, écrit par le
-  // script une fois l'API démarrée — voir la section « connector keys »).
+  // The connector no longer touches the database: it talks to the API. The key
+  // is interpolated by Compose from `.env` (`_KEY_<provider>=…`, written by the
+  // script once the API is up — see the "connector keys" section).
   return `
   connector-${c.name}:
     build: ./connector-${c.name}
@@ -146,8 +146,8 @@ function composeConnectorBlock(c: ResolvedConnector, projectDir: string): string
 }
 
 function ofeliaBlock(c: ResolvedConnector, projectDir: string): string {
-  // `$_KEY_<provider>` est développé par le shell au moment où le script écrit
-  // ofelia.ini — donc après l'émission des clés.
+  // `$_KEY_<provider>` is expanded by the shell when the script writes
+  // ofelia.ini — so after the keys have been issued.
   return `[job-run "stayup-${c.name}"]
 schedule = $${cronVar(c.name)}
 image = ${projectDir}-connector-${c.name}
@@ -158,7 +158,7 @@ delete = true
 `
 }
 
-/** Bloc de prompts pour un fournisseur OAuth (client id + secret à l'exécution). */
+/** Prompt block for an OAuth provider (client id + secret at runtime). */
 function oauthPrompt(provider: 'google' | 'github', apiPort: number): string {
   const label = provider === 'google' ? 'Google' : 'GitHub'
   const where =
@@ -225,13 +225,13 @@ export function buildSetupScript(input: GeneratorInput): string {
       )
       .join('\n') || ': # no connector selected'
 
-  // Chaque collecteur s'authentifie auprès de l'API avec une clé connecteur
-  // scopée à son provider — plus aucun accès direct à la base. On les émet ici,
-  // une fois l'API démarrée : login super admin puis POST /ui/connector-keys via
-  // `node` dans le conteneur api (fetch + JSON.stringify gèrent proprement des
-  // identifiants arbitraires, sans dépendre de curl/jq sur l'hôte). Les secrets
-  // `_KEY_<provider>=…` atterrissent dans `.env` (lu par Compose pour les
-  // services connector-*) et en variables du shell (pour le heredoc ofelia.ini).
+  // Each collector authenticates against the API with a connector key scoped
+  // to its provider — no more direct database access. We issue them here, once
+  // the API is up: super admin login then POST /ui/connector-keys via `node` in
+  // the api container (fetch + JSON.stringify handle arbitrary credentials
+  // cleanly, without depending on curl/jq on the host). The secrets
+  // `_KEY_<provider>=…` land in `.env` (read by Compose for the connector-*
+  // services) and as shell variables (for the ofelia.ini heredoc).
   const keyIssueNode = `const base = "http://localhost:3000";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {

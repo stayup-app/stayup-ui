@@ -29,7 +29,7 @@ export function AdminSidebar({ isSuper = false }: { isSuper?: boolean }) {
     { label: nav.fluxRequests, href: '/admin/flux-requests', icon: Inbox },
     { label: nav.dataSources, href: '/admin/data-sources', icon: Database },
     { label: nav.maintenance, href: '/admin/maintenance', icon: Trash2 },
-    // Réservé au super admin : la gestion des autres administrateurs.
+    // Reserved for the super admin: managing the other administrators.
     ...(isSuper ? [{ label: nav.admins, href: '/admin/admins', icon: ShieldCheck }] : []),
     { label: nav.account, href: '/admin/settings', icon: KeyRound },
   ]

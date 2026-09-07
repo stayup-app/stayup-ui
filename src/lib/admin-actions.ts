@@ -131,8 +131,8 @@ export async function adminUpdateUserAction(
 
   if (!res.ok) {
     const t = await getServerTranslations()
-    // Le message de l'API est en anglais quel que soit le visiteur : on branche sur
-    // le statut plutôt que de relayer son texte.
+    // The API message is in English whoever the visitor is: we branch on the
+    // status rather than relaying its text.
     if (res.status === 409) return { error: t.errors.emailTaken }
     return { error: t.errors.updateFailed }
   }
@@ -310,7 +310,7 @@ export async function adminApproveFluxRequestAction(
   }
 }
 
-// ─── Providers (mode d'approbation de flux) ───────────────────────────────────
+// ─── Providers (flux approval mode) ────────────────────────────────────────
 
 export async function adminListProvidersAction(): Promise<
   { name: string; displayName: string; flux_approval: 'auto' | 'manual' }[]
@@ -335,7 +335,7 @@ export async function adminSetProviderApprovalAction(
   }
 }
 
-// ─── Nettoyage du contenu (rétention centralisée) ─────────────────────────────
+// ─── Content cleanup (centralized retention) ────────────────────────────────
 
 export async function adminGetRetentionAction(): Promise<RetentionSettings | null> {
   const token = await getAdminToken()
@@ -373,7 +373,7 @@ export async function adminRunCleanupAction(): Promise<{
   }
 }
 
-// ─── Clés d'API des connectors ──────────────────────────────────────────────
+// ─── Connector API keys ────────────────────────────────────────────────────
 
 export async function adminListConnectorKeysAction(): Promise<ConnectorKey[]> {
   const token = await getAdminToken()

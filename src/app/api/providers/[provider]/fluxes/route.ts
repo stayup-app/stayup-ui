@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 import { getProviderFluxes, subscribeFlux, unsubscribeFlux } from '@/lib/api-client'
 import { resolveInstance } from '@/lib/instances'
 
-// GET  /api/providers/:provider/fluxes            → liste des flux existants
-// POST /api/providers/:provider/fluxes  { id }    → s'abonner à un flux existant
-// DELETE ...                            { id }    → se désabonner
-// `?instanceId=` cible une instance d'API précise (multi-API) — défaut : primaire.
+// GET  /api/providers/:provider/fluxes            → list existing fluxes
+// POST /api/providers/:provider/fluxes  { id }    → subscribe to an existing flux
+// DELETE ...                            { id }    → unsubscribe
+// `?instanceId=` targets a specific API instance (multi-API) — default: primary.
 export async function GET(req: Request, { params }: { params: Promise<{ provider: string }> }) {
   const instance = await resolveInstance(new URL(req.url).searchParams.get('instanceId'))
   if (!instance) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

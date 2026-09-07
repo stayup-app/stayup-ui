@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// getUserFeed résout l'URL de l'API via un cookie (voir src/lib/apiUrl.ts) — aucune
-// surcharge en test, donc on retombe sur STAYUP_API_URL.
+// getUserFeed resolves the API URL via a cookie (see src/lib/apiUrl.ts) — no
+// override in tests, so we fall back to STAYUP_API_URL.
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: vi.fn() }),
 }))

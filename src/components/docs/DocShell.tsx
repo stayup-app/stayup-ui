@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/utils'
 
-/** Sommaire latéral : suit la section visible pendant le défilement. */
+/** Side table of contents: follows the visible section while scrolling. */
 export function DocNav({
   title,
   entries,
@@ -26,8 +26,8 @@ export function DocNav({
           .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0]
         if (visible) setActive(visible.target.id)
       },
-      // Une bande étroite en haut de l'écran : la section « active » est celle qui
-      // vient de passer sous l'en-tête, pas celle qui occupe le plus de place.
+      // A narrow band at the top of the screen: the "active" section is the one
+      // that just passed under the header, not the one taking up the most space.
       { rootMargin: '-72px 0px -70% 0px', threshold: 0 },
     )
     for (const section of sections) observer.observe(section)
@@ -70,7 +70,7 @@ export function DocNav({
   )
 }
 
-/** Onglets des options de déploiement. */
+/** Deployment-options tabs. */
 export function DocTabs({ tabs }: { tabs: { label: string; content: React.ReactNode }[] }) {
   const [current, setCurrent] = useState(0)
 
@@ -116,7 +116,7 @@ export function DocTabs({ tabs }: { tabs: { label: string; content: React.ReactN
   )
 }
 
-/** Checklist cochable — l'état ne vit que le temps de la visite, c'est un aide-mémoire. */
+/** Checkable checklist — state only lives for the visit, it is a memory aid. */
 export function DocChecklist({ items }: { items: { code: string; label: string }[] }) {
   const [done, setDone] = useState<boolean[]>(() => items.map(() => false))
 

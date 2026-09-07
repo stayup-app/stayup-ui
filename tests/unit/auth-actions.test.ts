@@ -110,8 +110,8 @@ describe('registerAction', () => {
     })
   })
 
-  // Le message brut de l'API est en anglais quelle que soit la langue du visiteur :
-  // on affiche celui de ce déploiement plutôt que de le relayer.
+  // The raw API message is in English whatever the visitor's language: we show
+  // this deployment's rather than relaying it.
   it('reports a translated failure instead of the raw API message', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
@@ -228,8 +228,8 @@ describe('updateProfileAction', () => {
     expect(await updateProfileAction({ email: 'x@y.z' })).toEqual({ error: en.errors.emailTaken })
   })
 
-  // L'API refuse un changement de mot de passe sans l'actuel : le 401 doit se lire
-  // comme « mot de passe actuel incorrect », pas comme une session perdue.
+  // The API refuses a password change without the current one: the 401 must
+  // read as "current password incorrect", not as a lost session.
   it('maps a 401 to the wrong-current-password message', async () => {
     cookieGet.mockReturnValue({ value: makeToken() })
     mockFetch.mockResolvedValueOnce({

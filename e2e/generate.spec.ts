@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-// La configuration Playwright épingle le cookie de langue sur le français.
+// The Playwright config pins the language cookie to French.
 
 test.describe('Setup generator', () => {
   test.beforeEach(async ({ page }) => {

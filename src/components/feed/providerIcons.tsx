@@ -3,8 +3,8 @@ import type { ProviderMeta, ProviderTemplate } from '@/lib/providerTemplate'
 import { resolveIcon } from '@/lib/providerTemplate'
 
 /**
- * Jeu d'icônes intégré : un raccourci pour `display.icon = "<clé>"`. Un template
- * peut aussi fournir son propre tracé SVG, une data-URI ou une URL d'image
+ * Built-in icon set: a shortcut for `display.icon = "<key>"`. A template can
+ * also provide its own SVG path, a data URI or an image URL
  * (voir `providerIcon` / `resolveIcon`).
  */
 const ICONS: Record<string, ReactNode> = {
@@ -79,8 +79,8 @@ const ICONS: Record<string, ReactNode> = {
 }
 
 /**
- * Icône d'un provider, entièrement pilotée par `display.icon` :
- * clé du jeu intégré · tracé SVG `{ paths|d, viewBox, stroke }` · data-URI · URL image.
+ * A provider's icon, entirely driven by `display.icon`:
+ * built-in set key · SVG path `{ paths|d, viewBox, stroke }` · data URI · image URL.
  */
 export function providerIcon(display: ProviderTemplate['display'] | undefined): ReactNode {
   const spec = resolveIcon(display)
@@ -111,14 +111,14 @@ export function providerIcon(display: ProviderTemplate['display'] | undefined): 
 
 const GENERIC_ACCENT = 'var(--muted-foreground)'
 
-/** Couleur d'accent d'un provider : celle de son template, sinon neutre. */
+/** A provider's accent color: its template's, otherwise neutral. */
 export function providerAccent(meta: ProviderMeta | undefined): string {
   const accent = meta?.template?.display?.accent
   return accent && /^#|^var\(|^hsl|^rgb/.test(accent) ? accent : GENERIC_ACCENT
 }
 
-/** Libellé d'un provider : `display.name` du template, sinon le displayName API,
- *  sinon le nom capitalisé (même repli que stayup-api). */
+/** A provider's label: the template's `display.name`, otherwise the API
+ *  displayName, otherwise the capitalized name (same fallback as stayup-api). */
 export function providerLabel(meta: ProviderMeta | undefined, fallback: string): string {
   return (
     meta?.template?.display?.name ||

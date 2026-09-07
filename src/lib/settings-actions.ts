@@ -3,9 +3,10 @@
 import { cookies } from 'next/headers'
 import { API_URL_COOKIE } from './apiUrl'
 
-// Le serveur va réellement appeler cette URL, avec le token du visiteur en en-tête :
-// `new URL()` seul acceptait donc aussi bien `file:` que `http://169.254.169.254`,
-// c'est-à-dire une primitive SSRF vers le réseau interne de l'hébergeur.
+// The server will actually call this URL, with the visitor's token in the
+// header: `new URL()` alone would accept both `file:` and
+// `http://169.254.169.254`, i.e. an SSRF primitive into the host's internal
+// network.
 function isPrivateHost(hostname: string): boolean {
   const h = hostname.toLowerCase().replace(/^\[|\]$/g, '')
   if (h === 'localhost' || h.endsWith('.localhost') || h === '::1' || h === '0.0.0.0') {

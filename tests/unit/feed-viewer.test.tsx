@@ -8,7 +8,7 @@ import type { TaggedItem, ProviderFlux } from '@/types'
 import { buildTemplateMap } from '@/lib/providerTemplate'
 import { TEMPLATES } from './_templates'
 
-// Deux modes qu'aucun connecteur officiel n'utilise encore : on les teste sur des
+// Two modes no official connector uses yet: we test them on
 // templates locaux (podcast → audio, photos → gallery).
 const MEDIA_TEMPLATES = buildTemplateMap([
   {
@@ -246,7 +246,7 @@ describe('FeedContentViewer (template-driven)', () => {
     const link = screen.getByRole('link', { name: 'vercel/next.js' })
     expect(link).toHaveAttribute('href', 'https://github.com/vercel/next.js')
     expect(screen.getByText('The React Framework')).toBeInTheDocument()
-    // compactNumber — l'ICU du test rend « 129 k », un vrai navigateur « 129K ».
+    // compactNumber — the test ICU renders "129 k", a real browser "129K".
     expect(screen.getByText(/129\s*k/i)).toBeInTheDocument()
     expect(screen.getByText('+318')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Open on github\.com\/trending/ })).toHaveAttribute(

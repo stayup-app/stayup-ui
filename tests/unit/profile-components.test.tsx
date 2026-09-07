@@ -113,8 +113,8 @@ describe('ChangePasswordForm', () => {
     await waitFor(() => expect(screen.getByLabelText('New password')).toHaveValue(''))
   })
 
-  // L'API refuse un changement sans le mot de passe actuel : le formulaire doit
-  // l'exiger avant même l'aller-retour réseau.
+  // The API refuses a change without the current password: the form must
+  // require it even before the network round-trip.
   it('refuses to submit without the current password', async () => {
     const user = userEvent.setup()
     renderWithLang(<ChangePasswordForm />)
@@ -214,8 +214,8 @@ describe('IdentityCard', () => {
     expect(screen.getByText('A')).toBeInTheDocument()
   })
 
-  // Comme la Navbar : `''.charAt(0)` rend une chaîne vide, jamais `undefined`,
-  // donc l'initiale est vide plutôt que le `?` de repli.
+  // Like the Navbar: `''.charAt(0)` returns an empty string, never `undefined`,
+  // so the initial is empty rather than the `?` fallback.
   it('renders an empty avatar initial for an empty name', () => {
     const { container } = render(<IdentityCard name="" email="ada@example.com" />)
     expect(container.querySelector('.rounded-full')).toHaveTextContent('')

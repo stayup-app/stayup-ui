@@ -10,14 +10,14 @@ export interface AppSession {
   name: string
   email: string
   role: string
-  /** Vrai pour un super admin (habilité à gérer les autres admins). */
+  /** True for a super admin (allowed to manage the other admins). */
   isSuper: boolean
 }
 
-/** Décode le payload d'un token. La signature n'est pas vérifiée — seule l'API
- *  connaît JWT_SECRET — donc `role` n'est jamais une preuve : voir
- *  `isAdminTokenValid` pour une décision d'accès. Un token expiré est rejeté ici,
- *  ce qui évite d'afficher une session morte comme si elle était vivante. */
+/** Decodes a token's payload. The signature is not verified — only the API
+ *  knows JWT_SECRET — so `role` is never proof: see `isAdminTokenValid` for an
+ *  access decision. An expired token is rejected here, which avoids showing a
+ *  dead session as if it were alive. */
 export function decodeToken(token: string): AppSession {
   const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as {
     sub: string
@@ -39,9 +39,9 @@ export function decodeToken(token: string): AppSession {
   }
 }
 
-/** `true` uniquement si le token porte un `exp` déjà dépassé. Un token illisible
- *  n'est pas traité comme « expiré » ici : c'est un autre cas, que l'appelant
- *  distingue (jeton rejeté / malformé → reconnexion). */
+/** `true` only if the token carries an already-past `exp`. An unreadable token
+ *  is not treated as "expired" here: that is a different case, which the caller
+ *  distinguishes (rejected / malformed token → reconnect). */
 export function isTokenExpired(token: string): boolean {
   try {
     const { exp } = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as {
@@ -53,10 +53,10 @@ export function isTokenExpired(token: string): boolean {
   }
 }
 
-/** Fait valider le token par l'API (GET /auth/me), qui vérifie sa signature et son
- *  expiration. C'est la seule façon pour ce déploiement — qui ne connaît pas
- *  JWT_SECRET — de savoir si un cookie « admin » est authentique : sans ça, un
- *  payload fabriqué à la main ouvrait tout l'espace /admin. */
+/** Has the API validate the token (GET /auth/me), which verifies its signature
+ *  and expiration. This is the only way for this deployment — which does not
+ *  know JWT_SECRET — to know whether an "admin" cookie is authentic: without it,
+ *  a hand-crafted payload opened the whole /admin area. */
 export async function isAdminTokenValid(token: string): Promise<boolean> {
   try {
     const res = await fetch(`${await getApiUrl()}/auth/me`, {

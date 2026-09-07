@@ -12,14 +12,14 @@ interface TemplatedEntryProps {
   color: string
 }
 
-/** Rend une entrée de liste à partir du template du connecteur — aucune
- *  connaissance du provider, tout vient de `template.list` + `template.item`. */
+/** Renders a list entry from the connector template — no knowledge of the
+ *  provider, everything comes from `template.list` + `template.item`. */
 export function TemplatedEntry({ template, item, source, color }: TemplatedEntryProps) {
   const view = resolveItemView(template, item, source)
   const layout = template.list?.layout ?? 'row'
   const date = view.timestamp ? formatDate(view.timestamp) : ''
-  // Badge de source : nom d'instance (multi-API, posé seulement si >1 instance),
-  // sinon nom de la base secondaire (multi-base) — l'un ou l'autre, pas les deux.
+  // Source badge: instance name (multi-API, only set if >1 instance), otherwise
+  // the secondary database name (multi-database) — one or the other, not both.
   const srcName =
     (typeof item._instance_name === 'string' && item._instance_name) ||
     (typeof item._data_source_name === 'string' && item._data_source_name) ||

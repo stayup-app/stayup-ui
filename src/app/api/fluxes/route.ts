@@ -5,10 +5,10 @@ import { resolveInstance } from '@/lib/instances'
 import { decodeToken } from '@/lib/session'
 import { z } from 'zod'
 
-// Un seul chemin d'ajout, quel que soit le provider : le client envoie une URL
-// déjà construite (à partir du `form` du template du connecteur). Si le provider
-// est en mode `manual`, l'API répond 202 et le flux part en file d'approbation.
-// `?instanceId=` cible une instance d'API précise (multi-API) — défaut : primaire.
+// A single add path, whatever the provider: the client sends a URL already
+// built (from the connector template's `form`). If the provider is in
+// `manual` mode, the API answers 202 and the flux goes to the approval queue.
+// `?instanceId=` targets a specific API instance (multi-API) — default: primary.
 const createFluxSchema = z.object({
   provider: z.string().min(1),
   url: z.string().url().max(2000),
@@ -44,16 +44,16 @@ export async function POST(request: Request) {
     if (result.status === 'pending') {
       return NextResponse.json({ status: 'pending' }, { status: 202 })
     }
-    // Le libellé d'affichage est calculé par le client depuis le template du
-    // connecteur (resolveFeedLabel) après revalidation — pas ici.
+    // The display label is computed by the client from the connector template
+    // (resolveFeedLabel) after revalidation — not here.
     return NextResponse.json({ flux: result.repository }, { status: 201 })
   } catch (err) {
     return NextResponse.json(...toResponse(err, t))
   }
 }
 
-// L'API répond en anglais ('Already subscribed') : on branche sur le statut HTTP,
-// seul contrat stable, et on traduit ici.
+// The API answers in English ('Already subscribed'): we branch on the HTTP
+// status, the only stable contract, and translate here.
 function toResponse(
   err: unknown,
   t: Awaited<ReturnType<typeof getServerTranslations>>,

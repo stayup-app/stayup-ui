@@ -13,9 +13,9 @@ import {
   updateInstanceTokenEntry,
 } from './instances'
 
-// Le serveur va réellement appeler cette URL avec le token du visiteur : `new URL()`
-// seul accepterait `file:` ou `http://169.254.169.254` — une primitive SSRF vers le
-// réseau interne de l'hébergeur.
+// The server will actually call this URL with the visitor's token: `new URL()`
+// alone would accept `file:` or `http://169.254.169.254` — an SSRF primitive
+// into the host's internal network.
 function isPrivateHost(hostname: string): boolean {
   const h = hostname.toLowerCase().replace(/^\[|\]$/g, '')
   if (h === 'localhost' || h.endsWith('.localhost') || h === '::1' || h === '0.0.0.0') {
@@ -65,10 +65,10 @@ async function loginFor(url: string, email: string, password: string): Promise<s
   }
 }
 
-/** Sonde une instance avant l'écran de connexion : nom d'affichage + mode
- *  d'inscription (pour proposer, ou non, « créer un compte »). Sur le web,
- *  l'ajout d'une instance secondaire se fait par e-mail / mot de passe
- *  (l'aller-retour OAuth ne peut pas revenir sur cette origine). */
+/** Probes an instance before the login screen: display name + registration
+ *  mode (to offer, or not, "create an account"). On the web, adding a secondary
+ *  instance is done by e-mail / password (the OAuth round-trip cannot return to
+ *  this origin). */
 export async function probeInstanceAction(
   url: string,
 ): Promise<{ error?: string; name?: string; registrationMode?: 'open' | 'approval' }> {
@@ -88,9 +88,9 @@ export async function probeInstanceAction(
   }
 }
 
-/** Crée un compte sur une instance puis l'ajoute. `{ pending: true }` : l'instance
- *  est en `REGISTRATION_MODE=approval`, le compte attend un admin — rien n'est
- *  ajouté, l'utilisateur reviendra se connecter une fois validé. */
+/** Creates an account on an instance then adds it. `{ pending: true }`: the
+ *  instance is in `REGISTRATION_MODE=approval`, the account is awaiting an admin
+ *  — nothing is added, the user will come back to log in once approved. */
 export async function registerInstanceAction(
   url: string,
   name: string,
@@ -167,8 +167,8 @@ export async function setPrimaryInstanceAction(id: string): Promise<void> {
   await setPrimaryInstanceEntry(id)
 }
 
-/** Retire une instance. Retirer la primaire déconnecte entièrement (comportement
- *  identique au logout). */
+/** Removes an instance. Removing the primary one logs out entirely (same
+ *  behavior as logout). */
 export async function removeInstanceAction(id: string): Promise<void> {
   const outcome = await removeInstanceEntry(id)
   if (outcome === 'cleared') redirect('/')

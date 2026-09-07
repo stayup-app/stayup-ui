@@ -54,8 +54,8 @@ export function AdminsTable({
         </TableHeader>
         <TableBody>
           {admins.map((admin) => {
-            // Un super admin ne se supprime ni ne se modifie depuis l'interface ;
-            // on ne se supprime pas soi-même non plus.
+            // A super admin cannot be deleted or edited from the UI; you cannot
+            // delete yourself either.
             const locked = admin.is_super || admin.id === currentAdminId
             return (
               <TableRow key={admin.id}>

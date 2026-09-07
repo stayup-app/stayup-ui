@@ -49,7 +49,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
   const router = useRouter()
   const { t } = useLanguage()
   const [serverError, setServerError] = useState<string | null>(null)
-  // Instance cible d'un nouveau flux : la primaire par défaut.
+  // Target instance for a new flux: the primary by default.
   const [instanceId, setInstanceId] = useState('')
   const activeInstanceId = instanceId || instances[0]?.id || ''
   const instanceQuery = activeInstanceId
@@ -58,12 +58,12 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
   const [tiles, setTiles] = useState<ProviderTile[]>([])
   const [tpls, setTpls] = useState<Record<string, ProviderTemplate | null>>({})
   const [approvals, setApprovals] = useState<Record<string, 'auto' | 'manual'>>({})
-  // Flux existants du provider sélectionné — même flux d'ajout pour tous les providers.
+  // Existing fluxes of the selected provider — same add flow for every provider.
   const [fluxes, setFluxes] = useState<ProviderFlux[]>([])
   const [fluxesLoading, setFluxesLoading] = useState(false)
   const [selectedFlux, setSelectedFlux] = useState<ProviderFlux | null>(null)
   const [pickMode, setPickMode] = useState<'existing' | 'new'>('existing')
-  // Écran « demande envoyée » (provider en mode `manual`).
+  // "request sent" screen (provider in `manual` mode).
   const [pending, setPending] = useState(false)
 
   useEffect(() => {
@@ -120,8 +120,8 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
 
   const provider = watch('provider')
 
-  // Charge les flux existants du provider sélectionné, et choisit le mode par
-  // défaut : la liste s'il y a des flux disponibles, sinon le formulaire d'ajout.
+  // Loads the selected provider's existing fluxes, and picks the default mode:
+  // the list if there are fluxes available, otherwise the add form.
   useEffect(() => {
     if (!open || !provider) return
     setFluxesLoading(true)
@@ -141,12 +141,12 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
 
   const available = fluxes.filter((f) => !f.is_subscribed)
   const currentForm = tpls[provider]?.form
-  // Libellé / placeholder du champ « ajouter » : ceux du connecteur (`form` du
-  // template), avec un repli générique. Aucun provider connu en dur côté app.
+  // Label / placeholder of the "add" field: the connector's (`form` in the
+  // template), with a generic fallback. No provider hardcoded on the app side.
   const inputLabel = currentForm?.label ?? t.addFlux.identifierLabels.generic
   const inputPlaceholder = currentForm?.placeholder ?? t.addFlux.placeholders.generic
-  // Étiquette d'un flux existant : rendue par le template du connecteur, comme
-  // dans la sidebar (repli : URL sans schéma).
+  // An existing flux's label: rendered by the connector template, as in the
+  // sidebar (fallback: URL without scheme).
   const fluxLabel = (f: ProviderFlux) =>
     resolveFeedLabel(tpls[provider], { url: f.url, config: f.config })
 
@@ -177,7 +177,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
       return
     }
 
-    // Ajout d'un nouveau flux (champ piloté par le `form` du template).
+    // Adding a new flux (field driven by the template's `form`).
     if (!data.identifier.trim()) {
       setServerError(t.addFlux.requiredError)
       return

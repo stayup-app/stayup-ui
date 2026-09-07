@@ -1,8 +1,8 @@
 import type { ConnectorItem, FluxRequest, ProviderFlux } from '@/types'
 import { getApiUrl } from './apiUrl'
 
-/** Erreur d'appel API porteuse du statut HTTP : brancher sur le texte du message
- *  rendait le code dépendant de la langue et du libellé exact renvoyés par l'API. */
+/** API call error carrying the HTTP status: branching on the message text made
+ *  the code depend on the language and the exact wording the API returns. */
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -23,9 +23,9 @@ async function apiFetch<T>(
   const isGet = !init?.method || init.method === 'GET'
   const baseUrl = baseUrlOverride ?? (await getApiUrl())
 
-  // `cache` et `next.revalidate` s'excluent : les poser tous les deux (ce que faisait
-  // le spread de `init` avant celui du cache) laissait une réponse `no-store` être
-  // revalidée à 60 s — un feed figé après l'ajout d'un flux.
+  // `cache` and `next.revalidate` are mutually exclusive: setting both (which
+  // the `init` spread before the cache one did) let a `no-store` response be
+  // revalidated at 60 s — a feed frozen after adding a flux.
   const cacheOptions: RequestInit =
     init && ('cache' in init || 'next' in init)
       ? {}
@@ -46,8 +46,8 @@ async function apiFetch<T>(
       ...cacheOptions,
     })
   } catch (err) {
-    // Un POST/DELETE peut avoir été traité avant la coupure : le rejouer créerait
-    // un doublon. Seules les lectures sont réessayées.
+    // A POST/DELETE may have been processed before the cut: replaying it would
+    // create a duplicate. Only reads are retried.
     if (isGet && attempt === 0) return apiFetch<T>(path, token, init, 1, baseUrlOverride)
     throw err
   }
@@ -65,17 +65,17 @@ async function apiFetch<T>(
 // ─── Auth config ──────────────────────────────────────────────────────────────
 
 export interface AuthConfig {
-  /** Nom d'affichage de l'instance (INSTANCE_NAME côté API), sinon `null`. */
+  /** The instance's display name (INSTANCE_NAME on the API side), otherwise `null`. */
   name?: string | null
   registrationMode: 'open' | 'approval'
   emailPassword: boolean
   oauth: { google: boolean; github: boolean }
 }
 
-/** Ce qu'un client doit savoir avant l'écran de connexion. `null` si l'API ne
- *  répond pas ou est trop ancienne pour exposer `/auth/config` — l'appelant
- *  retombe alors sur « tout est proposé ». Non authentifié. `baseUrl` cible une
- *  instance précise (ajout d'une instance secondaire). */
+/** What a client needs to know before the login screen. `null` if the API does
+ *  not respond or is too old to expose `/auth/config` — the caller then falls
+ *  back to "everything is offered". Unauthenticated. `baseUrl` targets a
+ *  specific instance (adding a secondary instance). */
 function isAuthConfig(v: unknown): v is AuthConfig {
   if (!v || typeof v !== 'object') return false
   const c = v as Record<string, unknown>
@@ -89,14 +89,14 @@ function isAuthConfig(v: unknown): v is AuthConfig {
   )
 }
 
-/** Résultat d'une sonde d'URL d'API : `unreachable` = rien ne répond ;
- *  `incompatible` = ça répond mais ce n'est pas une API StayUp. */
+/** Result of an API URL probe: `unreachable` = nothing responds;
+ *  `incompatible` = it responds but it is not a StayUp API. */
 export type ApiProbe =
   | { ok: true; config: AuthConfig }
   | { ok: false; reason: 'unreachable' | 'incompatible' }
 
-/** Vérifie qu'une URL pointe sur une API StayUp joignable : `GET /auth/config`
- *  doit répondre 2xx avec la forme attendue. */
+/** Checks that a URL points to a reachable StayUp API: `GET /auth/config` must
+ *  answer 2xx with the expected shape. */
 export async function probeApiUrl(baseUrl?: string): Promise<ApiProbe> {
   const base = (baseUrl ?? (await getApiUrl())).replace(/\/$/, '')
   let res: Response
@@ -125,9 +125,9 @@ export async function fetchAuthConfig(baseUrl?: string): Promise<AuthConfig | nu
 export interface ConnectorProvider {
   name: string
   displayName: string
-  /** `auto` : l'ajout d'un flux est immédiat ; `manual` : il passe par une demande. */
+  /** `auto`: adding a flux is immediate; `manual`: it goes through a request. */
   fluxApproval?: 'auto' | 'manual'
-  /** Manifeste d'affichage brut (provider_registry.template), relayé tel quel. */
+  /** Raw display manifest (provider_registry.template), relayed as-is. */
   template?: unknown
 }
 
@@ -175,8 +175,9 @@ export async function getUserFeed(
   )
 }
 
-/** L'API répond soit `{ repository }` (flux créé), soit `202 { status: 'pending' }`
- *  quand le provider est en mode `manual` : la demande part en file d'approbation. */
+/** The API answers either `{ repository }` (flux created), or
+ *  `202 { status: 'pending' }` when the provider is in `manual` mode: the
+ *  request goes to the approval queue. */
 export type AddRepositoryResult =
   | { repository: UserRepositoryItem; status?: undefined }
   | { status: 'pending'; request: FluxRequest }
@@ -398,7 +399,7 @@ export async function adminClearRepositoryData(repoId: number, token: string): P
   })
 }
 
-// ─── Provider fluxes (liste des flux existants + abonnement) ───────────────────
+// ─── Provider fluxes (list existing fluxes + subscribe) ─────────────────────
 
 export async function getProviderFluxes(
   provider: string,
@@ -514,12 +515,12 @@ export async function adminCreateRepository(
 export type RetentionProvider = {
   name: string
   displayName: string
-  /** `null` = suit le défaut global. */
+  /** `null` = follows the global default. */
   retention_days: number | null
 }
 
 export type RetentionSettings = {
-  /** `null` = purge désactivée tant qu'aucun provider ne la surcharge. */
+  /** `null` = purge disabled as long as no provider overrides it. */
   default: number | null
   providers: RetentionProvider[]
 }

@@ -24,7 +24,7 @@ export function FluxRequestApproveDialog({ request, onClose }: FluxRequestApprov
   const router = useRouter()
   const { t } = useLanguage()
 
-  // Le scraping web garde ses champs de config ; les autres providers n'en ont pas.
+  // Web scraping keeps its config fields; the other providers have none.
   const isScrap = request.provider === 'scrap'
   const [form, setForm] = useState({
     articles_selector: '',

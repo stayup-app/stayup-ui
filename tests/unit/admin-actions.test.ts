@@ -4,8 +4,8 @@ import { en } from '@/lib/translations'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// adminUpdateUserAction résout l'URL de l'API via un cookie (voir src/lib/apiUrl.ts) —
-// aucune surcharge en test, donc on retombe sur STAYUP_API_URL.
+// adminUpdateUserAction resolves the API URL via a cookie (see src/lib/apiUrl.ts) —
+// no override in tests, so we fall back to STAYUP_API_URL.
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: vi.fn() }),
 }))
@@ -98,8 +98,8 @@ describe('adminUpdateUserAction', () => {
     expect(mockFetch).not.toHaveBeenCalled()
   })
 
-  // Le message brut de l'API n'est plus relayé : il est en anglais quelle que soit
-  // la langue du visiteur. On renvoie le message traduit de ce déploiement.
+  // The raw API message is no longer relayed: it is in English whatever the
+  // visitor's language. We return this deployment's translated message.
   it('reports a translated failure instead of the raw API message', async () => {
     mockFetch.mockResolvedValueOnce({ ok: false, json: async () => ({ error: 'Email pris' }) })
 

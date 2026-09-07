@@ -146,8 +146,8 @@ export function FeedClientView({
     [items, readIds],
   )
 
-  // Session morte (token expiré ou rejeté) → modale de reconnexion. Panne
-  // transitoire (réseau / 5xx) → simple bandeau à réessayer.
+  // Dead session (expired or rejected token) → reconnect modal. Transient
+  // failure (network / 5xx) → a simple retry banner.
   const unreachable = instanceErrors.filter((e) => e.reason === 'unreachable')
   const dead = instanceErrors.filter((e) => e.reason === 'expired' || e.reason === 'auth')
 

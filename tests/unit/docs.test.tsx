@@ -36,7 +36,7 @@ afterEach(() => {
 
 const LANGUAGES: Language[] = ['en', 'fr', 'de', 'es', 'it', 'pt', 'ja', 'zh']
 
-/** Toutes les feuilles chaîne d'un objet, avec leur chemin. */
+/** Every string leaf of an object, with its path. */
 function stringPaths(value: unknown, prefix = ''): [string, string][] {
   if (typeof value === 'string') return [[prefix, value]]
   if (Array.isArray(value)) return value.flatMap((v, i) => stringPaths(v, `${prefix}[${i}]`))
@@ -72,10 +72,10 @@ describe('documentation dictionaries', () => {
     }
   })
 
-  // Une traduction laissée à l'identique de l'anglais est presque toujours un oubli.
-  // Les seules exceptions légitimes sont les noms propres et les mots partagés.
+  // A translation left identical to English is almost always an oversight.
+  // The only legitimate exceptions are proper nouns and shared words.
   it('actually translates the prose away from English', () => {
-    // Noms propres et termes partagés : identiques d'une langue à l'autre.
+    // Proper nouns and shared terms: identical from one language to the next.
     const SHARED = new Set([
       'home.concept.diagram.database',
       'home.concept.diagram.api',
@@ -110,8 +110,8 @@ describe('documentation dictionaries', () => {
       const doc = getDoc(lang)
       expect(doc.install.env.descriptions, lang).toHaveLength(ENV_VARS.length)
       expect(doc.providers.creating.naming.rows, lang).toHaveLength(NAMING_ROWS.length)
-      // Une ligne de description par champ d'item et par endpoint : un décalage
-      // laisserait une cellule vide dans le tableau du contrat.
+      // One description line per item field and per endpoint: a mismatch would
+      // leave an empty cell in the contract table.
       expect(doc.providers.contract.itemFieldDescriptions, lang).toHaveLength(
         CONNECTOR_ITEM_FIELDS.length,
       )
@@ -121,37 +121,37 @@ describe('documentation dictionaries', () => {
     }
   })
 
-  // La doc doit décrire l'architecture — une API au-dessus de providers quelconques —
-  // et non le catalogue que l'instance de référence fait tourner. La page de
-  // concept ne nomme aucun collecteur ; l'install et providers en citent un
-  // (RSS) comme exemple concret de marche à suivre, pas comme une liste.
+  // The docs must describe the architecture — an API on top of arbitrary
+  // providers — not the catalog the reference instance happens to run. The
+  // concept page names no collector; install and providers cite one (RSS) as a
+  // concrete worked example, not as a list.
   it('describes the architecture, not the reference instance’s catalogue', () => {
     const NAMES = /YouTube|\bRSS\b|changelog|github-trending/i
     for (const lang of LANGUAGES) {
       const doc = getDoc(lang)
 
-      // La page de concept ne nomme aucun provider : sinon on lit « StayUp, c'est
-      // ces quatre-là » au lieu de « StayUp accepte n'importe lequel ».
+      // The concept page names no provider: otherwise it reads "StayUp is
+      // just those four" instead of "StayUp accepts any of them".
       expect(JSON.stringify(doc.home), `${lang} — index`).not.toMatch(NAMES)
 
-      // La page install en cite un seul, dans la marche à suivre, comme exemple.
+      // The install page cites just one, in the walkthrough, as an example.
       const installMentions = (
         JSON.stringify(doc.install).match(new RegExp(NAMES, 'gi')) ?? []
       ).filter((m) => m.toLowerCase() !== 'rss').length
       expect(installMentions, `${lang} — install`).toBe(0)
 
-      // La page providers a une section « exemples à lire » qui nomme les
-      // collecteurs de référence : c'est pointer vers des exemples, pas dresser
-      // le catalogue de ce que StayUp couvre. On borne pour éviter la dérive.
+      // The providers page has a "worked examples" section that names the
+      // reference collectors: that is pointing at examples, not listing the
+      // catalog of what StayUp covers. We cap it to prevent drift.
       const mentions = JSON.stringify(doc.providers).match(new RegExp(NAMES, 'gi')) ?? []
       expect(mentions.length, `${lang} — providers: ${mentions.join(', ')}`).toBeLessThanOrEqual(8)
     }
   })
 
-  // Le reproche fait à l'ancienne page : elle mélangeait deux publics et ouvrait
-  // sur du SQL. Le détail des tables internes (connector_*) reste cantonné à la
-  // page des providers ; l'install peut renvoyer vers `provider_registry` dans un
-  // point de dépannage, mais pas enseigner le contrat.
+  // The complaint about the old page: it mixed two audiences and opened with
+  // SQL. The detail of the internal tables (connector_*) stays confined to the
+  // providers page; install may point at `provider_registry` in a
+  // troubleshooting note, but not teach the contract.
   it('keeps the two journeys separate', () => {
     for (const lang of LANGUAGES) {
       const doc = getDoc(lang)
@@ -159,30 +159,30 @@ describe('documentation dictionaries', () => {
       expect(installText, `${lang} — connector_ hors de la page providers`).not.toContain(
         'connector_',
       )
-      // L'index n'explique que le concept : il ne verse pas dans le contrat.
+      // The index only explains the concept: it does not drift into the contract.
       expect(JSON.stringify(doc.home), lang).not.toContain('connector_')
     }
   })
 })
 
 describe('shared snippets', () => {
-  // Le code ne passe pas par la traduction : il doit rester identique quelle que
-  // soit la langue, et ne jamais contenir de prose traduite.
+  // Code does not go through translation: it must stay identical whatever the
+  // language, and never contain translated prose.
   it('never leaks a placeholder that was meant to be filled in', () => {
     for (const snippet of Object.values(SNIPPETS)) {
       expect(snippet).not.toMatch(/TODO|FIXME|XXX/)
     }
   })
 
-  // Le contrat d'un connecteur est HTTP : chaque appel est sous
-  // /connector-api/<name>/ et n'est jamais une requête SQL.
+  // A connector's contract is HTTP: every call is under /connector-api/<name>/
+  // and is never a SQL query.
   it('states the connector contract as HTTP calls, not SQL', () => {
     for (const e of CONNECTOR_ENDPOINTS) {
       expect(e.call).toMatch(/^(GET|POST|PATCH|DELETE) \/connector-api\/<name>\//)
     }
     expect(CONNECTOR_ENDPOINTS.some((e) => e.call.includes('/register'))).toBe(true)
     expect(CONNECTOR_ENDPOINTS.some((e) => e.call.includes('/items'))).toBe(true)
-    // Aucun DDL ne fuit dans les snippets partagés.
+    // No DDL leaks into the shared snippets.
     for (const snippet of Object.values(SNIPPETS)) {
       expect(snippet).not.toMatch(/CREATE TABLE|connector_<name>/)
     }
@@ -282,8 +282,8 @@ describe('DocNav', () => {
     ).not.toThrow()
   })
 
-  // Le sommaire suit la section passée sous l'en-tête : on pilote nous-mêmes
-  // l'IntersectionObserver, que jsdom ne fournit pas.
+  // The table of contents follows the section that passed under the header: we
+  // drive the IntersectionObserver ourselves, since jsdom does not provide it.
   describe('active section highlighting', () => {
     const realObserver = globalThis.IntersectionObserver
     let notify: ((records: IntersectionObserverEntry[]) => void) | null = null
@@ -406,7 +406,7 @@ describe('doc presentation pieces', () => {
     )
     expect(screen.getByText('first bullet')).toBeInTheDocument()
     expect(screen.getByText('second step')).toBeInTheDocument()
-    // La liste ordonnée numérote elle-même ses étapes.
+    // The ordered list numbers its own steps.
     expect(screen.getByText('2')).toBeInTheDocument()
   })
 

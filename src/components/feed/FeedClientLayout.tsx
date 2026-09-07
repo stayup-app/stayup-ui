@@ -49,8 +49,8 @@ interface FeedClientLayoutProps {
   children: ReactNode
 }
 
-/** Clé de comptage non-lus par flux : `<instanceId>:<repository_id>`.
- *  `repository_id` n'est unique qu'au sein d'une instance. */
+/** Unread-count key per flux: `<instanceId>:<repository_id>`.
+ *  `repository_id` is only unique within an instance. */
 export function unreadKey(instanceId: string | undefined, repositoryId: number | string): string {
   return `${instanceId ?? ''}:${repositoryId}`
 }

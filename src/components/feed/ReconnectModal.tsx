@@ -20,17 +20,18 @@ export interface DeadInstance {
   instanceName: string
 }
 
-/** Poussée dès qu'une instance a une session morte (token expiré ou rejeté),
- *  à chaque rendu serveur du feed — donc au chargement et après `router.refresh()`.
- *  Rejouable : « Plus tard » ne la garde fermée que jusqu'au prochain rendu.
- *  Sur le web la reconnexion se fait par e-mail + mot de passe (l'aller-retour
- *  OAuth d'une instance secondaire ne peut pas revenir sur cette origine). */
+/** Shown as soon as an instance has a dead session (expired or rejected
+ *  token), on every server render of the feed — so on load and after
+ *  `router.refresh()`. Repeatable: "Later" only keeps it closed until the next
+ *  render.
+ *  On the web, reconnecting is done by e-mail + password (a secondary
+ *  instance's OAuth round-trip cannot return to this origin). */
 export function ReconnectModal({ instances }: { instances: DeadInstance[] }) {
   const { t } = useLanguage()
   const [dismissed, setDismissed] = useState(false)
 
-  // Chaque rendu serveur fournit un nouveau tableau : on repropose tant qu'une
-  // session reste morte, même si l'utilisateur avait fermé.
+  // Each server render provides a new array: we re-offer as long as a session
+  // stays dead, even if the user had closed it.
   useEffect(() => {
     setDismissed(false)
   }, [instances])

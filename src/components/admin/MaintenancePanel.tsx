@@ -17,7 +17,7 @@ import { adminRunCleanupAction, adminUpdateRetentionAction } from '@/lib/admin-a
 import { useLanguage } from '@/context/LanguageContext'
 import type { RetentionSettings } from '@/lib/api-client'
 
-/** `''` → suit le défaut / désactivé ; sinon un entier de jours ≥ 1. `null` en
+/** `''` → follows the default / disabled; otherwise an integer number of days ≥ 1. `null` on
  *  sortie si invalide. */
 function parseField(value: string): number | null {
   const trimmed = value.trim()
@@ -130,7 +130,7 @@ function Panel({
 
   return (
     <div className="space-y-8 max-w-2xl">
-      {/* Défaut global */}
+      {/* Global default */}
       <section className="space-y-3">
         <div>
           <h2 className="text-sm font-semibold">{mp.globalHeading}</h2>
@@ -167,7 +167,7 @@ function Panel({
         {disabled && <p className="text-[12px] text-muted-foreground">{mp.disabledNote}</p>}
       </section>
 
-      {/* Surcharges par provider */}
+      {/* Per-provider overrides */}
       <section className="space-y-3">
         <div>
           <h2 className="text-sm font-semibold">{mp.overridesHeading}</h2>

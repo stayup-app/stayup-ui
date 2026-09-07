@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { getConnectorProviders } from '@/lib/api-client'
 import { resolveInstance } from '@/lib/instances'
 
-// Proxy vers GET /connectors/providers — sert à construire dynamiquement les listes
-// de providers côté client (ex: sélecteur "ajouter un flux"), sans exposer le token
-// au navigateur. `?instanceId=` cible une instance d'API précise (multi-API).
+// Proxy to GET /connectors/providers — used to build provider lists dynamically
+// on the client (e.g. the "add a flux" selector), without exposing the token to
+// the browser. `?instanceId=` targets a specific API instance (multi-API).
 export async function GET(request: Request) {
   const instanceId = new URL(request.url).searchParams.get('instanceId')
   const instance = await resolveInstance(instanceId)

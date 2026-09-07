@@ -137,16 +137,16 @@ describe('UserMenu', () => {
 })
 
 describe('LandingHeader', () => {
-  // Ancres absolues : l'en-tête sert aussi la page de doc, où ces sections
-  // n'existent pas — une ancre nue n'y menait nulle part.
+  // Absolute anchors: the header also serves the doc page, where these sections
+  // do not exist — a bare anchor led nowhere there.
   it('links to the features and download anchors on the landing page', () => {
     renderWithLang(<LandingHeader />)
     expect(screen.getByRole('link', { name: 'Features' })).toHaveAttribute('href', '/#features')
     expect(screen.getByRole('link', { name: 'Download' })).toHaveAttribute('href', '/#download')
   })
 
-  // Le lien mène à l'index des parcours, pas directement à l'auto-hébergement :
-  // quelqu'un qui vient écrire un provider n'a rien à y faire.
+  // The link leads to the walkthroughs index, not straight to self-hosting:
+  // someone coming to write a provider has no business there.
   it('links to the documentation index', () => {
     renderWithLang(<LandingHeader />)
     expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', '/docs')
@@ -170,8 +170,8 @@ describe('LandingHeader', () => {
     window.scrollY = 0
   })
 
-  // Sur mobile la nav et les CTA sont repliés derrière un bouton : sans lui,
-  // un téléphone n'a aucun accès aux liens ni à « Commencer ».
+  // On mobile the nav and the CTAs are folded behind a button: without it, a
+  // phone has no access to the links or to "Get started".
   it('folds the navigation into a toggle for small screens', async () => {
     const user = userEvent.setup()
     renderWithLang(<LandingHeader />)
@@ -190,8 +190,8 @@ describe('LandingHeader', () => {
     expect(screen.getAllByRole('link', { name: 'Features' })).toHaveLength(1)
   })
 
-  // Ouvrir le menu sur mobile puis élargir la fenêtre ne doit pas laisser le
-  // panneau ouvert par-dessus la mise en page desktop.
+  // Opening the menu on mobile then widening the window must not leave the
+  // panel open over the desktop layout.
   it('closes the mobile menu when the viewport grows back to desktop', async () => {
     const user = userEvent.setup()
     const original = window.innerWidth

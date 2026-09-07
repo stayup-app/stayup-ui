@@ -37,9 +37,9 @@ test.describe('Landing page', () => {
   })
 })
 
-// Régression : le <select> portait `bg-transparent`, ce qui fait perdre au
-// navigateur sa palette sombre pour la liste déroulante — elle s'affichait en
-// blanc, avec des libellés clairs hérités de la page, donc illisibles.
+// Regression: the <select> carried `bg-transparent`, which makes the browser
+// lose its dark palette for the dropdown — it showed white, with light labels
+// inherited from the page, hence unreadable.
 test.describe('Language switcher', () => {
   test('paints its options instead of leaving the browser default', async ({ page }) => {
     await page.goto('/')
@@ -56,9 +56,9 @@ test.describe('Language switcher', () => {
       }
     })
 
-    // Le déclencheur reste fondu dans l'en-tête…
+    // The trigger stays blended into the header…
     expect(styles.triggerBg).toBe('rgba(0, 0, 0, 0)')
-    // …mais les options sont peintes explicitement, fond sombre et texte clair.
+    // …but the options are painted explicitly, dark background and light text.
     expect(styles.optionBg).toBe('rgb(24, 28, 39)')
     expect(styles.optionColor).toBe('rgb(242, 237, 226)')
   })

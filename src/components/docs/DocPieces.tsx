@@ -1,4 +1,4 @@
-// Briques de présentation de la doc. Serveur uniquement : rien ici n'a d'état.
+// Presentation building blocks for the docs. Server-only: nothing here has state.
 
 export function DocSection({
   id,
@@ -191,8 +191,8 @@ export function DocTable({
   )
 }
 
-/** Encadré de schéma : une grille de boîtes légendées, plutôt qu'une image figée
- *  qu'il faudrait régénérer à chaque traduction. */
+/** Schema box: a grid of captioned boxes, rather than a static image that would
+ *  need regenerating on every translation. */
 export function DocDiagram({
   title,
   children,

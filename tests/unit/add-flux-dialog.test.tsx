@@ -12,8 +12,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// Les providers renvoyés par GET /api/providers (proxy de GET /connectors/providers).
-// `scrap` est en mode `manual` : l'ajout d'un flux inédit part en file d'approbation.
+// The providers returned by GET /api/providers (proxy of GET /connectors/providers).
+// `scrap` is in `manual` mode: adding a brand-new flux goes to the approval queue.
 const DEFAULT_PROVIDERS = ['changelog', 'youtube', 'rss', 'scrap'].map((name) => ({
   name,
   displayName: TEMPLATES[name].displayName,
@@ -82,7 +82,7 @@ describe('AddFluxDialog', () => {
 
   it('shows the "add a new one" input by default when no flux is available', async () => {
     renderDialog()
-    // Le template changelog fournit le libellé de son champ.
+    // The changelog template provides its field's label.
     expect(await screen.findByLabelText('GitHub repo (owner/repo or URL)')).toBeInTheDocument()
   })
 

@@ -20,7 +20,7 @@ export function LandingHeader() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Repasser en desktop referme le menu mobile pour ne pas laisser un panneau fantôme.
+  // Switching back to desktop closes the mobile menu so no ghost panel is left.
   useEffect(() => {
     if (!menuOpen) return
     function onResize() {
@@ -30,8 +30,8 @@ export function LandingHeader() {
     return () => window.removeEventListener('resize', onResize)
   }, [menuOpen])
 
-  // Ancres absolues : l'en-tête sert aussi la doc, où ces sections n'existent pas.
-  // Une simple ancre `#features` n'y menait donc nulle part.
+  // Absolute anchors: the header also serves the docs, where these sections do not exist.
+  // So a plain `#features` anchor led nowhere there.
   const navLinks = [
     { label: t.landing.header.features, href: '/#features' },
     { label: t.landing.header.download, href: '/#download' },

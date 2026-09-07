@@ -8,8 +8,8 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { AuroraMark } from '@/components/ui/aurora-mark'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  // `session.role` vient d'un payload non signé : il ne prouve rien. La porte, c'est
-  // l'API, seule à pouvoir vérifier la signature du token.
+  // `session.role` comes from an unsigned payload: it proves nothing. The gate
+  // is the API, the only one that can verify the token's signature.
   const [session, token, t] = await Promise.all([
     getAdminSession(),
     getAdminToken(),
