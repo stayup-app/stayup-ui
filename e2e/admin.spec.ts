@@ -19,7 +19,7 @@ test.describe('Admin login page', () => {
   test('validates required fields', async ({ page }) => {
     await page.goto('/admin/login')
     await page.getByRole('button', { name: /se connecter/i }).click()
-    await expect(page.getByText(/email invalide/i)).toBeVisible()
+    await expect(page.getByText(/e-?mail invalide/i)).toBeVisible()
     await expect(page.getByText(/mot de passe requis/i)).toBeVisible()
   })
 })
