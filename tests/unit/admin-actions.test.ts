@@ -26,6 +26,9 @@ const api = {
   adminRejectFluxRequest: vi.fn(),
   adminListProviders: vi.fn(),
   adminSetProviderApproval: vi.fn(),
+  adminGetRetention: vi.fn(),
+  adminUpdateRetention: vi.fn(),
+  adminRunCleanup: vi.fn(),
   deleteUserRepository: vi.fn(),
   adminChangeOwnPassword: vi.fn(),
   adminCreateAdmin: vi.fn(),
@@ -481,5 +484,58 @@ describe('documentation actions', () => {
   it('are no longer exported', async () => {
     const mod = await import('@/lib/admin-actions')
     expect(Object.keys(mod).filter((k) => /Doc/i.test(k))).toEqual([])
+  })
+})
+
+describe('content retention actions', () => {
+  it('adminGetRetentionAction returns the settings, null when unauthenticated', async () => {
+    api.adminGetRetention.mockResolvedValue({ default: 30, providers: [] })
+    const { adminGetRetentionAction } = await import('@/lib/admin-actions')
+    expect(await adminGetRetentionAction()).toEqual({ default: 30, providers: [] })
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminGetRetentionAction()).toBeNull()
+  })
+
+  it('adminGetRetentionAction swallows an API failure', async () => {
+    api.adminGetRetention.mockRejectedValue(new Error('boom'))
+    const { adminGetRetentionAction } = await import('@/lib/admin-actions')
+    expect(await adminGetRetentionAction()).toBeNull()
+  })
+
+  it('adminUpdateRetentionAction forwards the body and revalidates', async () => {
+    const { adminUpdateRetentionAction } = await import('@/lib/admin-actions')
+    expect(await adminUpdateRetentionAction({ default: 45 })).toEqual({})
+    expect(api.adminUpdateRetention).toHaveBeenCalledWith({ default: 45 }, 'token')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/maintenance')
+  })
+
+  it('adminUpdateRetentionAction reports the API error and the auth error', async () => {
+    api.adminUpdateRetention.mockRejectedValue(new Error('bad days'))
+    const { adminUpdateRetentionAction } = await import('@/lib/admin-actions')
+    expect(await adminUpdateRetentionAction({ default: 0 })).toEqual({ error: 'bad days' })
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminUpdateRetentionAction({ default: 1 })).toEqual({
+      error: en.errors.notAuthenticated,
+    })
+  })
+
+  it('adminRunCleanupAction returns the purge report', async () => {
+    api.adminRunCleanup.mockResolvedValue({ total: 7, purged: [{ provider: 'rss', deleted: 7 }] })
+    const { adminRunCleanupAction } = await import('@/lib/admin-actions')
+    expect(await adminRunCleanupAction()).toEqual({
+      total: 7,
+      purged: [{ provider: 'rss', deleted: 7 }],
+    })
+  })
+
+  it('adminRunCleanupAction reports the API error and the auth error', async () => {
+    api.adminRunCleanup.mockRejectedValue(new Error('down'))
+    const { adminRunCleanupAction } = await import('@/lib/admin-actions')
+    expect(await adminRunCleanupAction()).toEqual({ error: 'down' })
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminRunCleanupAction()).toEqual({ error: en.errors.notAuthenticated })
   })
 })

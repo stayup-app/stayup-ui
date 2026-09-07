@@ -311,6 +311,46 @@ describe('adminListProviders / adminSetProviderApproval', () => {
   })
 })
 
+describe('content retention & cleanup', () => {
+  it('adminGetRetention reads the settings', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        default: 30,
+        providers: [{ name: 'rss', displayName: 'RSS', retention_days: null }],
+      }),
+    })
+    const { adminGetRetention } = await import('@/lib/api-client')
+    const res = await adminGetRetention(TEST_TOKEN)
+    expect(res.default).toBe(30)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/maintenance/retention')
+  })
+
+  it('adminUpdateRetention PATCHes the body', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
+    const { adminUpdateRetention } = await import('@/lib/api-client')
+    await adminUpdateRetention({ default: 45, providers: { rss: 10 } }, TEST_TOKEN)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/maintenance/retention')
+    expect(mockFetch.mock.calls[0][1].method).toBe('PATCH')
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({
+      default: 45,
+      providers: { rss: 10 },
+    })
+  })
+
+  it('adminRunCleanup POSTs and returns the report', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ purged: [{ provider: 'rss', deleted: 3 }], total: 3 }),
+    })
+    const { adminRunCleanup } = await import('@/lib/api-client')
+    const res = await adminRunCleanup(TEST_TOKEN)
+    expect(res.total).toBe(3)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/maintenance/cleanup')
+    expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+  })
+})
+
 describe('adminListFluxRequests / approve / reject', () => {
   it('unwraps the requests array', async () => {
     mockFetch.mockResolvedValueOnce({
