@@ -123,11 +123,9 @@ export default async function ProvidersPage() {
               {d.existing.body}
             </p>
             <Link
-              href="https://github.com/stayup-app/stayup-cmd-template"
+              href="/docs/providers/tutorial"
               className="inline-flex items-center gap-1.5 text-[13.5px] font-medium"
               style={{ color: 'var(--sky)' }}
-              target="_blank"
-              rel="noreferrer"
             >
               {d.existing.cta}
               <ArrowRight size={13} />

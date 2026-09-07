@@ -549,8 +549,8 @@ export const ja: DocContent = {
     },
     existing: {
       heading: '読める実例',
-      body: 'まず stayup-cmd-template から始めます。コピーして使うための素の骨組みで、変更する 3 か所に印が付いています。次に本物を読みます — changelog、youtube、rss、scrap、github-trending — 参照インスタンスがたまたま動かしているもので、StayUp が何をカバーするかの定義ではありません。rss は下の契約の最短の実例、github-trending はリッチな表示テンプレートの参照です。都合が合えばどれでも自分のインスタンスに向けてください。',
-      cta: 'stayup-cmd-template を開く',
+      body: 'ステップごとのチュートリアルは、空のフォルダーから Hacker News 用の connector を丸ごと組み立てます — 最速の入り口です。次に本物を読みます — changelog、youtube、rss、scrap、github-trending — 参照インスタンスがたまたま動かしているもので、StayUp が何をカバーするかの定義ではありません。rss は下の契約の最短の実例、github-trending はリッチな表示テンプレートの参照です。',
+      cta: 'チュートリアルを進める',
     },
     creating: {
       heading: '自分のを書く',
@@ -677,6 +677,68 @@ export const ja: DocContent = {
           '1 回の実行後にあなたのプロバイダーを一覧する。',
         ],
       },
+    },
+  },
+
+  tutorial: {
+    meta: {
+      title: 'StayUp — connector を書く',
+      description:
+        '空のフォルダーから組み立てる、Hacker News 用の完全に動く StayUp connector — 各ステップをコピーしてください。',
+    },
+    eyebrow: 'Providers',
+    title: 'connector を書く、ステップごとに',
+    lede: '1 ファイル、約 90 行、自前の API キーなし。Hacker News のリスト（top、best、new…）を追い、まだ見ていないストーリーを保持して、stayup-api に渡します。各ブロックを順にコピーしてください。ファイル全体は末尾にあります。',
+
+    intro: {
+      heading: '何を作るか',
+      body: 'hackernews という名前の connector。追跡する各ソースは Hacker News のリストエンドポイント — https://hacker-news.firebaseio.com/v0/topstories.json など。実行のたびにスクリプトはリストを読み、まだ保存していない最新のストーリーを取得して送ります。HTTP で stayup-api とだけ話し、データベースには決して触れません。',
+      note: 'Firebase の Hacker News API はキーも User-Agent も不要でレート制限もありません — だから最初の対象に向いています。',
+    },
+
+    prereqs: {
+      heading: '始める前に',
+      items: [
+        'Python 3.11 以上と pip。',
+        '到達できる stayup-api インスタンス（公開のもの、または自分のもの）。',
+        'provider hackernews 用のコネクター鍵。そのインスタンスの管理画面で作成：コネクター鍵 → 新しい鍵、provider は hackernews。シークレットは一度だけ表示されます。',
+      ],
+    },
+
+    steps: {
+      heading: 'ステップ',
+      setup: 'フォルダーを用意し、2 つの環境変数をインスタンスとその鍵に向けます。',
+      helper:
+        '1 ファイル、check_hn.py。まず import と、唯一の api() ヘルパー — stayup-api への呼び出しはすべてこれを通り、Bearer 鍵が付きます。',
+      template:
+        '実行のたびに connector は名乗ります：表示名と表示テンプレート — アプリがその行を描画するための JSON で、アプリ側のコードは不要。stayup-api はそれを保存し、そのまま中継します。',
+      fetch:
+        'Hacker News 固有なのはここだけ：リストエンドポイントを読み、各ストーリーを取得し、1 行を形にします。version は重複排除キー — ストーリー id を文字列にしたもの。content は不透明な JSON 文字列で、上のテンプレートがアプリに読み方を伝えます。',
+      collect:
+        '追跡する各ソースについて：API に既知のバージョンを尋ね、新しいストーリーだけを残し、1 バッチで送ります。1 つのソースの失敗は API に報告し、投げません。',
+      main: 'エントリポイント：register、その後 --add でリストエンドポイントを追加するか、収集パスを回します。',
+    },
+
+    run: {
+      heading: '実行する',
+      body: 'リストを 1 つ 2 つ追跡し、それから本番実行します。provider はもう存在します — GET /connectors/providers とアプリに現れ、ユーザーが購読できます。',
+      note: 'この connector は 1 実行あたり最大 STORIES_PER_RUN 行を保持し、削除は一切しません。古いコンテンツの刈り取りは別の関心事です — provider の契約を参照。',
+    },
+
+    schedule: {
+      heading: 'スケジュールに載せる',
+      body: 'コンテナ化したいなら Dockerfile を、そしてスケジュール実行の GitHub Actions ワークフロー — あるいは任意の cron を追加します。STAYUP_API_URL と STAYUP_API_KEY をリポジトリのシークレットに設定します。',
+    },
+
+    full: {
+      heading: 'ファイル全体',
+      body: 'check_hn.py を一続きで — 上の 6 ブロックを順に。',
+    },
+
+    next: {
+      heading: 'ここから先',
+      body: 'fetch_stories を自分のソースに差し替え、テンプレートを調整する — 作業はそれだけです。参照インスタンスが動かす 5 つのコレクター（changelog、youtube、rss、scrap、github-trending）はより充実した例で、rss が最短です。すべての connector が従う契約は provider ページにあります。',
+      cta: 'provider の契約',
     },
   },
 }

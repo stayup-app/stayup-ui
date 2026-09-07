@@ -553,8 +553,8 @@ export const de: DocContent = {
     },
     existing: {
       heading: 'Beispiele zum Nachlesen',
-      body: 'Fang mit stayup-cmd-template an: ein nacktes Gerüst zum Kopieren, mit den drei Stellen markiert, die du änderst. Lies dann die echten — changelog, youtube, rss, scrap, github-trending — die die Referenzinstanz zufällig betreibt, keine Definition dessen, was StayUp abdeckt. Der rss ist das kürzeste echte Beispiel des Vertrags unten; github-trending ist die Referenz für ein reiches Anzeige-Template. Richte einen beliebigen auf deine eigene Instanz, wenn er passt.',
-      cta: 'stayup-cmd-template öffnen',
+      body: 'Das Schritt-für-Schritt-Tutorial baut aus einem leeren Ordner einen ganzen Konnektor für Hacker News — der schnellste Einstieg. Lies dann die echten — changelog, youtube, rss, scrap, github-trending — die die Referenzinstanz zufällig betreibt, keine Definition dessen, was StayUp abdeckt. Der rss ist das kürzeste echte Beispiel des Vertrags unten; github-trending ist die Referenz für ein reiches Anzeige-Template.',
+      cta: 'Dem Tutorial folgen',
     },
     creating: {
       heading: 'Deinen eigenen schreiben',
@@ -682,6 +682,69 @@ export const de: DocContent = {
           'listet deinen Provider nach einem Lauf.',
         ],
       },
+    },
+  },
+
+  tutorial: {
+    meta: {
+      title: 'StayUp — Einen Konnektor bauen',
+      description:
+        'Ein vollständiger, funktionierender StayUp-Konnektor für Hacker News, aus einem leeren Ordner gebaut — kopiere jeden Schritt.',
+    },
+    eyebrow: 'Providers',
+    title: 'Einen Konnektor bauen, Schritt für Schritt',
+    lede: 'Eine Datei, etwa 90 Zeilen, ohne eigenen API-Schlüssel. Sie folgt Hacker-News-Listen (top, best, new…), behält die Stories, die sie noch nicht gesehen hat, und reicht sie an stayup-api. Kopiere jeden Block der Reihe nach; die ganze Datei steht am Ende.',
+
+    intro: {
+      heading: 'Was du baust',
+      body: 'Ein Konnektor namens hackernews. Jede verfolgte Quelle ist ein Hacker-News-Listen-Endpunkt — https://hacker-news.firebaseio.com/v0/topstories.json und Verwandte. Bei jedem Lauf liest das Skript die Liste, holt die neuesten noch nicht gespeicherten Stories und sendet sie. Es redet nur mit stayup-api über HTTP; es berührt die Datenbank nie.',
+      note: 'Die Firebase-Hacker-News-API braucht keinen Schlüssel, keinen User-Agent und hat kein Rate-Limit — deshalb ist sie ein gutes erstes Ziel.',
+    },
+
+    prereqs: {
+      heading: 'Bevor du anfängst',
+      items: [
+        'Python 3.11+ und pip.',
+        'Eine erreichbare stayup-api-Instanz (die öffentliche oder deine eigene).',
+        'Ein Connector-Schlüssel für den Provider hackernews, in der Admin-UI dieser Instanz erstellt: Connector keys → New key, Provider hackernews. Das Secret wird nur einmal gezeigt.',
+      ],
+    },
+
+    steps: {
+      heading: 'Die Schritte',
+      setup:
+        'Lege den Ordner an und richte zwei Umgebungsvariablen auf deine Instanz und ihren Schlüssel.',
+      helper:
+        'Eine Datei, check_hn.py. Beginne mit den Imports und einem einzigen api()-Helfer — jeder Aufruf an stayup-api geht durch ihn, mit dem Bearer-Schlüssel.',
+      template:
+        'Bei jedem Lauf meldet sich der Konnektor an: sein Anzeigename und ein Anzeige-Template — das JSON, aus dem die Apps seine Zeilen rendern, ohne Code pro App. stayup-api speichert es und reicht es unverändert weiter.',
+      fetch:
+        'Der einzige Hacker-News-spezifische Teil: einen Listen-Endpunkt lesen, jede Story holen und eine Zeile formen. version ist der Dedupe-Schlüssel — die Story-id als String. content ist ein opaker JSON-String; das Template oben sagt den Apps, wie sie ihn lesen.',
+      collect:
+        'Für jede verfolgte Quelle: die API fragen, welche Versionen sie schon hat, nur die neuen Stories behalten und in einem Stapel senden. Ein Fehler bei einer Quelle wird der API gemeldet, nicht geworfen.',
+      main: 'Der Einstiegspunkt: register, dann entweder --add einen Listen-Endpunkt oder ein Sammel-Durchlauf.',
+    },
+
+    run: {
+      heading: 'Ausführen',
+      body: 'Verfolge ein, zwei Listen und mach dann einen echten Lauf. Der Provider existiert jetzt — er taucht in GET /connectors/providers und in den Apps auf, und ein Nutzer kann ihn abonnieren.',
+      note: 'Dieser Konnektor behält höchstens STORIES_PER_RUN Zeilen pro Lauf und löscht nie; das Kürzen alter Inhalte ist eine eigene Sache — siehe den Provider-Vertrag.',
+    },
+
+    schedule: {
+      heading: 'Nach Zeitplan laufen lassen',
+      body: 'Füge ein Dockerfile hinzu, wenn du es containerisieren willst, und einen geplanten GitHub-Actions-Workflow — oder irgendein Cron. Setze STAYUP_API_URL und STAYUP_API_KEY als Repository-Secrets.',
+    },
+
+    full: {
+      heading: 'Die ganze Datei',
+      body: 'check_hn.py in einem Stück — die sechs Blöcke oben, der Reihe nach.',
+    },
+
+    next: {
+      heading: 'Von hier aus',
+      body: 'Tausche fetch_stories gegen deine eigene Quelle und pass das Template an — das ist die ganze Arbeit. Die 5 Collectoren, die die Referenzinstanz betreibt (changelog, youtube, rss, scrap, github-trending), sind ausführlichere Beispiele; rss ist das kürzeste. Der Vertrag, dem jeder Konnektor folgt, steht auf der Provider-Seite.',
+      cta: 'Der Provider-Vertrag',
     },
   },
 }

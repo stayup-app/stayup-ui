@@ -538,8 +538,8 @@ export const zh: DocContent = {
     },
     existing: {
       heading: '可读的实例',
-      body: '先从 stayup-cmd-template 开始：一个供复制的裸骨架，标出了你要改动的三处地方。然后读那些真实的 — changelog、youtube、rss、scrap、github-trending — 这是参考实例恰好在运行的，并非 StayUp 所覆盖内容的定义。rss 是下面契约最短的真实示例；github-trending 是丰富展示模板的参考。如果合适，把其中任何一个指向你自己的实例。',
-      cta: '打开 stayup-cmd-template',
+      body: '分步教程从一个空文件夹开始，完整搭出一个 Hacker News 的 connector — 最快的上手方式。然后读那些真实的 — changelog、youtube、rss、scrap、github-trending — 这是参考实例恰好在运行的，并非 StayUp 所覆盖内容的定义。rss 是下面契约最短的真实示例；github-trending 是丰富展示模板的参考。',
+      cta: '跟着教程走',
     },
     creating: {
       heading: '写你自己的',
@@ -666,6 +666,67 @@ export const zh: DocContent = {
           '运行一次后列出你的 provider。',
         ],
       },
+    },
+  },
+
+  tutorial: {
+    meta: {
+      title: 'StayUp — 写一个 connector',
+      description: '一个从空文件夹搭起、完整可用的 Hacker News StayUp connector —— 逐步复制。',
+    },
+    eyebrow: 'Providers',
+    title: '写一个 connector，逐步',
+    lede: '一个文件，约 90 行，没有自己的 API key。它跟踪 Hacker News 的列表（top、best、new…），保留没见过的 story，交给 stayup-api。按顺序复制每一段；整份文件在末尾。',
+
+    intro: {
+      heading: '你在搭什么',
+      body: '一个叫 hackernews 的 connector。每个被跟踪的来源是一个 Hacker News 列表端点 —— https://hacker-news.firebaseio.com/v0/topstories.json 等。每次运行脚本读取列表，取回还没存过的最新 story 并发送。它只通过 HTTP 跟 stayup-api 通信；从不碰数据库。',
+      note: 'Firebase 的 Hacker News API 不需要 key、不需要 User-Agent，也没有限流 —— 所以很适合作为第一个目标。',
+    },
+
+    prereqs: {
+      heading: '开始之前',
+      items: [
+        'Python 3.11+ 和 pip。',
+        '一个你能访问的 stayup-api 实例（公共的，或你自己的）。',
+        '一个作用于 provider hackernews 的连接器密钥，在该实例的管理后台创建：连接器密钥 → 新建密钥，provider 选 hackernews。密文只显示一次。',
+      ],
+    },
+
+    steps: {
+      heading: '步骤',
+      setup: '建好文件夹，把两个环境变量指向你的实例和它的密钥。',
+      helper:
+        '一个文件，check_hn.py。先写 import 和唯一的 api() 辅助函数 —— 对 stayup-api 的每次调用都走它，带上 Bearer 密钥。',
+      template:
+        '每次运行 connector 都会声明自己：展示名和一个展示模板 —— 各 app 据以渲染它的行的 JSON，无需每个 app 写代码。stayup-api 存下它并原样中转。',
+      fetch:
+        '唯一跟 Hacker News 相关的部分：读一个列表端点，取每个 story，拼成一行。version 是去重键 —— story id 的字符串形式。content 是不透明的 JSON 字符串；上面的模板告诉各 app 怎么读它。',
+      collect:
+        '对每个被跟踪的来源：问 API 已经有哪些 version，只留下新的 story，一批发出。某个来源出错就上报给 API，而不是抛出。',
+      main: '入口：register，然后要么 --add 一个列表端点，要么跑一遍采集。',
+    },
+
+    run: {
+      heading: '运行它',
+      body: '跟踪一两个列表，然后跑一次真正的运行。provider 现在存在了 —— 它出现在 GET /connectors/providers 和各 app 里，用户可以订阅。',
+      note: '这个 connector 每次运行最多保留 STORIES_PER_RUN 行，从不删除；修剪旧内容是另一回事 —— 见 provider 契约。',
+    },
+
+    schedule: {
+      heading: '放到调度里',
+      body: '想容器化就加一个 Dockerfile，再加一个定时的 GitHub Actions 工作流 —— 或任何 cron。把 STAYUP_API_URL 和 STAYUP_API_KEY 设为仓库 secret。',
+    },
+
+    full: {
+      heading: '整份文件',
+      body: 'check_hn.py 一整份 —— 上面六段，按顺序。',
+    },
+
+    next: {
+      heading: '从这里出发',
+      body: '把 fetch_stories 换成你自己的来源，调一下模板 —— 这就是全部工作。参考实例运行的 5 个采集器（changelog、youtube、rss、scrap、github-trending）是更完整的例子；rss 最短。每个 connector 遵循的契约在 provider 页面。',
+      cta: 'provider 契约',
     },
   },
 }

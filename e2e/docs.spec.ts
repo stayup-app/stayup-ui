@@ -147,6 +147,31 @@ test.describe('Providers page', () => {
     await page.locator('#where-it-writes').getByRole('link').click()
     await expect(page).toHaveURL('/docs/install')
   })
+
+  test('the worked-examples section leads to the tutorial', async ({ page }) => {
+    await page.locator('#existing-providers').getByRole('link').click()
+    await expect(page).toHaveURL('/docs/providers/tutorial')
+  })
+})
+
+test.describe('Provider tutorial', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/docs/providers/tutorial')
+  })
+
+  test('shows the whole connector as copyable code', async ({ page }) => {
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    const main = page.locator('main')
+    // The Hacker News API and the connector-api calls both appear verbatim.
+    await expect(main.getByText('hacker-news.firebaseio.com').first()).toBeVisible()
+    await expect(main.getByText('/connector-api/').first()).toBeVisible()
+    await expect(page.locator('#the-whole-file')).toBeVisible()
+  })
+
+  test('leads back to the provider page', async ({ page }) => {
+    await page.locator('main').getByRole('link', { name: /^←/ }).click()
+    await expect(page).toHaveURL('/docs/providers')
+  })
 })
 
 // Régression : l'en-tête est partagé avec les pages de doc, où #features et

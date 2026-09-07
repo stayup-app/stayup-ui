@@ -552,8 +552,8 @@ export const it: DocContent = {
     },
     existing: {
       heading: 'Esempi concreti da leggere',
-      body: 'Parti da stayup-cmd-template: uno scheletro nudo fatto per essere copiato, con i tre punti da modificare segnati. Poi leggi quelli veri — changelog, youtube, rss, scrap, github-trending — che è ciò che l’istanza di riferimento si trova a far girare, non una definizione di ciò che StayUp copre. Il rss è l’esempio reale più corto del contratto qui sotto; github-trending è il riferimento per un template di visualizzazione ricco. Punta uno qualsiasi sulla tua istanza se ti va bene.',
-      cta: 'Apri stayup-cmd-template',
+      body: 'Il tutorial passo passo costruisce un connettore intero per Hacker News da una cartella vuota — la via più rapida. Poi leggi quelli veri — changelog, youtube, rss, scrap, github-trending — che è ciò che l’istanza di riferimento si trova a far girare, non una definizione di ciò che StayUp copre. Il rss è l’esempio reale più corto del contratto qui sotto; github-trending è il riferimento per un template di visualizzazione ricco.',
+      cta: 'Segui il tutorial',
     },
     creating: {
       heading: 'Scrivere il tuo',
@@ -681,6 +681,69 @@ export const it: DocContent = {
           'elenca il tuo provider dopo un’esecuzione.',
         ],
       },
+    },
+  },
+
+  tutorial: {
+    meta: {
+      title: 'StayUp — Scrivere un connettore',
+      description:
+        'Un connettore StayUp completo e funzionante per Hacker News, costruito da una cartella vuota — copia ogni passo.',
+    },
+    eyebrow: 'Providers',
+    title: 'Scrivere un connettore, passo passo',
+    lede: 'Un file, circa 90 righe, senza una chiave API propria. Segue liste di Hacker News (top, best, new…), tiene le storie che non ha visto, e le consegna a stayup-api. Copia ogni blocco nell’ordine; il file intero è alla fine.',
+
+    intro: {
+      heading: 'Cosa stai costruendo',
+      body: 'Un connettore chiamato hackernews. Ogni sorgente seguita è un endpoint di lista di Hacker News — https://hacker-news.firebaseio.com/v0/topstories.json e simili. A ogni esecuzione lo script legge la lista, recupera le storie più recenti non ancora salvate, e le invia. Parla solo con stayup-api via HTTP; non tocca mai il database.',
+      note: 'L’API Firebase di Hacker News non richiede né chiave né User-Agent e non ha limiti di richieste — per questo è un buon primo bersaglio.',
+    },
+
+    prereqs: {
+      heading: 'Prima di iniziare',
+      items: [
+        'Python 3.11+ e pip.',
+        'Un’istanza stayup-api raggiungibile (quella pubblica o la tua).',
+        'Una chiave di connettore per il provider hackernews, creata dall’admin di quell’istanza: Chiavi connettore → Nuova chiave, provider hackernews. Il segreto è mostrato una sola volta.',
+      ],
+    },
+
+    steps: {
+      heading: 'I passi',
+      setup:
+        'Prepara la cartella e punta due variabili d’ambiente sulla tua istanza e la sua chiave.',
+      helper:
+        'Un solo file, check_hn.py. Comincia dagli import e da un unico helper api() — ogni chiamata a stayup-api passa da lì, con la chiave Bearer.',
+      template:
+        'A ogni esecuzione il connettore si dichiara: il suo nome visualizzato e un template di visualizzazione — il JSON da cui le app rendono le sue righe, senza codice per app. stayup-api lo memorizza e lo ritrasmette così com’è.',
+      fetch:
+        'L’unica parte specifica di Hacker News: leggere un endpoint di lista, recuperare ogni storia e formare una riga. version è la chiave di deduplica — l’id della storia come stringa. content è una stringa JSON opaca; il template sopra dice alle app come leggerla.',
+      collect:
+        'Per ogni sorgente seguita: chiedere all’API quali versioni ha già, tenere solo le storie nuove, e inviarle in un lotto. Un errore su una sorgente viene segnalato all’API, non sollevato.',
+      main: 'Il punto d’ingresso: register, poi o --add un endpoint di lista o una passata di raccolta.',
+    },
+
+    run: {
+      heading: 'Eseguirlo',
+      body: 'Segui una o due liste, poi fai un’esecuzione vera. Il provider ora esiste — compare in GET /connectors/providers e nelle app, e un utente può abbonarsi.',
+      note: 'Questo connettore tiene al massimo STORIES_PER_RUN righe per esecuzione e non cancella mai; potare il contenuto vecchio è una questione a parte — vedi il contratto del provider.',
+    },
+
+    schedule: {
+      heading: 'Metterlo su pianificazione',
+      body: 'Aggiungi un Dockerfile se vuoi containerizzarlo, e un workflow GitHub Actions pianificato — o un cron qualsiasi. Metti STAYUP_API_URL e STAYUP_API_KEY come segreti del repository.',
+    },
+
+    full: {
+      heading: 'Il file intero',
+      body: 'check_hn.py in un pezzo solo — i sei blocchi sopra, nell’ordine.',
+    },
+
+    next: {
+      heading: 'Da qui',
+      body: 'Sostituisci fetch_stories con la tua sorgente e adatta il template — è tutto il lavoro. I 5 collettori che l’istanza di riferimento fa girare (changelog, youtube, rss, scrap, github-trending) sono esempi più completi; rss è il più corto. Il contratto che ogni connettore segue è nella pagina provider.',
+      cta: 'Il contratto del provider',
     },
   },
 }

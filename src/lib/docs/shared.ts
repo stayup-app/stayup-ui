@@ -54,6 +54,16 @@ export const GENERATE_ANCHORS = {
   production: 'going-to-production',
 } as const
 
+export const TUTORIAL_ANCHORS = {
+  intro: 'what-you-are-building',
+  prereqs: 'before-you-start',
+  steps: 'the-steps',
+  run: 'run-it',
+  schedule: 'on-a-schedule',
+  full: 'the-whole-file',
+  next: 'from-here',
+} as const
+
 // Un déploiement de prod, bout à bout : Neon (Postgres) + Cloudflare Workers
 // (API) + GitHub Actions (planificateur des connecteurs). Commandes et YAML ici,
 // prose dans chaque locale.
@@ -276,3 +286,177 @@ export const CHECKLIST_CODE = [
   'POST /connector-api/<name>/errors',
   'GET /connectors/providers',
 ] as const
+
+// ─── /docs/providers/tutorial — un connecteur Hacker News, de zéro ────────────
+// Un vrai connecteur, court, sans clé d'API externe : chaque source suivie est
+// un endpoint de liste HN (topstories.json, beststories.json…), le collecteur en
+// lit les stories et envoie les nouvelles à stayup-api. Le code n'est pas
+// traduit ; la prose de chaque étape vit dans les locales (`tutorial.steps.*`).
+
+export const TUTORIAL = {
+  head: `#!/usr/bin/env python3
+"""StayUp connector — Hacker News.
+
+Each tracked source is a Hacker News "list" endpoint (topstories.json,
+beststories.json, newstories.json…). On every run the connector reads the
+list, fetches the newest stories it has not stored yet, and sends them to
+stayup-api. It never touches a database.
+"""
+from __future__ import annotations
+`,
+
+  setup: `mkdir stayup-cmd-hackernews && cd stayup-cmd-hackernews
+python -m venv .venv && . .venv/bin/activate
+pip install requests
+# the instance you report to + a connector key for "hackernews",
+# created in the admin panel (Connector keys → New key, provider hackernews)
+export STAYUP_API_URL=http://localhost:3000
+export STAYUP_API_KEY=stayup_conn_xxxxxxxxxxxxxxxx`,
+
+  helper: `import argparse, json, os, sys
+from datetime import datetime, timezone
+import requests
+
+PROVIDER = "hackernews"
+API_URL = os.environ.get("STAYUP_API_URL", "http://localhost:3000").rstrip("/")
+API_KEY = os.environ.get("STAYUP_API_KEY")
+HN = "https://hacker-news.firebaseio.com/v0"
+STORIES_PER_RUN = 15
+
+
+def api(method, path, **kwargs):
+    """Call stayup-api's /connector-api/hackernews/* — Bearer-authenticated."""
+    if not API_KEY:
+        sys.exit("STAYUP_API_KEY is not set.")
+    r = requests.request(
+        method, f"{API_URL}/connector-api/{PROVIDER}{path}",
+        headers={"Authorization": f"Bearer {API_KEY}"}, timeout=30, **kwargs,
+    )
+    r.raise_for_status()
+    return r.json() if r.content else None`,
+
+  template: `# How the web / desktop / mobile apps render this connector's rows.
+# stayup-api stores it and relays it untouched — it never reads it.
+DISPLAY_NAME = "Hacker News"
+SORT_ORDER = 60
+
+TEMPLATE = {
+    "version": 1,
+    "display": {
+        "name": DISPLAY_NAME,
+        "accent": "#ff6600",
+        "sortOrder": SORT_ORDER,
+        "feedLabel": [{"path": "$source.url", "format": "domain"}],
+    },
+    "item": {
+        "parseContentAsJson": True,
+        "fields": {"title": "title", "subtitle": "by", "url": "url",
+                   "timestamp": "$row.datetime"},
+    },
+    "list": {"layout": "row", "primary": "title", "secondary": "subtitle",
+             "meta": "timestamp"},
+    "detail": {"mode": "text", "title": "title", "subtitle": "by",
+               "openUrl": "url", "openLabel": "Open on Hacker News"},
+    "form": {
+        "label": "Hacker News list endpoint",
+        "placeholder": HN + "/topstories.json",
+        "pattern": r"^https://hacker-news\\.firebaseio\\.com/v0/[a-z]+stories\\.json$",
+        "transform": {"trim": True},
+    },
+}
+
+
+def register():
+    api("POST", "/register",
+        json={"displayName": DISPLAY_NAME, "sortOrder": SORT_ORDER, "template": TEMPLATE})`,
+
+  fetch: `def fetch_stories(list_url):
+    """The newest stories of one HN list, newest first, ready for /items."""
+    ids = requests.get(list_url, timeout=30).json()[:STORIES_PER_RUN]
+    rows = []
+    for story_id in ids:
+        story = requests.get(f"{HN}/item/{story_id}.json", timeout=30).json()
+        if not story or story.get("type") != "story" or not story.get("title"):
+            continue
+        rows.append({
+            "version": str(story["id"]),                       # dedupe key
+            "content": json.dumps({
+                "title": story["title"],
+                "url": story.get("url")
+                       or f"https://news.ycombinator.com/item?id={story['id']}",
+                "by": story.get("by", ""),
+            }, ensure_ascii=False),
+            "datetime": datetime.fromtimestamp(story["time"], tz=timezone.utc).isoformat(),
+        })
+    return rows`,
+
+  collect: `def collect():
+    now = datetime.now(tz=timezone.utc).isoformat()
+    sources = api("GET", "/sources")["sources"]
+    if not sources:
+        print("No list tracked yet. Run with --add <HN list endpoint>.")
+        return
+
+    for source in sources:
+        try:
+            # every id already stored for this source → skip those
+            known = set(api("GET", f"/sources/{source['id']}/versions")["versions"])
+            new_rows = [r for r in fetch_stories(source["url"])
+                        if r["version"] not in known]
+            if new_rows:
+                api("POST", "/items", json={"items": [
+                    {**r, "repositoryId": source["id"], "executedAt": now, "success": True}
+                    for r in new_rows
+                ]})
+                print(f"[{source['url']}] +{len(new_rows)}")
+        except Exception as exc:
+            api("POST", "/errors", json={
+                "repositoryId": source["id"], "error": str(exc), "executedAt": now})
+            print(f"[{source['url']}] {exc}", file=sys.stderr)`,
+
+  main: `def main():
+    parser = argparse.ArgumentParser(description="StayUp — Hacker News connector.")
+    parser.add_argument("--add", metavar="URL", help="Track a HN list endpoint and exit.")
+    args = parser.parse_args()
+
+    register()  # idempotent — safe to call on every run
+
+    if args.add:
+        source = api("POST", "/sources", json={"url": args.add})
+        print(f"Tracking {source['url']} (source #{source['id']}).")
+        return
+
+    collect()
+
+
+if __name__ == "__main__":
+    main()`,
+
+  run: `python check_hn.py --add https://hacker-news.firebaseio.com/v0/topstories.json
+python check_hn.py --add https://hacker-news.firebaseio.com/v0/beststories.json
+python check_hn.py            # first real run: registers, then collects
+
+# it now shows up:
+curl -s "$STAYUP_API_URL/connectors/providers" -H "Authorization: Bearer <user JWT>"`,
+
+  workflow: `# .github/workflows/daily.yml
+name: Hacker News
+on:
+  schedule:
+    - cron: "17 */2 * * *"     # every 2 hours, offset so it isn't on the hour
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip install requests
+      - run: python check_hn.py
+        env:
+          STAYUP_API_URL: \${{ secrets.STAYUP_API_URL }}
+          STAYUP_API_KEY: \${{ secrets.STAYUP_API_KEY }}`,
+} as const
