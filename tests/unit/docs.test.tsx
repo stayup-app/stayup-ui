@@ -4,8 +4,9 @@ import { getDoc } from '@/lib/docs'
 import { en } from '@/lib/docs/en'
 import {
   CHECKLIST_CODE,
+  CONNECTOR_ENDPOINTS,
+  CONNECTOR_ITEM_FIELDS,
   ENGINES,
-  ENGINE_TABLES,
   ENV_VARS,
   NAMING_ROWS,
   SCHEMA_COMMANDS,
@@ -109,11 +110,12 @@ describe('documentation dictionaries', () => {
       const doc = getDoc(lang)
       expect(doc.install.env.descriptions, lang).toHaveLength(ENV_VARS.length)
       expect(doc.providers.creating.naming.rows, lang).toHaveLength(NAMING_ROWS.length)
-      expect(doc.providers.contract.optionalDescriptions, lang).toHaveLength(
-        ENGINE_TABLES.postgres.optionalColumns.length,
+      // Une ligne de description par champ d'item et par endpoint : un décalage
+      // laisserait une cellule vide dans le tableau du contrat.
+      expect(doc.providers.contract.itemFieldDescriptions, lang).toHaveLength(
+        CONNECTOR_ITEM_FIELDS.length,
       )
-      // Un onglet par moteur : une note manquante laisserait un panneau muet.
-      expect(doc.providers.contract.engineNotes, lang).toHaveLength(ENGINES.length)
+      expect(doc.providers.contract.endpointPurposes, lang).toHaveLength(CONNECTOR_ENDPOINTS.length)
       expect(doc.install.schema.engineNotes, lang).toHaveLength(ENGINES.length)
       expect(doc.providers.contract.checklist.items, lang).toHaveLength(CHECKLIST_CODE.length)
     }
@@ -147,9 +149,9 @@ describe('documentation dictionaries', () => {
   })
 
   // Le reproche fait à l'ancienne page : elle mélangeait deux publics et ouvrait
-  // sur du SQL. Le contrat de provider (la table connector_<name>) reste cantonné
-  // à la page des providers ; l'install peut renvoyer vers `provider_registry`
-  // dans un point de dépannage, mais pas enseigner le contrat.
+  // sur du SQL. Le détail des tables internes (connector_*) reste cantonné à la
+  // page des providers ; l'install peut renvoyer vers `provider_registry` dans un
+  // point de dépannage, mais pas enseigner le contrat.
   it('keeps the two journeys separate', () => {
     for (const lang of LANGUAGES) {
       const doc = getDoc(lang)
@@ -172,20 +174,17 @@ describe('shared snippets', () => {
     }
   })
 
-  // Ce que la doc promet : d'un moteur à l'autre, seuls le dialecte et les types
-  // changent, jamais les noms — sinon un provider serait à réécrire par base.
-  it('names the same things whichever engine is shown', () => {
-    for (const engine of ENGINES) {
-      const t = ENGINE_TABLES[engine.id]
-      expect(t.connector, engine.label).toContain('connector_<name>')
-      expect(t.registry, engine.label).toContain('provider_registry')
-      expect(t.repository, engine.label).toContain('repository')
-      expect(t.log, engine.label).toContain('log')
-      expect(t.selectSources, engine.label).toContain('<name>')
-      expect(
-        t.optionalColumns.map((col) => col.split(/[ :]/)[0]),
-        engine.label,
-      ).toEqual(['datetime', 'version'])
+  // Le contrat d'un connecteur est HTTP : chaque appel est sous
+  // /connector-api/<name>/ et n'est jamais une requête SQL.
+  it('states the connector contract as HTTP calls, not SQL', () => {
+    for (const e of CONNECTOR_ENDPOINTS) {
+      expect(e.call).toMatch(/^(GET|POST|PATCH|DELETE) \/connector-api\/<name>\//)
+    }
+    expect(CONNECTOR_ENDPOINTS.some((e) => e.call.includes('/register'))).toBe(true)
+    expect(CONNECTOR_ENDPOINTS.some((e) => e.call.includes('/items'))).toBe(true)
+    // Aucun DDL ne fuit dans les snippets partagés.
+    for (const snippet of Object.values(SNIPPETS)) {
+      expect(snippet).not.toMatch(/CREATE TABLE|connector_<name>/)
     }
   })
 

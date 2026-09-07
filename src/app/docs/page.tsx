@@ -74,17 +74,17 @@ export default async function DocsHomePage() {
                 title={h.concept.diagram.providers}
                 subtitle={h.concept.diagram.providersSub}
               />
-              <DiagramArrow label={h.concept.diagram.database} />
-              <DiagramBox
-                title={h.concept.diagram.database}
-                subtitle={h.concept.diagram.databaseSub}
-                accent="var(--sky)"
-              />
               <DiagramArrow label={h.concept.diagram.api} />
               <DiagramBox
                 title={h.concept.diagram.api}
                 subtitle={h.concept.diagram.apiSub}
                 accent="var(--sage)"
+              />
+              <DiagramArrow label={h.concept.diagram.database} />
+              <DiagramBox
+                title={h.concept.diagram.database}
+                subtitle={h.concept.diagram.databaseSub}
+                accent="var(--sky)"
               />
               <DiagramArrow label={h.concept.diagram.apps} />
               <DiagramBox title={h.concept.diagram.apps} subtitle={h.concept.diagram.appsSub} />

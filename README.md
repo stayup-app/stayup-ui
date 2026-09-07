@@ -7,21 +7,29 @@
 
 **Live at:** https://stayup-ui.vercel.app
 
-Next.js web interface for StayUp — a GitHub and YouTube changelog aggregator.
+Next.js web interface for StayUp — an aggregator for everything you follow.
 
 Follow the sources that matter to you (GitHub releases, YouTube channels, RSS
-feeds, scraped web pages) and read every update in a single unified feed.
+feeds, scraped web pages, and any provider added to the API) and read every
+update in a single unified feed.
 
 ## Features
 
 - **Unified feed** — all your sources merged into one chronological list, with
   read/unread tracking and keyboard navigation (`↑` / `↓`)
-- **Multiple providers** — GitHub changelogs, YouTube channels, RSS feeds and
-  web scraping
-- **Scraping requests** — users can request a new page to scrape; admins review
-  and approve it
-- **Admin panel** — manage users, feeds and scraping requests
-- **i18n** — French and English, switchable at runtime
+- **Provider-agnostic rendering** — the feed renders each provider from the
+  display template the API relays, so a new provider needs no UI code
+- **Multiple API instances** — point the app at any `stayup-api` (checked before
+  it's saved, with an account-creation flow if needed); switch between the ones
+  you've added
+- **Flux requests** — for providers in manual-approval mode, users request a new
+  source and admins review it
+- **Admin panel** — users, admins, providers (display name, ordering, approval
+  mode), repositories, connector API keys, and secondary databases
+- **Docs site** — self-hosting, provider, admin and script-generator guides at
+  `/docs`
+- **i18n** — English, French, German, Spanish, Italian, Portuguese, Japanese and
+  Chinese, switchable at runtime
 - **Auth** — email/password plus Google and GitHub OAuth
 
 ## Requirements
@@ -105,12 +113,15 @@ docker compose --profile dev up dev # dev server with hot reload
 src/
 ├── app/              # Next.js App Router (routes, layouts, API routes)
 │   ├── (auth)/       # login / register
+│   ├── (admin-login)/# admin sign-in
 │   ├── (protected)/  # feed, profile, scrap — auth required
-│   ├── admin/        # admin panel
+│   ├── admin/        # admin panel (users, admins, providers, repositories,
+│   │                 #   connector keys, data sources, settings)
+│   ├── docs/         # public documentation site
 │   └── api/          # route handlers
 ├── components/       # React components, grouped by domain
 ├── context/          # React contexts (language, read state)
-├── lib/              # API client, server actions, translations, helpers
+├── lib/              # API client, server actions, translations, docs content
 ├── types/            # shared TypeScript types
 └── middleware.ts     # route protection
 ```

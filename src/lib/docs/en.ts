@@ -27,8 +27,8 @@ export const en = {
       heading: 'The idea, in four sentences',
       points: [
         'StayUp shows you new content from the sources you follow. What counts as a source is not fixed — it is whatever some provider knows how to fetch.',
-        'A provider is a small program that fetches one kind of source and writes what it finds into the instance’s database. Covering a new kind of source means writing a provider; nothing else in StayUp changes.',
-        'The StayUp API reads that database and serves it to the apps. It hardcodes no kind of source: on each request it asks the database which providers exist right now, and hands back their display manifest untouched.',
+        'A provider is a small program that fetches one kind of source and sends what it finds to the instance’s API over HTTP — it never touches the database. Covering a new kind of source means writing a provider; nothing else in StayUp changes.',
+        'The StayUp API owns the database and serves it to the apps. It hardcodes no kind of source: a provider exists as soon as it has registered or sent any content, and the API hands back each provider’s display manifest untouched.',
         'The apps — web, desktop, mobile — read the API. Each can be pointed at any instance, so at any database, and each can display a provider it has never heard of.',
       ],
       note: 'The set of sources is open by construction. An instance shows exactly the providers that run against its database — no built-in list, nothing to register with a central authority.',
@@ -38,11 +38,12 @@ export const en = {
         sourcesItems:
           'a podcast feed · a forum thread · a status page · anything a program can read',
         providers: 'Providers',
-        providersSub: 'one small program per kind of source, on a schedule',
+        providersSub: 'one small program per kind of source, on a schedule, over HTTP',
         database: 'The database',
-        databaseSub: 'PostgreSQL, MySQL, SQLite or MongoDB — everything collected, in one place',
+        databaseSub:
+          'PostgreSQL, MySQL, SQLite or MongoDB — everything the API stores, in one place',
         api: 'StayUp API',
-        apiSub: 'reads the database, serves the apps, hardcodes nothing',
+        apiSub: 'takes what providers send, serves the apps, hardcodes nothing',
         apps: 'Web · Desktop · Mobile · Admin',
         appsSub: 'each one configurable to another instance',
       },
@@ -63,7 +64,7 @@ export const en = {
         {
           term: 'Provider (a.k.a. connector)',
           meaning:
-            'A standalone program that fetches one kind of source and writes rows into the database. “Connector” and “provider” are the same thing; the repos are named stayup-cmd-*.',
+            'A standalone program that fetches one kind of source and sends rows to the API, authenticated with a connector key. “Connector” and “provider” are the same thing; the repos are named stayup-cmd-*.',
         },
         {
           term: 'Source (a.k.a. flux) — a repository row',
@@ -78,7 +79,7 @@ export const en = {
         {
           term: 'Display template',
           meaning:
-            'An optional JSON manifest a provider stores in provider_registry.template. It tells the apps how to render that provider’s rows. No template → a plain generic card.',
+            'An optional JSON manifest a provider registers with the API (stored in provider_registry.template). It tells the apps how to render that provider’s rows. No template → a plain generic card.',
         },
         {
           term: 'Admin',
@@ -107,7 +108,7 @@ export const en = {
         'Write a provider — a program that fetches a source StayUp does not cover yet, and stores what it finds. Includes display templates.',
       providersCta: 'Provider guide',
       relation:
-        'Running an instance and writing a provider are related but separate. A provider never talks to the API, only to the database — so you can write one without reading the install guide. Running it is another matter: it needs write access to the database it feeds, and on the public instance you do not have that. In practice, your own provider goes with your own instance.',
+        'Running an instance and writing a provider are related but separate. Writing one needs nothing from the install guide — it is just a program that calls the API. Running it is another matter: it needs a connector key on the instance it feeds, and on the public instance you do not have that. In practice, your own provider goes with your own instance.',
     },
   },
 
@@ -146,7 +147,7 @@ export const en = {
         'A thin, stateless layer over that database. It hardcodes no provider name — on each request it asks the database what is there. Runs on Node, in Docker, or on Cloudflare Workers.',
       providers: 'Providers',
       providersBody:
-        'The programs that actually fill the database. Standalone repos, run on a schedule, talking only to the database. Without at least one, your instance works but shows nothing.',
+        'The programs that actually fill the instance. Standalone repos, run on a schedule, talking only to the API — with a connector key an admin issues them. Without at least one, your instance works but shows nothing.',
       adminUi: 'The admin web UI (optional)',
       adminUiBody:
         'A deployment of the web app opened at /admin. Lets you manage admins, set each provider’s approval mode, work the flux-request queue, and curate users and fluxes. Skip it and the API still works — you just lose the browser console.',
@@ -168,12 +169,13 @@ export const en = {
         'Start the database and the API: docker compose up -d db api. The compose file seeds the schema into Postgres on first init; the API listens on port 3000.',
         'If you did not rely on that auto-init, apply the schema once: psql "$DATABASE_URL" -f src/db/schema.sql. It only ever adds, so it is safe to re-run.',
         'Create the first super admin: npm run create-admin -- root@example.com "Root" \'a-strong-password\'. This is the account that manages the admin web UI.',
-        'Add a provider. Clone one — git clone https://github.com/stayup-app/stayup-cmd-rss.git — point its DATABASE_URL at the same database, install its deps, then: python fetch_rss.py --add https://blog.example.com/feed.xml and python fetch_rss.py. The first real run creates its tables and registers itself.',
+        'Issue a connector key. In the admin web UI, Connector keys → New key, provider rss — or POST /ui/connector-keys. The secret (stayup_conn_…) is shown once; copy it.',
+        'Add a provider. Clone one — git clone https://github.com/stayup-app/stayup-cmd-rss.git — set STAYUP_API_URL to http://localhost:3000 and STAYUP_API_KEY to the key above, install its deps, then: python fetch_rss.py --add https://blog.example.com/feed.xml and python fetch_rss.py. The first real run registers the provider with the API, then collects.',
         'Check the API sees it: curl localhost:3000/connectors/providers should now list rss with its display manifest.',
         'Open the desktop app, go to Profile → API URL, paste http://localhost:3000, save. Register an account, then add a flux — the rss entry appears once the connector has run.',
         'Schedule the connector so it keeps running: a cron entry, a systemd timer, a GitHub Actions schedule, or the Ofelia container the generator sets up.',
       ],
-      note: 'The API never runs the connectors. They are separate programs on their own schedule; the only thing they share with the API is the database.',
+      note: 'The API never runs the connectors. They are separate programs on their own schedule; all they need from the API is its URL and a connector key.',
     },
 
     requirements: {
@@ -302,7 +304,7 @@ export const en = {
         {
           symptom: 'A provider shows up as a plain text card, sometimes raw JSON.',
           cause:
-            'No usable display template. The provider has not written provider_registry.template, or its content column is a JSON string with no template to interpret it. See the provider guide.',
+            'No usable display template. The provider has not registered one with the API, or its content is a JSON string with no template to interpret it. See the provider guide.',
         },
         {
           symptom: 'Adding a flux says “request sent” instead of subscribing.',
@@ -509,9 +511,9 @@ export const en = {
       dbHeading: 'The database — Neon',
       dbSteps: [
         'Create a Neon account, then a project. Pick the region closest to where the API will run.',
-        'In the project, turn on connection pooling and copy the pooled connection string — its host has “-pooler” in it. Workers opens a fresh connection per request; the pooled endpoint is what keeps that from exhausting PostgreSQL. This one string is used by the API and by every connector.',
+        'In the project, turn on connection pooling and copy the pooled connection string — its host has “-pooler” in it. Workers opens a fresh connection per request; the pooled endpoint is what keeps that from exhausting PostgreSQL. This string is for the API only — connectors never see it.',
         'From your machine, apply the schema and create the first super admin in one command. This is the only step that must run from Node — Workers never applies the schema itself:',
-        'That command ran src/db/schema.sql and inserted the admin. The connector tables (connector_*, provider_registry) are not there yet — the first connector run creates them (step 3).',
+        'That command ran src/db/schema.sql and inserted the admin. No provider is registered yet — the first connector run does that (step 3).',
       ],
       dbNote:
         'Neon’s free tier suspends the database when idle; the first request after a pause takes about a second to wake it. Fine for a personal instance.',
@@ -529,13 +531,14 @@ export const en = {
 
       connHeading: 'The connectors — GitHub Actions',
       connIntro:
-        'A connector is a Python script that reads DATABASE_URL, does one round and exits. It needs something to run it on a schedule; GitHub Actions does that for free with schedule: and workflow_dispatch:. Every stayup-cmd-* repo already ships .github/workflows/daily.yml.',
+        'A connector is a Python script that reads STAYUP_API_URL and STAYUP_API_KEY, does one round against the API and exits. It needs something to run it on a schedule; GitHub Actions does that for free with schedule: and workflow_dispatch:. Every stayup-cmd-* repo already ships .github/workflows/daily.yml.',
       connSteps: [
+        'In the admin UI (or POST /ui/connector-keys), issue one connector key per provider you will run — rss, youtube, and so on. Each secret is shown once.',
         'Fork each connector you want: stayup-cmd-rss, stayup-cmd-youtube, stayup-cmd-changelog, stayup-cmd-github-trending, stayup-cmd-scrap.',
-        'In each fork: Settings → Secrets and variables → Actions → New repository secret. Name it DATABASE_URL, value = the same pooled Neon string the API uses.',
+        'In each fork: Settings → Secrets and variables → Actions → New repository secret. Add STAYUP_API_URL (your Workers URL) and STAYUP_API_KEY (that provider’s key).',
         'The workflow is already there — this is all of it:',
-        'Set the cadence with the cron: line (UTC). Stagger the connectors so they do not all hit the database in the same minute:',
-        'Prime it: Actions tab → the workflow → Run workflow. The first run creates connector_<name> and registers the provider in provider_registry; after it, the provider appears in the apps and in GET /connectors/providers.',
+        'Set the cadence with the cron: line (UTC). Stagger the connectors so they do not all hit the API in the same minute:',
+        'Prime it: Actions tab → the workflow → Run workflow. The first run registers the provider with the API; after it, the provider appears in the apps and in GET /connectors/providers.',
         'GitHub pauses scheduled workflows in a repo with no activity for 60 days. A commit or a manual run re-arms them.',
       ],
       connNote:
@@ -565,39 +568,39 @@ export const en = {
 
     what: {
       heading: 'What a provider actually is',
-      body: 'Not a plugin, not a module to register: an ordinary program, in any language, run on a schedule. It reads the list of sources meant for it, fetches each one, keeps what is new, and writes it to the database. The API picks it up on its own, and the three apps display it — without a line of code changing anywhere.',
-      note: 'A provider never calls the StayUp API. It talks to the database, and only to the database.',
+      body: 'Not a plugin, not a module to register: an ordinary program, in any language, run on a schedule. It asks the API for the sources meant for it, fetches each one, keeps what is new, and posts it back to the API. The API picks it up on its own, and the three apps display it — without a line of code changing anywhere.',
+      note: 'A provider only ever talks to the StayUp API, over HTTP, with a connector key. It never touches the database.',
       diagram: {
         title: 'A provider, step by step',
-        sources: 'Its sources, read from the database',
+        sources: 'Its sources, fetched from the API',
         sourcesItems: 'the podcast feeds this provider was told to track',
         fetch: 'Fetch each feed',
         compare: 'Keep only what was not there before',
-        store: 'Write to the database',
+        store: 'Post it back to the API',
         exposed: 'The API exposes it, the apps display it',
       },
       steps: {
         heading: 'On every run',
         items: [
-          'Read the sources meant for you.',
+          'Register your display name and template with the API.',
+          'Ask the API for the sources meant for you.',
           'Fetch each one from the outside world.',
-          'Compare against what you stored last time, and keep only what is new.',
-          'Write the new items to the database.',
-          'Drop what has aged out, and log a failure instead of crashing on it.',
-          'Re-declare your display name and template, so a fresh database learns about you on the first run.',
+          'Ask the API where you left off, and keep only what is new.',
+          'Post the new items back to the API, in one batch.',
+          'Ask the API to drop what has aged out, and report a failure instead of crashing on it.',
         ],
       },
     },
 
     access: {
-      heading: 'Before you start: where will it write?',
-      body: 'A provider needs write access to the database of the instance it feeds. On the public instance you do not have that, so in practice a provider of your own goes with an instance of your own. Writing one requires nothing from the install guide; running one requires a database you can write to.',
+      heading: 'Before you start: what do you need?',
+      body: 'A provider needs the URL of the instance it feeds and a connector key for its name, issued by an admin of that instance. On the public instance you do not have that, so in practice a provider of your own goes with an instance of your own. Writing one requires nothing from the install guide; running one requires a key on the instance you feed.',
       cta: 'Install guide',
     },
 
     existing: {
       heading: 'Worked examples to read',
-      body: 'Start from stayup-cmd-template: a bare skeleton built to be copied, with the three spots you change marked out. Then read the real ones — changelog, youtube, rss, scrap, github-trending — which are what the reference instance happens to run, not a definition of what StayUp covers. The rss one is the shortest real example of the contract below; github-trending is the reference for a rich display template. Point any of them at your own database if it suits you.',
+      body: 'Start from stayup-cmd-template: a bare skeleton built to be copied, with the three spots you change marked out. Then read the real ones — changelog, youtube, rss, scrap, github-trending — which are what the reference instance happens to run, not a definition of what StayUp covers. The rss one is the shortest real example of the contract below; github-trending is the reference for a rich display template. Point any of them at your own instance if it suits you.',
       cta: 'Open stayup-cmd-template',
     },
 
@@ -610,28 +613,28 @@ export const en = {
         columnWhere: 'Where',
         columnExample: 'For “podcast”',
         rows: [
-          'Your data table',
+          'The API path your script calls',
           'The sources that belong to you',
           'Your row in the registry',
           'The provider field the apps send when adding a flux',
         ],
-        note: 'There is nothing to reserve in advance: the name simply is whatever you create the table as. Two providers only collide by picking the same one.',
+        note: 'There is nothing to reserve in advance: the name is simply the one your connector key is scoped to and the one you register. Two providers only collide by picking the same one.',
       },
       shape: {
         heading: 'What you store',
-        body: 'One row per item you found. The content itself can be plain text or JSON — your call. With no display template the apps show a plain card: the beginning of the content, the date, your display name. That works, it is just visually sober, and it shows raw JSON if that is what your content column holds. A template fixes that, and it is the next section.',
+        body: 'One row per item you found. The content itself can be plain text or JSON — your call; the API never parses it. With no display template the apps show a plain card: the beginning of the content, the date, your display name. That works, it is just visually sober, and it shows raw JSON if that is what your content holds. A template fixes that, and it is the next section.',
       },
       schedule: {
         heading: 'Running it on a schedule',
-        body: 'Copy any existing collector: a root Dockerfile whose ENTRYPOINT runs the script once, and a job that runs it with the database URL in the environment. Nothing requires a particular CI — a systemd timer, plain cron, or the Ofelia container the generator sets up all do the same.',
+        body: 'Copy any existing collector: a root Dockerfile whose ENTRYPOINT runs the script once, and a job that runs it with STAYUP_API_URL and STAYUP_API_KEY in the environment. Nothing requires a particular CI — a systemd timer, plain cron, or the Ofelia container the generator sets up all do the same.',
       },
     },
 
     templates: {
       heading: 'Display templates',
-      body: 'A template is a JSON manifest your provider stores in provider_registry.template, in the same upsert as its display name. The API relays it untouched through GET /connectors/providers; each app has an engine that reads it and renders your rows — a list layout, and a reading pane in one of seven modes: text, html, media, audio, gallery, table, link-list. No code in the apps knows your provider’s name.',
+      body: 'A template is a JSON manifest your provider sends as the template field of its register call. The API stores it in provider_registry.template and relays it untouched through GET /connectors/providers; each app has an engine that reads it and renders your rows — a list layout, and a reading pane in one of seven modes: text, html, media, audio, gallery, table, link-list. No code in the apps knows your provider’s name.',
       fallbackNote:
-        'A provider with no template (column NULL, unreadable JSON, or an unrecognised version) still works — the apps fall back to the plain card. A template is strongly recommended the moment your content is anything but a short line of text.',
+        'A provider with no template (never sent, unreadable JSON, or an unrecognised version) still works — the apps fall back to the plain card. A template is strongly recommended the moment your content is anything but a short line of text.',
       cta: 'Full template reference',
     },
 
@@ -655,70 +658,76 @@ export const en = {
             'trim, strip a known prefix/suffix, or extract a capture group — so a pasted full URL and a bare handle end up the same.',
         },
       ],
-      note: 'The apps store the built URL as the source; your collector reads it back from the repository row like any other.',
+      note: 'The apps store the built URL as the source; your collector gets it back in its source list like any other.',
     },
 
     fluxApproval: {
       heading: 'Approval mode',
-      body: 'Every provider has a flux_approval column in the registry: auto (default) or manual. auto subscribes a user immediately when they add a new flux; manual turns it into a request an admin must approve. A provider can seed its own default in the upsert; an admin overrides it per instance from /admin/providers. Scraping ships as manual for a reason — running a source costs something there.',
+      body: 'Every provider has a flux_approval mode in the registry: auto (default) or manual. auto subscribes a user immediately when they add a new flux; manual turns it into a request an admin must approve. It is an operator setting — a connector cannot set it for itself; an admin sets it per instance from /admin/providers. Scraping is seeded to manual for a reason — running a source costs something there.',
       note: 'This only gates bringing a brand-new source in. Subscribing to a source that already exists is never gated.',
     },
 
     contract: {
       heading: 'Technical contract',
       lede: 'Reference material. You need this to write a provider, not to understand StayUp.',
-      diagramTitle: 'What your script may touch',
+      diagramTitle: 'What your script calls',
       yourScript: 'Your provider',
-      readOnly: 'read only',
-      readWrite: 'read and write — entirely yours',
-      upsertOne: 'one row: yours',
-      writeOnError: 'write on error',
-      repositoryDesc: 'the sources to track',
-      connectorDesc: 'the content you collect',
-      registryDesc: 'your display name + template',
-      logDesc: 'failures, instead of crashing',
+      announce: 'Announce',
+      read: 'Read',
+      write: 'Write',
+      seed: 'Seed',
+      announceDesc: 'register your display name + template, every run',
+      readDesc: 'the sources to collect, and where you left off',
+      writeDesc: 'new rows, a config merge, retention, errors',
+      seedDesc: 'follow a new URL — the --add flag',
       warning:
-        'Never write into another provider’s table, nor into the user, session, account, admin, subscription or flux_request tables: those belong to the API and the web app.',
-      tablesHeading: 'The four tables',
-      tablesIntro:
-        'Your init step, run at the start of every execution, must make sure these exist. Every statement is idempotent — safe to run every time, and safe if another provider or the API created the shared ones first.',
-      engineIntro:
-        'Pick the engine your instance runs. The names never change from one tab to the next — only the dialect and the types do, which is why a provider written against one engine reads the same against another.',
-      engineNotes: [
-        'The reference dialect, and what the public instance runs.',
-        'Same tables, MySQL types. A URL has to fit in an indexable VARCHAR, hence the explicit length.',
-        'No server: your provider and the API open the same file. Dates and JSON are stored as text, which the API parses back on read.',
-        'A collection instead of a table, and no schema to declare — but two rules. A repository document carries a numeric _id, drawn from the counters collection, because the contract designates a source by a number. And nothing cascades: what you write, you clean up.',
+        'The connector holds no database credentials and knows no table names. Its key only works under /connector-api/<its own name>/*; it cannot write for another provider, nor reach users, admins or subscriptions.',
+      authHeading: 'Authentication',
+      authBody:
+        'An admin issues a connector key for your provider name (admin UI → Connector keys, or POST /ui/connector-keys). The secret, stayup_conn_…, is shown once. Your script sends it as Authorization: Bearer <key> on every call, and reads it — with the instance URL — from STAYUP_API_KEY and STAYUP_API_URL.',
+      endpointsHeading: 'The endpoints',
+      endpointsIntro:
+        'All under /connector-api/<name>/, all needing the key. Roughly in the order a run uses them.',
+      columnCall: 'Call',
+      columnPurpose: 'What it does',
+      endpointPurposes: [
+        'Announce yourself: display name, sort order, optional template. Idempotent — call it every run. sortOrder is not overwritten once set; template is only replaced when the field is present.',
+        'Follow a new URL. Idempotent on the URL: 201 when created, 200 when it already existed, 409 if another provider owns it.',
+        'Your list of sources to collect this run — each with its id, url and config.',
+        'The last stored version for that source, or null on the first run — where to resume.',
+        'Every version already stored for that source — for a connector that back-fills gaps rather than only resuming after the newest.',
+        'Shallow-merge keys into that source’s config (e.g. store the channel title for labelling). Never a full replace.',
+        'Write a batch of collected rows. content is an opaque string the API never parses.',
+        'Prune rows older than retentionDays for that source.',
+        'Record a collection failure. It lands in the API’s error log.',
       ],
-      repositoryTitle: 'repository — shared, you mostly read from it',
-      repositoryBody:
-        'One row is one thing to track: a podcast feed, a subreddit, whatever your provider calls a source. The type column must equal your provider name. The config column is free-form JSON that only your script defines and interprets.',
-      connectorTitle: 'connector_<name> — yours, entirely',
-      connectorBody: 'Optional columns, used when present but never required:',
-      optionalDescriptions: [
-        'the content’s own timestamp, preferred over the execution time when sorting by what is newest.',
-        'a short label shown next to rich renders — a release tag, a video id, and so on.',
+      itemHeading: 'The item shape',
+      itemIntro: 'Each row in the POST /connector-api/<name>/items batch:',
+      required: 'required',
+      optional: 'optional',
+      itemFieldDescriptions: [
+        'the id of the source, from your source list.',
+        'an opaque string — plain text or a JSON string, your choice.',
+        'ISO timestamp of this run.',
+        'whether the fetch for this source succeeded.',
+        'the dedupe key; also shown next to rich renders (a release tag, a video id).',
+        'the content’s own timestamp, preferred over executedAt when sorting by what is newest.',
+        'free-form JSON; only the scraping provider uses it today.',
       ],
-      registryTitle: 'provider_registry — shared, one row for you',
-      registryBody:
-        'The sort order only affects the order providers appear in across the apps; any integer will do. The template column is your display manifest (previous sections); leave it NULL and your provider still works, just with the plain card. flux_approval is an operator setting — do not fight an admin over it, but you may seed a sensible default. Skip the row entirely and the API falls back to a capitalized version of your name.',
-      logTitle: 'log — shared, optional but recommended',
-      logBody:
-        'Write here instead of crashing when one source fails, and carry on with the others.',
       addingSources: {
         heading: 'Getting sources in',
-        body: 'Two ways. Support an --add flag that inserts a row and exits — handy to seed directly against the database. The other way, the one end users actually take, is adding a source from an app, which posts to POST /providers/<name>/fluxes; the provider field must equal your table suffix.',
+        body: 'Two ways. A --add flag that calls POST /connector-api/<name>/sources and exits — handy to seed from the command line. The other, the one end users actually take, is adding a source from an app, which posts to POST /ui/users/<userId>/repositories; the provider field must equal your name, and it routes through the auto/manual approval flow.',
       },
       checklist: {
         heading: 'Before you call it done',
         items: [
-          'created with at least an id, a source reference, the content, a timestamp and a success flag.',
-          'row upserted on every run, with your display name and (recommended) your template.',
-          'sources read with your provider name.',
-          'old entries pruned — or the absence of retention documented.',
-          'per-source failures written here instead of crashing the run.',
+          'called every run, with your display name and (recommended) your template.',
+          'gives you the sources to collect this run.',
+          'sends new rows in one batch, deduped against the stored version.',
+          'tells you where you left off for each source.',
+          'prunes old entries — or the absence of retention is documented.',
+          'per-source failures reported instead of crashing the run.',
           'lists your provider after one run.',
-          'returns your data.',
         ],
       },
     },

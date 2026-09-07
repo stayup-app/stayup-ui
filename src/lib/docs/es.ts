@@ -19,8 +19,8 @@ export const es: DocContent = {
       heading: 'La idea, en cuatro frases',
       points: [
         'StayUp te muestra contenido nuevo de las fuentes que sigues. Lo que cuenta como fuente no está fijado: es lo que algún proveedor sepa ir a buscar.',
-        'Un proveedor es un pequeño programa que va a buscar un tipo de fuente y escribe lo que encuentra en la base de datos de la instancia. Cubrir un tipo de fuente nuevo es escribir un proveedor; nada más cambia en StayUp.',
-        'La API de StayUp lee esa base de datos y la sirve a las apps. No codifica ningún tipo de fuente: en cada petición pregunta a la base qué proveedores existen ahora, y devuelve su manifiesto de visualización tal cual.',
+        'Un proveedor es un pequeño programa que va a buscar un tipo de fuente y envía lo que encuentra a la API de la instancia por HTTP — nunca toca la base de datos. Cubrir un tipo de fuente nuevo es escribir un proveedor; nada más cambia en StayUp.',
+        'La API de StayUp es dueña de la base de datos y la sirve a las apps. No codifica ningún tipo de fuente: un proveedor existe en cuanto se ha registrado o ha enviado contenido, y la API devuelve el manifiesto de visualización de cada uno tal cual.',
         'Las apps — web, escritorio, móvil — leen la API. Cada una se puede apuntar a cualquier instancia, o sea a cualquier base de datos, y cada una sabe mostrar un proveedor del que nunca ha oído hablar.',
       ],
       note: 'El conjunto de fuentes es abierto por construcción. Una instancia muestra exactamente los proveedores que corren contra su base — sin lista incorporada, nada que registrar ante una autoridad central.',
@@ -30,11 +30,12 @@ export const es: DocContent = {
         sourcesItems:
           'un feed de podcast · un hilo de foro · una página de estado · lo que un programa sepa leer',
         providers: 'Proveedores',
-        providersSub: 'un pequeño programa por tipo de fuente, con planificación',
+        providersSub: 'un pequeño programa por tipo de fuente, con planificación, por HTTP',
         database: 'La base de datos',
-        databaseSub: 'PostgreSQL, MySQL, SQLite o MongoDB — todo lo recopilado, en un solo sitio',
+        databaseSub:
+          'PostgreSQL, MySQL, SQLite o MongoDB — todo lo que la API guarda, en un solo sitio',
         api: 'API de StayUp',
-        apiSub: 'lee la base, sirve las apps, no codifica nada',
+        apiSub: 'recibe lo que envían los proveedores, sirve las apps, no codifica nada',
         apps: 'Web · Escritorio · Móvil · Admin',
         appsSub: 'cada una configurable hacia otra instancia',
       },
@@ -54,7 +55,7 @@ export const es: DocContent = {
         {
           term: 'Proveedor (alias conector)',
           meaning:
-            'Un programa autónomo que va a buscar un tipo de fuente y escribe filas en la base. «Conector» y «proveedor» son lo mismo; los repos se llaman stayup-cmd-*.',
+            'Un programa autónomo que va a buscar un tipo de fuente y envía filas a la API, autenticado con una clave de conector. «Conector» y «proveedor» son lo mismo; los repos se llaman stayup-cmd-*.',
         },
         {
           term: 'Fuente (alias flux) — una fila repository',
@@ -69,7 +70,7 @@ export const es: DocContent = {
         {
           term: 'Plantilla de visualización',
           meaning:
-            'Un manifiesto JSON opcional que el proveedor guarda en provider_registry.template. Dice a las apps cómo renderizar sus filas. Sin plantilla → una tarjeta genérica simple.',
+            'Un manifiesto JSON opcional que el proveedor registra en la API (guardado en provider_registry.template). Dice a las apps cómo renderizar sus filas. Sin plantilla → una tarjeta genérica simple.',
         },
         {
           term: 'Admin',
@@ -97,7 +98,7 @@ export const es: DocContent = {
         'Escribir un proveedor — un programa que va a buscar una fuente que StayUp aún no cubre y guarda lo que encuentra. Incluye las plantillas de visualización.',
       providersCta: 'Guía de proveedores',
       relation:
-        'Operar una instancia y escribir un proveedor están relacionados pero son cosas distintas. Un proveedor nunca habla con la API, solo con la base — así que puedes escribir uno sin leer la guía de instalación. Ejecutarlo es otra cosa: necesita acceso de escritura a la base que alimenta, y en la instancia pública no lo tienes. En la práctica, tu propio proveedor va con tu propia instancia.',
+        'Operar una instancia y escribir un proveedor están relacionados pero son cosas distintas. Escribir uno no requiere nada de la guía de instalación — es solo un programa que llama a la API. Ejecutarlo es otra cosa: necesita una clave de conector en la instancia que alimenta, y en la instancia pública no la tienes. En la práctica, tu propio proveedor va con tu propia instancia.',
     },
   },
   install: {
@@ -132,7 +133,7 @@ export const es: DocContent = {
         'Una capa fina y sin estado sobre esa base. No codifica ningún nombre de proveedor — en cada petición pregunta a la base qué hay. Corre en Node, en Docker, o en Cloudflare Workers.',
       providers: 'Proveedores',
       providersBody:
-        'Los programas que realmente llenan la base. Repos autónomos, lanzados con planificación, que solo hablan con la base. Sin al menos uno, tu instancia funciona pero no muestra nada.',
+        'Los programas que realmente llenan la instancia. Repos autónomos, lanzados con planificación, que solo hablan con la API — con una clave de conector que un admin les entrega. Sin al menos uno, tu instancia funciona pero no muestra nada.',
       adminUi: 'La interfaz web de administración (opcional)',
       adminUiBody:
         'Un despliegue de la app web abierto en /admin. Permite gestionar administradores, fijar el modo de aprobación de cada proveedor, trabajar la cola de solicitudes de flux, y curar usuarios y flux. Prescinde de ella y la API sigue funcionando — solo pierdes la consola de navegador.',
@@ -152,12 +153,13 @@ export const es: DocContent = {
         'Arrancar la base y la API: docker compose up -d db api. El fichero compose siembra el esquema en Postgres en la primera init; la API escucha en el puerto 3000.',
         'Si no contaste con esa auto-init, aplica el esquema una vez: psql "$DATABASE_URL" -f src/db/schema.sql. Solo añade, así que se puede repetir sin riesgo.',
         'Crear el primer super admin: npm run create-admin -- root@example.com "Root" \'una-contraseña-fuerte\'. Es la cuenta que gestiona la interfaz web de administración.',
-        'Añadir un proveedor. Clonar uno — git clone https://github.com/stayup-app/stayup-cmd-rss.git — apuntar su DATABASE_URL a la misma base, instalar sus dependencias, y luego: python fetch_rss.py --add https://blog.example.com/feed.xml y python fetch_rss.py. La primera ejecución real crea sus tablas y lo registra.',
+        'Emitir una clave de conector. En la interfaz web de administración, Claves de conector → Nueva clave, proveedor rss — o POST /ui/connector-keys. El secreto (stayup_conn_…) se muestra una sola vez; cópialo.',
+        'Añadir un proveedor. Clonar uno — git clone https://github.com/stayup-app/stayup-cmd-rss.git — fijar STAYUP_API_URL a http://localhost:3000 y STAYUP_API_KEY a la clave anterior, instalar sus dependencias, y luego: python fetch_rss.py --add https://blog.example.com/feed.xml y python fetch_rss.py. La primera ejecución real registra el proveedor en la API y luego recopila.',
         'Comprobar que la API lo ve: curl localhost:3000/connectors/providers debería listar ahora rss con su manifiesto de visualización.',
         'Abrir la app de escritorio, ir a Perfil → URL de la API, pegar http://localhost:3000, guardar. Crear una cuenta, y luego añadir un flux — la entrada rss aparece una vez que el conector se ha ejecutado.',
         'Planificar el conector para que siga corriendo: una entrada de cron, un timer de systemd, una planificación de GitHub Actions, o el contenedor Ofelia que monta el generador.',
       ],
-      note: 'La API nunca lanza los conectores. Son programas aparte, con su propia planificación; lo único que comparten con la API es la base de datos.',
+      note: 'La API nunca lanza los conectores. Son programas aparte, con su propia planificación; lo único que necesitan de la API es su URL y una clave de conector.',
     },
     requirements: {
       heading: 'Qué necesitas',
@@ -279,7 +281,7 @@ export const es: DocContent = {
         {
           symptom: 'Un proveedor aparece como tarjeta de texto, a veces JSON en crudo.',
           cause:
-            'Sin plantilla de visualización utilizable. El proveedor no ha escrito provider_registry.template, o su columna content es una cadena JSON sin plantilla para interpretarla. Ver la guía de proveedores.',
+            'Sin plantilla de visualización utilizable. El proveedor no ha registrado ninguna en la API, o su content es una cadena JSON sin plantilla para interpretarla. Ver la guía de proveedores.',
         },
         {
           symptom: 'Añadir un flux dice «solicitud enviada» en vez de suscribir.',
@@ -470,9 +472,9 @@ export const es: DocContent = {
       dbHeading: 'La base de datos — Neon',
       dbSteps: [
         'Crea una cuenta de Neon y luego un proyecto. Elige la región más cercana a donde se ejecutará la API.',
-        'En el proyecto, activa el connection pooling y copia la cadena de conexión «pooled» — su host contiene «-pooler». Workers abre una conexión nueva por petición; el endpoint pooled es lo que evita agotar PostgreSQL. Esta misma cadena la usan la API y cada conector.',
+        'En el proyecto, activa el connection pooling y copia la cadena de conexión «pooled» — su host contiene «-pooler». Workers abre una conexión nueva por petición; el endpoint pooled es lo que evita agotar PostgreSQL. Esta cadena es solo para la API — los conectores nunca la ven.',
         'Desde tu máquina, aplica el esquema y crea el primer superadmin en un solo comando. Es el único paso que debe ejecutarse desde Node — Workers nunca aplica el esquema por sí mismo:',
-        'Ese comando ejecutó src/db/schema.sql e insertó el admin. Las tablas de los conectores (connector_*, provider_registry) aún no existen — las crea la primera ejecución de un conector (paso 3).',
+        'Ese comando ejecutó src/db/schema.sql e insertó el admin. Aún no hay ningún proveedor registrado — lo hace la primera ejecución de un conector (paso 3).',
       ],
       dbNote:
         'El plan gratuito de Neon suspende la base de datos cuando está inactiva; la primera petición tras una pausa tarda alrededor de un segundo en despertarla. Bien para una instancia personal.',
@@ -488,13 +490,14 @@ export const es: DocContent = {
         'Solo el driver de PostgreSQL viene incluido para Workers — el runtime no puede abrir sockets de MySQL ni MongoDB. En Workers, la base de datos es PostgreSQL.',
       connHeading: 'Los conectores — GitHub Actions',
       connIntro:
-        'Un conector es un script de Python que lee DATABASE_URL, hace una ronda y termina. Necesita algo que lo ejecute de forma programada; GitHub Actions lo hace gratis con schedule: y workflow_dispatch:. Cada repo stayup-cmd-* ya trae .github/workflows/daily.yml.',
+        'Un conector es un script de Python que lee STAYUP_API_URL y STAYUP_API_KEY, hace una ronda contra la API y termina. Necesita algo que lo ejecute de forma programada; GitHub Actions lo hace gratis con schedule: y workflow_dispatch:. Cada repo stayup-cmd-* ya trae .github/workflows/daily.yml.',
       connSteps: [
+        'En la UI de admin (o POST /ui/connector-keys), emite una clave de conector por cada proveedor que vayas a ejecutar — rss, youtube, etc. Cada secreto se muestra una sola vez.',
         'Haz fork de cada conector que quieras: stayup-cmd-rss, stayup-cmd-youtube, stayup-cmd-changelog, stayup-cmd-github-trending, stayup-cmd-scrap.',
-        'En cada fork: Settings → Secrets and variables → Actions → New repository secret. Nómbralo DATABASE_URL, valor = la misma cadena pooled de Neon que usa la API.',
+        'En cada fork: Settings → Secrets and variables → Actions → New repository secret. Añade STAYUP_API_URL (tu URL de Workers) y STAYUP_API_KEY (la clave de ese proveedor).',
         'El workflow ya está ahí — esto es todo:',
-        'Ajusta la cadencia con la línea cron: (en UTC). Escalona los conectores para que no golpeen la base de datos en el mismo minuto:',
-        'Actívalo: pestaña Actions → el workflow → Run workflow. La primera ejecución crea connector_<name> y registra el provider en provider_registry; después, el provider aparece en las apps y en GET /connectors/providers.',
+        'Ajusta la cadencia con la línea cron: (en UTC). Escalona los conectores para que no golpeen la API en el mismo minuto:',
+        'Actívalo: pestaña Actions → el workflow → Run workflow. La primera ejecución registra el proveedor en la API; después, el proveedor aparece en las apps y en GET /connectors/providers.',
         'GitHub pausa los workflows programados de un repo sin actividad durante 60 días. Un commit o una ejecución manual los rearma.',
       ],
       connNote:
@@ -521,37 +524,37 @@ export const es: DocContent = {
     lede: 'Un proveedor es un programa que va a buscar un tipo de fuente y guarda lo que encuentra. Es lo único que escribes para extender StayUp — la API y las tres apps lo recogen solas.',
     what: {
       heading: 'Qué es realmente un proveedor',
-      body: 'No un plugin, no un módulo que registrar: un programa ordinario, en cualquier lenguaje, lanzado con planificación. Lee la lista de fuentes que le corresponden, va a buscar cada una, guarda lo nuevo, y lo escribe en la base. La API lo recoge sola, y las tres apps lo muestran — sin que cambie una línea de código en ningún sitio.',
-      note: 'Un proveedor nunca llama a la API de StayUp. Habla con la base, y solo con la base.',
+      body: 'No un plugin, no un módulo que registrar: un programa ordinario, en cualquier lenguaje, lanzado con planificación. Pide a la API las fuentes que le corresponden, va a buscar cada una, guarda lo nuevo, y lo devuelve a la API. La API lo recoge sola, y las tres apps lo muestran — sin que cambie una línea de código en ningún sitio.',
+      note: 'Un proveedor solo habla con la API de StayUp, por HTTP, con una clave de conector. Nunca toca la base de datos.',
       diagram: {
         title: 'Un proveedor, paso a paso',
-        sources: 'Sus fuentes, leídas de la base',
+        sources: 'Sus fuentes, obtenidas de la API',
         sourcesItems: 'los feeds de podcast que este proveedor recibió la orden de seguir',
         fetch: 'Ir a buscar cada feed',
         compare: 'Quedarse solo con lo que no estaba antes',
-        store: 'Escribir en la base',
+        store: 'Devolverlo a la API',
         exposed: 'La API lo expone, las apps lo muestran',
       },
       steps: {
         heading: 'En cada ejecución',
         items: [
-          'Leer las fuentes que te corresponden.',
+          'Registrar tu nombre visible y tu plantilla en la API.',
+          'Pedir a la API las fuentes que te corresponden.',
           'Ir a buscar cada una en el mundo exterior.',
-          'Comparar con lo que guardaste la última vez, y quedarte solo con lo nuevo.',
-          'Escribir los elementos nuevos en la base.',
-          'Retirar lo que ha caducado, y registrar un fallo en vez de estrellarte con él.',
-          'Volver a declarar tu nombre visible y tu plantilla, para que una base recién hecha te conozca en la primera ejecución.',
+          'Preguntar a la API dónde te quedaste, y quedarte solo con lo nuevo.',
+          'Devolver los elementos nuevos a la API, en un lote.',
+          'Pedir a la API que retire lo que ha caducado, y reportar un fallo en vez de estrellarte con él.',
         ],
       },
     },
     access: {
-      heading: 'Antes de empezar: ¿dónde va a escribir?',
-      body: 'Un proveedor necesita acceso de escritura a la base de la instancia que alimenta. En la instancia pública no lo tienes, así que en la práctica un proveedor tuyo va con una instancia tuya. Escribir uno no requiere nada de la guía de instalación; ejecutar uno requiere una base en la que puedas escribir.',
+      heading: 'Antes de empezar: ¿qué necesitas?',
+      body: 'Un proveedor necesita la URL de la instancia que alimenta y una clave de conector para su nombre, emitida por un admin de esa instancia. En la instancia pública no la tienes, así que en la práctica un proveedor tuyo va con una instancia tuya. Escribir uno no requiere nada de la guía de instalación; ejecutar uno requiere una clave en la instancia que alimentas.',
       cta: 'Guía de instalación',
     },
     existing: {
       heading: 'Ejemplos concretos para leer',
-      body: 'Empieza por stayup-cmd-template: un esqueleto desnudo hecho para copiar, con los tres puntos que cambias señalados. Luego lee los reales — changelog, youtube, rss, scrap, github-trending — que es lo que la instancia de referencia resulta ejecutar, no una definición de lo que StayUp cubre. El rss es el ejemplo real más corto del contrato de abajo; github-trending es la referencia para una plantilla de visualización rica. Apunta cualquiera a tu propia base si te conviene.',
+      body: 'Empieza por stayup-cmd-template: un esqueleto desnudo hecho para copiar, con los tres puntos que cambias señalados. Luego lee los reales — changelog, youtube, rss, scrap, github-trending — que es lo que la instancia de referencia resulta ejecutar, no una definición de lo que StayUp cubre. El rss es el ejemplo real más corto del contrato de abajo; github-trending es la referencia para una plantilla de visualización rica. Apunta cualquiera a tu propia instancia si te conviene.',
       cta: 'Abrir stayup-cmd-template',
     },
     creating: {
@@ -563,27 +566,27 @@ export const es: DocContent = {
         columnWhere: 'Dónde',
         columnExample: 'Para «podcast»',
         rows: [
-          'Tu tabla de datos',
+          'La ruta de API que llama tu script',
           'Las fuentes que te pertenecen',
           'Tu fila en el registro',
           'El campo provider que las apps envían al añadir un flux',
         ],
-        note: 'Nada que reservar por adelantado: el nombre es simplemente aquel con el que creas la tabla. Dos proveedores solo colisionan si eligen el mismo.',
+        note: 'Nada que reservar por adelantado: el nombre es simplemente aquel al que está vinculada tu clave de conector y el que registras. Dos proveedores solo colisionan si eligen el mismo.',
       },
       shape: {
         heading: 'Qué guardas',
-        body: 'Una fila por elemento encontrado. El contenido en sí puede ser texto plano o JSON — tú decides. Sin plantilla de visualización las apps muestran una tarjeta simple: el principio del contenido, la fecha, tu nombre visible. Funciona, solo que es visualmente sobrio, y muestra JSON en crudo si eso es lo que contiene tu columna content. Una plantilla lo arregla, y es la sección siguiente.',
+        body: 'Una fila por elemento encontrado. El contenido en sí puede ser texto plano o JSON — tú decides; la API nunca lo parsea. Sin plantilla de visualización las apps muestran una tarjeta simple: el principio del contenido, la fecha, tu nombre visible. Funciona, solo que es visualmente sobrio, y muestra JSON en crudo si eso es lo que contiene tu contenido. Una plantilla lo arregla, y es la sección siguiente.',
       },
       schedule: {
         heading: 'Ejecutarlo con planificación',
-        body: 'Copia cualquier colector existente: un Dockerfile en la raíz cuyo ENTRYPOINT ejecuta el script una vez, y un job que lo lanza con la URL de la base en el entorno. Nada impone una CI concreta — un timer de systemd, un cron a secas, o el contenedor Ofelia del generador hacen lo mismo.',
+        body: 'Copia cualquier colector existente: un Dockerfile en la raíz cuyo ENTRYPOINT ejecuta el script una vez, y un job que lo lanza con STAYUP_API_URL y STAYUP_API_KEY en el entorno. Nada impone una CI concreta — un timer de systemd, un cron a secas, o el contenedor Ofelia del generador hacen lo mismo.',
       },
     },
     templates: {
       heading: 'Plantillas de visualización',
-      body: 'Una plantilla es un manifiesto JSON que tu proveedor guarda en provider_registry.template, en el mismo upsert que su nombre visible. La API lo transmite tal cual por GET /connectors/providers; cada app tiene un motor que lo lee y renderiza tus filas — una disposición en lista, y un panel de lectura en uno de siete modos: texto, html, medio, audio, galería, tabla, lista de enlaces. Ningún código de las apps conoce el nombre de tu proveedor.',
+      body: 'Una plantilla es un manifiesto JSON que tu proveedor envía en el campo template de su llamada register. La API lo guarda en provider_registry.template y lo transmite tal cual por GET /connectors/providers; cada app tiene un motor que lo lee y renderiza tus filas — una disposición en lista, y un panel de lectura en uno de siete modos: texto, html, medio, audio, galería, tabla, lista de enlaces. Ningún código de las apps conoce el nombre de tu proveedor.',
       fallbackNote:
-        'Un proveedor sin plantilla (columna NULL, JSON ilegible, o una version no reconocida) funciona igualmente — las apps recurren a la tarjeta simple. Una plantilla es muy recomendable en cuanto tu contenido es algo más que una línea corta de texto.',
+        'Un proveedor sin plantilla (nunca enviada, JSON ilegible, o una version no reconocida) funciona igualmente — las apps recurren a la tarjeta simple. Una plantilla es muy recomendable en cuanto tu contenido es algo más que una línea corta de texto.',
       cta: 'Referencia completa de plantillas',
     },
     form: {
@@ -610,67 +613,74 @@ export const es: DocContent = {
             'trim, quitar un prefijo/sufijo conocido, o extraer un grupo de captura — para que una URL completa pegada y un handle a secas acaben igual.',
         },
       ],
-      note: 'Las apps guardan la URL construida como fuente; tu colector la vuelve a leer de la fila repository como cualquier otra.',
+      note: 'Las apps guardan la URL construida como fuente; tu colector la recibe en su lista de fuentes como cualquier otra.',
     },
     fluxApproval: {
       heading: 'Modo de aprobación',
-      body: 'Cada proveedor tiene una columna flux_approval en el registro: auto (por defecto) o manual. auto suscribe al usuario de inmediato cuando añade un flux nuevo; manual lo convierte en una solicitud que un admin debe aprobar. Un proveedor puede sembrar su propio valor por defecto en el upsert; un admin lo sobrescribe por instancia desde /admin/providers. El scraping se entrega en manual por una razón — ejecutar una fuente cuesta algo allí.',
+      body: 'Cada proveedor tiene un modo flux_approval en el registro: auto (por defecto) o manual. auto suscribe al usuario de inmediato cuando añade un flux nuevo; manual lo convierte en una solicitud que un admin debe aprobar. Es un ajuste de operador — un conector no puede fijarlo por sí mismo; un admin lo fija por instancia desde /admin/providers. El scraping viene sembrado en manual por una razón — ejecutar una fuente cuesta algo allí.',
       note: 'Esto solo controla traer una fuente nueva. Suscribirse a una fuente que ya existe nunca pasa por aprobación.',
     },
     contract: {
       heading: 'Contrato técnico',
       lede: 'Material de referencia. Lo necesitas para escribir un proveedor, no para entender StayUp.',
-      diagramTitle: 'Lo que tu script puede tocar',
+      diagramTitle: 'Lo que tu script llama',
       yourScript: 'Tu proveedor',
-      readOnly: 'solo lectura',
-      readWrite: 'lectura y escritura — enteramente tuya',
-      upsertOne: 'una fila: la tuya',
-      writeOnError: 'escritura en error',
-      repositoryDesc: 'las fuentes a seguir',
-      connectorDesc: 'el contenido que recopilas',
-      registryDesc: 'tu nombre visible + plantilla',
-      logDesc: 'fallos, en vez de estrellarse',
+      announce: 'Anunciarse',
+      read: 'Leer',
+      write: 'Escribir',
+      seed: 'Sembrar',
+      announceDesc: 'registrar tu nombre visible + plantilla, en cada ejecución',
+      readDesc: 'las fuentes a recopilar, y dónde te quedaste',
+      writeDesc: 'filas nuevas, una fusión de config, retención, errores',
+      seedDesc: 'seguir una URL nueva — el flag --add',
       warning:
-        'Nunca escribas en la tabla de otro proveedor, ni en las tablas user, session, account, admin, subscription o flux_request: pertenecen a la API y a la app web.',
-      tablesHeading: 'Las cuatro tablas',
-      tablesIntro:
-        'Tu paso de init, lanzado al principio de cada ejecución, debe asegurarse de que estas existen. Cada sentencia es idempotente — segura de repetir siempre, y segura si otro proveedor o la API creó las compartidas primero.',
-      engineIntro:
-        'Elige el motor que ejecuta tu instancia. Los nombres nunca cambian de una pestaña a otra — solo el dialecto y los tipos, y por eso un proveedor escrito para un motor se lee igual contra otro.',
-      engineNotes: [
-        'El dialecto de referencia, y lo que ejecuta la instancia pública.',
-        'Mismas tablas, tipos MySQL. Una URL tiene que caber en un VARCHAR indexable, de ahí la longitud explícita.',
-        'Sin servidor: tu proveedor y la API abren el mismo fichero. Fechas y JSON guardados como texto, que la API reparsea al leer.',
-        'Una colección en vez de una tabla, y ningún esquema que declarar — pero dos reglas. Un documento repository lleva un _id numérico, sacado de la colección counters, porque el contrato designa una fuente por un número. Y nada cascadea: lo que escribes, lo limpias.',
+        'El conector no tiene credenciales de base de datos y no conoce ningún nombre de tabla. Su clave solo funciona bajo /connector-api/<su propio nombre>/*: no puede escribir para otro proveedor, ni alcanzar a los usuarios, admins o suscripciones.',
+      authHeading: 'Autenticación',
+      authBody:
+        'Un admin emite una clave de conector para el nombre de tu proveedor (UI de admin → Claves de conector, o POST /ui/connector-keys). El secreto, stayup_conn_…, se muestra una sola vez. Tu script lo envía como Authorization: Bearer <clave> en cada llamada, y lo lee — junto con la URL de la instancia — de STAYUP_API_KEY y STAYUP_API_URL.',
+      endpointsHeading: 'Los endpoints',
+      endpointsIntro:
+        'Todos bajo /connector-api/<name>/, todos exigen la clave. Más o menos en el orden en que una ejecución los usa.',
+      columnCall: 'Llamada',
+      columnPurpose: 'Qué hace',
+      endpointPurposes: [
+        'Anunciarte: nombre visible, orden, plantilla opcional. Idempotente — llámalo en cada ejecución. sortOrder no se sobrescribe una vez fijado; template solo se reemplaza si el campo está presente.',
+        'Seguir una URL nueva. Idempotente sobre la URL: 201 si se creó, 200 si ya existía, 409 si otro proveedor la posee.',
+        'Tu lista de fuentes a recopilar esta ejecución — cada una con su id, url y config.',
+        'La última versión guardada para esa fuente, o null en la primera ejecución — dónde retomar.',
+        'Todas las versiones ya guardadas para esa fuente — para un conector que rellena huecos en vez de solo retomar tras la más reciente.',
+        'Fusiona (shallow merge) claves en la config de esa fuente (p. ej. guardar el título del canal para la etiqueta). Nunca un reemplazo completo.',
+        'Escribe un lote de filas recopiladas. content es una cadena opaca que la API nunca parsea.',
+        'Poda las filas más antiguas que retentionDays para esa fuente.',
+        'Registra un fallo de recopilación. Acaba en el registro de errores de la API.',
       ],
-      repositoryTitle: 'repository — compartida, tú sobre todo lees de ella',
-      repositoryBody:
-        'Una fila es una cosa a seguir: un feed de podcast, un subreddit, lo que tu proveedor llame una fuente. La columna type debe ser igual al nombre de tu proveedor. La columna config es JSON libre que solo tu script define e interpreta.',
-      connectorTitle: 'connector_<name> — tuya, enteramente',
-      connectorBody: 'Columnas opcionales, usadas si están presentes pero nunca obligatorias:',
-      optionalDescriptions: [
-        'la marca de tiempo propia del contenido, preferida a la hora de ejecución al ordenar por «lo más reciente».',
-        'una etiqueta corta mostrada junto a los renders ricos — un tag de versión, un id de vídeo, etc.',
+      itemHeading: 'La forma de un item',
+      itemIntro: 'Cada fila del lote POST /connector-api/<name>/items:',
+      required: 'obligatorio',
+      optional: 'opcional',
+      itemFieldDescriptions: [
+        'el id de la fuente, de tu lista de fuentes.',
+        'una cadena opaca — texto plano o una cadena JSON, tú eliges.',
+        'marca de tiempo ISO de esta ejecución.',
+        'si la obtención de esa fuente tuvo éxito.',
+        'la clave de deduplicación; también se muestra junto a los renders ricos (un tag de versión, un id de vídeo).',
+        'la marca de tiempo propia del contenido, preferida a executedAt al ordenar por «lo más reciente».',
+        'JSON libre; hoy solo lo usa el proveedor de scraping.',
       ],
-      registryTitle: 'provider_registry — compartida, una fila para ti',
-      registryBody:
-        'El sort order solo afecta al orden en que aparecen los proveedores en las apps; cualquier entero sirve. La columna template es tu manifiesto de visualización (secciones anteriores); déjala NULL y tu proveedor funciona igual, solo con la tarjeta simple. flux_approval es un ajuste de operador — no pelees con un admin por él, pero puedes sembrar un valor por defecto sensato. Omite la fila del todo y la API recurre a una versión capitalizada de tu nombre.',
-      logTitle: 'log — compartida, opcional pero recomendada',
-      logBody: 'Escribe aquí en vez de estrellarte cuando una fuente falla, y sigue con las demás.',
       addingSources: {
         heading: 'Meter fuentes',
-        body: 'Dos maneras. Soporta un flag --add que inserta una fila y sale — cómodo para sembrar directamente contra la base. La otra manera, la que los usuarios finales toman de verdad, es añadir una fuente desde una app, que hace POST a /providers/<name>/fluxes; el campo provider debe ser igual al sufijo de tu tabla.',
+        body: 'Dos maneras. Un flag --add que llama a POST /connector-api/<name>/sources y sale — cómodo para sembrar desde la línea de comandos. La otra, la que los usuarios finales toman de verdad, es añadir una fuente desde una app, que hace POST a /ui/users/<userId>/repositories; el campo provider debe ser igual a tu nombre, y pasa por el flujo de aprobación auto/manual.',
       },
       checklist: {
         heading: 'Antes de darlo por hecho',
         items: [
-          'creada con al menos un id, una referencia de fuente, el contenido, una marca de tiempo y un flag de éxito.',
-          'fila upserteada en cada ejecución, con tu nombre visible y (recomendado) tu plantilla.',
-          'fuentes leídas con el nombre de tu proveedor.',
-          'entradas antiguas podadas — o la ausencia de retención documentada.',
-          'fallos por fuente escritos aquí en vez de hacer caer la ejecución.',
+          'llamado en cada ejecución, con tu nombre visible y (recomendado) tu plantilla.',
+          'te da las fuentes a recopilar esta ejecución.',
+          'envía filas nuevas en un lote, deduplicadas contra la versión guardada.',
+          'te dice dónde te quedaste para cada fuente.',
+          'poda entradas antiguas — o la ausencia de retención está documentada.',
+          'fallos por fuente reportados en vez de hacer caer la ejecución.',
           'lista tu proveedor tras una ejecución.',
-          'devuelve tus datos.',
         ],
       },
     },

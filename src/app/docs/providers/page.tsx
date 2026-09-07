@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { LandingHeader } from '@/components/landing/LandingHeader'
-import { DocChecklist, DocNav, DocTabs } from '@/components/docs/DocShell'
+import { DocChecklist, DocNav } from '@/components/docs/DocShell'
 import {
   DiagramArrow,
   DiagramBox,
@@ -15,13 +15,13 @@ import {
   DocSubheading,
   DocTable,
 } from '@/components/docs/DocPieces'
-import { getDoc, type DocContent } from '@/lib/docs'
+import { getDoc } from '@/lib/docs'
 import {
   CHECKLIST_CODE,
+  CONNECTOR_ENDPOINTS,
+  CONNECTOR_ITEM_FIELDS,
   NAMING_ROWS,
   PROVIDER_ANCHORS as A,
-  ENGINES,
-  ENGINE_TABLES,
   SNIPPETS,
 } from '@/lib/docs/shared'
 import { getServerLang } from '@/lib/serverLang'
@@ -204,54 +204,50 @@ export default async function ProvidersPage() {
             <DocDiagram title={c.diagramTitle} tone="sky">
               <DiagramBox title={c.yourScript} />
               <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <DiagramBox
-                  title="repository"
-                  subtitle={`${c.readOnly} — ${c.repositoryDesc}`}
-                  accent="var(--sky)"
-                />
-                <DiagramBox
-                  title="connector_<name>"
-                  subtitle={`${c.readWrite} — ${c.connectorDesc}`}
-                />
-                <DiagramBox
-                  title="provider_registry"
-                  subtitle={`${c.upsertOne} — ${c.registryDesc}`}
-                  accent="var(--sky)"
-                />
-                <DiagramBox
-                  title="log"
-                  subtitle={`${c.writeOnError} — ${c.logDesc}`}
-                  accent="var(--sky)"
-                />
+                <DiagramBox title={c.announce} subtitle={c.announceDesc} accent="var(--sky)" />
+                <DiagramBox title={c.read} subtitle={c.readDesc} accent="var(--sky)" />
+                <DiagramBox title={c.write} subtitle={c.writeDesc} />
+                <DiagramBox title={c.seed} subtitle={c.seedDesc} accent="var(--sky)" />
               </div>
             </DocDiagram>
             <DocNote>{c.warning}</DocNote>
 
-            <DocSubheading>{c.tablesHeading}</DocSubheading>
+            <DocSubheading>{c.authHeading}</DocSubheading>
             <p className="mb-6 text-[15px] leading-relaxed" style={{ color: 'var(--fg-soft)' }}>
-              {c.tablesIntro}
+              {c.authBody}
             </p>
 
+            <DocSubheading>{c.endpointsHeading}</DocSubheading>
             <p className="mb-5 text-[15px] leading-relaxed" style={{ color: 'var(--fg-soft)' }}>
-              {c.engineIntro}
+              {c.endpointsIntro}
             </p>
-            <DocTabs
-              tabs={ENGINES.map((engine, i) => ({
-                label: engine.label,
-                content: <EngineTables engine={engine.id} c={c} note={c.engineNotes[i]} />,
-              }))}
+            <DocTable
+              columns={[c.columnCall, c.columnPurpose]}
+              rows={CONNECTOR_ENDPOINTS.map((e, i) => [
+                <DocInline key={e.call}>{e.call}</DocInline>,
+                c.endpointPurposes[i],
+              ])}
             />
+
+            <DocSubheading>{c.itemHeading}</DocSubheading>
+            <p className="mb-4 text-[15px] leading-relaxed" style={{ color: 'var(--fg-soft)' }}>
+              {c.itemIntro}
+            </p>
+            <ul className="mb-6 space-y-2">
+              {CONNECTOR_ITEM_FIELDS.map((f, i) => (
+                <li key={f.field} className="text-[14px] leading-relaxed">
+                  <DocInline>{f.field}</DocInline>{' '}
+                  <span style={{ color: 'var(--muted-foreground)' }}>
+                    {f.required ? c.required : c.optional} — {c.itemFieldDescriptions[i]}
+                  </span>
+                </li>
+              ))}
+            </ul>
 
             <DocSubheading>{c.addingSources.heading}</DocSubheading>
             <p className="mb-4 text-[15px] leading-relaxed" style={{ color: 'var(--fg-soft)' }}>
               {c.addingSources.body}
             </p>
-            <DocTabs
-              tabs={ENGINES.map((engine) => ({
-                label: engine.label,
-                content: <DocCode>{ENGINE_TABLES[engine.id].selectSources}</DocCode>,
-              }))}
-            />
             <DocCode>{SNIPPETS.addSource}</DocCode>
 
             <DocSubheading>{c.checklist.heading}</DocSubheading>
@@ -262,56 +258,5 @@ export default async function ProvidersPage() {
         </main>
       </div>
     </div>
-  )
-}
-
-/** Les quatre tables d'un provider, dans le dialecte d'un moteur. */
-function EngineTables({
-  engine,
-  c,
-  note,
-}: {
-  engine: keyof typeof ENGINE_TABLES
-  c: DocContent['providers']['contract']
-  note: string
-}) {
-  const t = ENGINE_TABLES[engine]
-
-  return (
-    <>
-      <DocSubheading>{c.repositoryTitle}</DocSubheading>
-      <DocCode>{t.repository}</DocCode>
-      <p className="mb-6 text-[14px] leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-        {c.repositoryBody}
-      </p>
-
-      <DocSubheading>{c.connectorTitle}</DocSubheading>
-      <DocCode>{t.connector}</DocCode>
-      <p className="mb-3 text-[14px] leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-        {c.connectorBody}
-      </p>
-      <ul className="mb-6 space-y-2">
-        {t.optionalColumns.map((col, i) => (
-          <li key={col} className="text-[14px] leading-relaxed">
-            <DocInline>{col}</DocInline>{' '}
-            <span style={{ color: 'var(--muted-foreground)' }}>{c.optionalDescriptions[i]}</span>
-          </li>
-        ))}
-      </ul>
-
-      <DocSubheading>{c.registryTitle}</DocSubheading>
-      <DocCode>{t.registry}</DocCode>
-      <p className="mb-6 text-[14px] leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-        {c.registryBody}
-      </p>
-
-      <DocSubheading>{c.logTitle}</DocSubheading>
-      <DocCode>{t.log}</DocCode>
-      <p className="mb-6 text-[14px] leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-        {c.logBody}
-      </p>
-
-      <DocNote>{note}</DocNote>
-    </>
   )
 }
