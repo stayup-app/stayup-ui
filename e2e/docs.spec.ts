@@ -112,50 +112,38 @@ test.describe('Providers page', () => {
     await page.goto('/docs/providers')
   })
 
-  test('explains the idea before the SQL', async ({ page }) => {
-    const body = await page.locator('main').innerText()
-    const conceptAt = body.indexOf('PostgreSQL')
-    const sqlAt = body.indexOf('CREATE TABLE')
+  test('explains the idea before the technical contract', async ({ page }) => {
+    const concept = await page.locator('#what-is-a-provider').boundingBox()
+    const contract = await page.locator('#technical-contract').boundingBox()
 
-    expect(conceptAt).toBeGreaterThan(-1)
-    expect(sqlAt).toBeGreaterThan(-1)
-    // Le contrat technique arrive après l'explication, jamais avant.
-    expect(sqlAt).toBeGreaterThan(conceptAt)
+    expect(concept).not.toBeNull()
+    expect(contract).not.toBeNull()
+    // Le contrat de référence arrive après l'explication, jamais avant.
+    expect(contract!.y).toBeGreaterThan(concept!.y)
+    // Le contrat est une API HTTP : plus aucun DDL sur la page.
+    await expect(page.getByText('CREATE TABLE')).toHaveCount(0)
   })
 
-  test('keeps SQL untranslated and shows the template column', async ({ page }) => {
-    await expect(
-      page.getByText('CREATE TABLE IF NOT EXISTS provider_registry').first(),
-    ).toBeVisible()
+  test('states the contract as /connector-api endpoints and links the template reference', async ({
+    page,
+  }) => {
+    const contract = page.locator('#technical-contract')
+    await expect(contract).toBeVisible()
+    await expect(contract.getByText('POST /connector-api/<name>/register').first()).toBeVisible()
+    await expect(contract.getByText('POST /connector-api/<name>/items').first()).toBeVisible()
+    // La forme d'un item est décrite.
+    await expect(contract.getByText('repositoryId').first()).toBeVisible()
     await expect(page.locator('#display-templates')).toBeVisible()
   })
 
   test('ticks a checklist item', async ({ page }) => {
-    const item = page.getByRole('button', { name: /connector_<name>/ })
+    const item = page.getByRole('button', { name: /connector-api\/<name>\/register/ })
     await expect(item).toHaveAttribute('aria-pressed', 'false')
     await item.click()
     await expect(item).toHaveAttribute('aria-pressed', 'true')
   })
 
-  // La promesse de la doc : les mêmes noms d'un moteur à l'autre, seul le
-  // dialecte change. Un onglet muet la trahirait sans que rien n'échoue ailleurs.
-  test('shows the same tables in the dialect of each engine', async ({ page }) => {
-    const contract = page.locator('#technical-contract')
-    await expect(contract.getByText('SERIAL PRIMARY KEY').first()).toBeVisible()
-
-    await contract.getByRole('tab', { name: 'MongoDB' }).first().click()
-
-    await expect(contract.getByText("db.createCollection('connector_<name>')")).toBeVisible()
-    await expect(contract.getByText('SERIAL PRIMARY KEY')).toHaveCount(0)
-
-    await contract.getByRole('tab', { name: 'MySQL / MariaDB' }).first().click()
-
-    await expect(contract.getByText('AUTO_INCREMENT').first()).toBeVisible()
-    // Le nom de la table ne bouge pas d'un moteur à l'autre : c'est tout l'intérêt.
-    await expect(contract.getByText('connector_<name>').first()).toBeVisible()
-  })
-
-  test('points at the install guide for where to write', async ({ page }) => {
+  test('points at the install guide for what you need', async ({ page }) => {
     await page.locator('#where-it-writes').getByRole('link').click()
     await expect(page).toHaveURL('/docs/install')
   })
