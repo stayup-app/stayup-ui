@@ -39,6 +39,11 @@ test.describe('Admin routes (unauthenticated)', () => {
     await page.goto('/admin/repositories')
     await expect(page).toHaveURL('/admin/login')
   })
+
+  test('/admin/maintenance redirects to /admin/login', async ({ page }) => {
+    await page.goto('/admin/maintenance')
+    await expect(page).toHaveURL('/admin/login')
+  })
 })
 
 test.describe('Admin session is independent from the user session', () => {

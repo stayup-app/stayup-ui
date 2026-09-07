@@ -358,6 +358,7 @@ export const it: Translations = {
       providers: 'Provider',
       fluxRequests: 'Richieste di feed',
       dataSources: 'Database',
+      maintenance: 'Manutenzione',
       admins: 'Admin',
       account: 'Il mio account',
     },
@@ -391,6 +392,9 @@ export const it: Translations = {
       joinedOn: 'Iscritto il {date}',
       userFeeds: 'Feed ({n})',
       backToUsers: 'Utenti',
+      maintenanceTitle: 'Manutenzione',
+      maintenanceDesc:
+        'Per quanto tempo viene conservato il contenuto raccolto e un attivatore di pulizia manuale.',
     },
     providersTable: {
       provider: 'Provider',
@@ -401,6 +405,30 @@ export const it: Translations = {
       switchToApproval: 'Passa ad approvazione',
       switchToAuto: 'Passa ad automatico',
       none: 'Nessun provider',
+    },
+    maintenance: {
+      loadError: 'Impossibile caricare le impostazioni di conservazione. L’API è raggiungibile?',
+      globalHeading: 'Valore predefinito globale',
+      globalHint:
+        'Il contenuto più vecchio di questo numero di giorni viene rimosso dalla pulizia quotidiana. Vale per ogni provider senza un valore proprio.',
+      daysLabel: 'Conservazione (giorni)',
+      disableGlobal: 'Disattiva la pulizia globale',
+      disabledNote:
+        'Nessuna pulizia globale. Vengono puliti solo i provider con un valore proprio.',
+      overridesHeading: 'Override per provider',
+      overridesHint: 'Lascia vuoto per seguire il valore globale.',
+      provider: 'Provider',
+      followsGlobal: 'Globale',
+      none: 'Nessun provider',
+      save: 'Salva',
+      saved: 'Salvato.',
+      invalidDays: 'Inserisci un numero intero di giorni ≥ 1 oppure lascia vuoto.',
+      runHeading: 'Esegui la pulizia ora',
+      runHint: 'Esegue subito la stessa pulizia del job pianificato.',
+      runButton: 'Esegui pulizia',
+      running: 'Pulizia…',
+      runResult: '{n} elemento/i rimosso/i.',
+      runResultZero: 'Niente da rimuovere.',
     },
     dataSources: {
       addSecondary: '+ Aggiungi un database secondario',

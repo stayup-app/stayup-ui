@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   KeyRound,
   Database,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
@@ -25,6 +26,7 @@ export function AdminSidebar({ isSuper = false }: { isSuper?: boolean }) {
     { label: nav.providers, href: '/admin/providers', icon: SlidersHorizontal },
     { label: nav.fluxRequests, href: '/admin/flux-requests', icon: Inbox },
     { label: nav.dataSources, href: '/admin/data-sources', icon: Database },
+    { label: nav.maintenance, href: '/admin/maintenance', icon: Trash2 },
     // Réservé au super admin : la gestion des autres administrateurs.
     ...(isSuper ? [{ label: nav.admins, href: '/admin/admins', icon: ShieldCheck }] : []),
     { label: nav.account, href: '/admin/settings', icon: KeyRound },

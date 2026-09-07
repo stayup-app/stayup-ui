@@ -366,6 +366,7 @@ export const de: Translations = {
       providers: 'Provider',
       fluxRequests: 'Feed-Anfragen',
       dataSources: 'Datenbanken',
+      maintenance: 'Wartung',
       admins: 'Admins',
       account: 'Mein Konto',
     },
@@ -399,6 +400,9 @@ export const de: Translations = {
       joinedOn: 'Beigetreten am {date}',
       userFeeds: 'Feeds ({n})',
       backToUsers: 'Benutzer',
+      maintenanceTitle: 'Wartung',
+      maintenanceDesc:
+        'Wie lange gesammelte Inhalte aufbewahrt werden, plus manueller Bereinigungsauslöser.',
     },
     providersTable: {
       provider: 'Provider',
@@ -409,6 +413,30 @@ export const de: Translations = {
       switchToApproval: 'Auf Freigabe umstellen',
       switchToAuto: 'Auf automatisch umstellen',
       none: 'Keine Provider',
+    },
+    maintenance: {
+      loadError:
+        'Die Aufbewahrungseinstellungen konnten nicht geladen werden. Ist die API erreichbar?',
+      globalHeading: 'Globaler Standard',
+      globalHint:
+        'Inhalte, die älter als so viele Tage sind, werden von der täglichen Bereinigung entfernt. Gilt für jeden Provider ohne eigenen Wert.',
+      daysLabel: 'Aufbewahrung (Tage)',
+      disableGlobal: 'Globale Bereinigung deaktivieren',
+      disabledNote: 'Keine globale Bereinigung. Nur Provider mit eigenem Wert werden bereinigt.',
+      overridesHeading: 'Überschreibungen pro Provider',
+      overridesHint: 'Leer lassen, um dem globalen Standard zu folgen.',
+      provider: 'Provider',
+      followsGlobal: 'Global',
+      none: 'Keine Provider',
+      save: 'Speichern',
+      saved: 'Gespeichert.',
+      invalidDays: 'Eine ganze Zahl an Tagen ≥ 1 eingeben oder leer lassen.',
+      runHeading: 'Bereinigung jetzt ausführen',
+      runHint: 'Führt dieselbe Bereinigung wie der geplante Job sofort aus.',
+      runButton: 'Bereinigung ausführen',
+      running: 'Bereinige…',
+      runResult: '{n} Element(e) entfernt.',
+      runResultZero: 'Nichts zu entfernen.',
     },
     dataSources: {
       addSecondary: '+ Sekundäre Datenbank hinzufügen',

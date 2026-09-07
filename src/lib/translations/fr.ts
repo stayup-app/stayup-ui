@@ -368,6 +368,7 @@ export const fr: Translations = {
       providers: 'Providers',
       fluxRequests: 'Demandes de flux',
       dataSources: 'Bases de données',
+      maintenance: 'Maintenance',
       admins: 'Admins',
       account: 'Mon compte',
     },
@@ -401,6 +402,9 @@ export const fr: Translations = {
       joinedOn: 'Inscrit le {date}',
       userFeeds: 'Flux ({n})',
       backToUsers: 'Utilisateurs',
+      maintenanceTitle: 'Maintenance',
+      maintenanceDesc:
+        'Durée de conservation du contenu collecté, et déclenchement manuel du nettoyage.',
     },
     providersTable: {
       provider: 'Provider',
@@ -411,6 +415,30 @@ export const fr: Translations = {
       switchToApproval: 'Passer sur approbation',
       switchToAuto: 'Passer en automatique',
       none: 'Aucun provider',
+    },
+    maintenance: {
+      loadError: 'Impossible de charger les réglages de rétention. L’API est-elle joignable ?',
+      globalHeading: 'Défaut global',
+      globalHint:
+        'Le contenu plus vieux que ce nombre de jours est supprimé par le nettoyage quotidien. S’applique à tout provider sans valeur propre.',
+      daysLabel: 'Rétention (jours)',
+      disableGlobal: 'Désactiver la purge globale',
+      disabledNote:
+        'Aucune purge globale. Seuls les providers ayant leur propre valeur sont nettoyés.',
+      overridesHeading: 'Surcharges par provider',
+      overridesHint: 'Laisser vide pour suivre le défaut global.',
+      provider: 'Provider',
+      followsGlobal: 'Global',
+      none: 'Aucun provider',
+      save: 'Enregistrer',
+      saved: 'Enregistré.',
+      invalidDays: 'Saisir un nombre entier de jours ≥ 1, ou laisser vide.',
+      runHeading: 'Lancer le nettoyage maintenant',
+      runHint: 'Exécute la même purge que la tâche planifiée, immédiatement.',
+      runButton: 'Lancer le nettoyage',
+      running: 'Nettoyage…',
+      runResult: '{n} élément(s) supprimé(s).',
+      runResultZero: 'Rien à supprimer.',
     },
     dataSources: {
       addSecondary: '+ Ajouter une base secondaire',

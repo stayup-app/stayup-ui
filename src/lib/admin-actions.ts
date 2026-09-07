@@ -19,16 +19,20 @@ import {
   adminListDataSources,
   adminListFluxRequests,
   adminListPendingUsers,
+  adminGetRetention,
   adminListProviders,
   adminRejectFluxRequest,
   adminRejectPendingUser,
+  adminRunCleanup,
   adminSetProviderApproval,
+  adminUpdateRetention,
   adminTestDataSource,
   adminUpdateAdmin,
   deleteUserRepository,
   type AdminPendingUser,
   type DataSourceProbe,
   type DataSourcesResponse,
+  type RetentionSettings,
 } from './api-client'
 import type { FluxRequest } from '@/types'
 
@@ -322,6 +326,44 @@ export async function adminSetProviderApprovalAction(
     await adminSetProviderApproval(name, flux_approval, token)
     revalidatePath('/admin/providers')
     return {}
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+// ─── Nettoyage du contenu (rétention centralisée) ─────────────────────────────
+
+export async function adminGetRetentionAction(): Promise<RetentionSettings | null> {
+  const token = await getAdminToken()
+  if (!token) return null
+  return adminGetRetention(token).catch(() => null)
+}
+
+export async function adminUpdateRetentionAction(body: {
+  default?: number | null
+  providers?: Record<string, number | null>
+}): Promise<{ error?: string }> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    await adminUpdateRetention(body, token)
+    revalidatePath('/admin/maintenance')
+    return {}
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+export async function adminRunCleanupAction(): Promise<{
+  error?: string
+  total?: number
+  purged?: { provider: string; deleted: number }[]
+}> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    const result = await adminRunCleanup(token)
+    return { total: result.total, purged: result.purged }
   } catch (err) {
     return { error: (err as Error).message }
   }

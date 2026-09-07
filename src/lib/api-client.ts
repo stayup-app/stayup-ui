@@ -508,3 +508,42 @@ export async function adminCreateRepository(
     body: JSON.stringify(body),
   })
 }
+
+// ─── Admin — content retention & cleanup ─────────────────────────────────────
+
+export type RetentionProvider = {
+  name: string
+  displayName: string
+  /** `null` = suit le défaut global. */
+  retention_days: number | null
+}
+
+export type RetentionSettings = {
+  /** `null` = purge désactivée tant qu'aucun provider ne la surcharge. */
+  default: number | null
+  providers: RetentionProvider[]
+}
+
+export async function adminGetRetention(token: string): Promise<RetentionSettings> {
+  return apiFetch<RetentionSettings>('/ui/maintenance/retention', token, { cache: 'no-store' })
+}
+
+export async function adminUpdateRetention(
+  body: { default?: number | null; providers?: Record<string, number | null> },
+  token: string,
+): Promise<void> {
+  await apiFetch<{ success: boolean }>('/ui/maintenance/retention', token, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function adminRunCleanup(
+  token: string,
+): Promise<{ purged: { provider: string; deleted: number }[]; total: number }> {
+  return apiFetch<{ purged: { provider: string; deleted: number }[]; total: number }>(
+    '/ui/maintenance/cleanup',
+    token,
+    { method: 'POST' },
+  )
+}
