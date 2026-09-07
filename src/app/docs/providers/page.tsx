@@ -226,6 +226,7 @@ export default async function ProvidersPage() {
                 c.endpointPurposes[i],
               ])}
             />
+            <DocNote>{c.retentionNote}</DocNote>
 
             <DocSubheading>{c.itemHeading}</DocSubheading>
             <p className="mb-4 text-[15px] leading-relaxed" style={{ color: 'var(--fg-soft)' }}>

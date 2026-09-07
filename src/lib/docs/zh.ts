@@ -614,7 +614,7 @@ export const zh: DocContent = {
       seed: '铺垫',
       announceDesc: '每次运行注册你的展示名 + 模板',
       readDesc: '要收集的来源，以及你上次到哪儿',
-      writeDesc: '新行、一次 config 合并、保留、错误',
+      writeDesc: '新行、一次 config 合并、错误',
       seedDesc: '追踪一个新 URL — --add 标志',
       warning:
         '连接器不持有数据库凭据，也不知道任何表名。它的密钥只在 /connector-api/<它自己的名字>/* 下有效：它不能为另一个 provider 写入，也够不到用户、管理员或订阅。',
@@ -622,6 +622,8 @@ export const zh: DocContent = {
       authBody:
         '管理员为你的 provider 名签发一个连接器密钥（管理 UI → 连接器密钥，或 POST /ui/connector-keys）。密文 stayup_conn_… 只显示一次。你的脚本在每次调用时以 Authorization: Bearer <密钥> 发送它，并连同实例 URL 一起从 STAYUP_API_KEY 和 STAYUP_API_URL 读取。',
       endpointsHeading: '端点',
+      retentionNote:
+        '保留没有列在这里是有意为之。连接器从不删除 —— 管理员在 Web 界面的“维护”中设置内容的存活时长（全局或按提供方），由 API 上的计划任务执行清理。',
       endpointsIntro:
         '全部在 /connector-api/<name>/ 之下，全部需要密钥。大致按一次运行使用它们的顺序。',
       columnCall: '调用',
@@ -634,7 +636,6 @@ export const zh: DocContent = {
         '该来源已存储的所有版本 — 供需要补空缺而不只是从最新之后续的连接器。',
         '把键浅合并进该来源的 config（例如把频道标题存下来做标签）。绝不是整体替换。',
         '批量写入收集到的行。content 是一个 API 从不解析的不透明字符串。',
-        '删除该来源早于 retentionDays 的行。',
         '记录一次收集失败。它会进入 API 的错误日志。',
       ],
       itemHeading: '一个 item 的形状',
@@ -661,7 +662,6 @@ export const zh: DocContent = {
           '给你本次运行要收集的来源。',
           '把新行一批发送，针对已存储版本去重。',
           '告诉你每个来源上次到哪儿。',
-          '修剪旧条目 — 或把不做保留这件事写明。',
           '按来源的失败被上报，而不是让本次运行崩掉。',
           '运行一次后列出你的 provider。',
         ],

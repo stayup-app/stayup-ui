@@ -629,7 +629,7 @@ export const it: DocContent = {
       seed: 'Seminare',
       announceDesc: 'registrare il tuo nome visualizzato + template, a ogni esecuzione',
       readDesc: 'le sorgenti da raccogliere, e dove ti sei fermato',
-      writeDesc: 'righe nuove, un merge di config, retention, errori',
+      writeDesc: 'righe nuove, un merge di config, errori',
       seedDesc: 'seguire un nuovo URL — il flag --add',
       warning:
         'Il connettore non detiene credenziali di database e non conosce alcun nome di tabella. La sua chiave funziona solo sotto /connector-api/<il proprio nome>/*: non può scrivere per un altro provider, né raggiungere utenti, admin o abbonamenti.',
@@ -637,6 +637,8 @@ export const it: DocContent = {
       authBody:
         'Un admin emette una chiave di connettore per il nome del tuo provider (UI admin → Chiavi connettore, o POST /ui/connector-keys). Il segreto, stayup_conn_…, è mostrato una sola volta. Il tuo script lo invia come Authorization: Bearer <chiave> a ogni chiamata, e lo legge — con l’URL dell’istanza — da STAYUP_API_KEY e STAYUP_API_URL.',
       endpointsHeading: 'Gli endpoint',
+      retentionNote:
+        'La retention non è in questo elenco di proposito. Un connettore non elimina mai: un admin imposta quanto vivono i contenuti (globale o per provider) nell’interfaccia web in Manutenzione, e un job pianificato sull’API esegue la purga.',
       endpointsIntro:
         'Tutti sotto /connector-api/<name>/, tutti richiedono la chiave. Più o meno nell’ordine in cui un’esecuzione li usa.',
       columnCall: 'Chiamata',
@@ -649,7 +651,6 @@ export const it: DocContent = {
         'Ogni versione già salvata per quella sorgente — per un connettore che colma i buchi invece di riprendere solo dopo la più recente.',
         'Fonde (shallow merge) chiavi nella config di quella sorgente (es. salvare il titolo del canale per l’etichetta). Mai una sostituzione completa.',
         'Scrive un lotto di righe raccolte. content è una stringa opaca che l’API non analizza mai.',
-        'Pota le righe più vecchie di retentionDays per quella sorgente.',
         'Registra un errore di raccolta. Finisce nel registro errori dell’API.',
       ],
       itemHeading: 'La forma di un item',
@@ -676,7 +677,6 @@ export const it: DocContent = {
           'ti dà le sorgenti da raccogliere in questa esecuzione.',
           'invia righe nuove in un lotto, deduplicate rispetto alla versione salvata.',
           'ti dice dove ti sei fermato per ogni sorgente.',
-          'pota le voci vecchie — o l’assenza di retention è documentata.',
           'errori per sorgente segnalati invece di far cadere l’esecuzione.',
           'elenca il tuo provider dopo un’esecuzione.',
         ],

@@ -630,7 +630,7 @@ export const de: DocContent = {
       seed: 'Anlegen',
       announceDesc: 'deinen Anzeigenamen + Template registrieren, bei jedem Lauf',
       readDesc: 'die zu sammelnden Quellen, und wo du aufgehört hast',
-      writeDesc: 'neue Zeilen, ein Config-Merge, Aufbewahrung, Fehler',
+      writeDesc: 'neue Zeilen, ein Config-Merge, Fehler',
       seedDesc: 'einer neuen URL folgen — das --add-Flag',
       warning:
         'Der Connector hält keine Datenbank-Zugangsdaten und kennt keine Tabellennamen. Sein Schlüssel wirkt nur unter /connector-api/<eigener Name>/*: er kann nicht für einen anderen Provider schreiben, noch Nutzer, Admins oder Abos erreichen.',
@@ -638,6 +638,8 @@ export const de: DocContent = {
       authBody:
         'Ein Admin stellt einen Connector-Schlüssel für deinen Provider-Namen aus (Admin-UI → Connector keys, oder POST /ui/connector-keys). Das Secret, stayup_conn_…, wird nur einmal gezeigt. Dein Skript sendet es bei jedem Aufruf als Authorization: Bearer <key> und liest es — mit der Instanz-URL — aus STAYUP_API_KEY und STAYUP_API_URL.',
       endpointsHeading: 'Die Endpunkte',
+      retentionNote:
+        'Aufbewahrung steht bewusst nicht in dieser Liste. Ein Connector löscht nie — ein Admin legt im Web-UI unter Wartung fest, wie lange Inhalte leben (global oder pro Provider), und ein geplanter Job auf der API übernimmt die Bereinigung.',
       endpointsIntro:
         'Alle unter /connector-api/<name>/, alle brauchen den Schlüssel. Etwa in der Reihenfolge, in der ein Lauf sie nutzt.',
       columnCall: 'Aufruf',
@@ -650,7 +652,6 @@ export const de: DocContent = {
         'Jede bereits gespeicherte Version für diese Quelle — für einen Connector, der Lücken nachfüllt statt nur nach der neuesten weiterzumachen.',
         'Schlüssel flach in die config dieser Quelle mergen (z. B. den Kanaltitel zur Beschriftung ablegen). Nie ein voller Ersatz.',
         'Einen Stapel gesammelter Zeilen schreiben. content ist ein opaker String, den die API nie parst.',
-        'Zeilen älter als retentionDays für diese Quelle löschen.',
         'Einen Sammelfehler festhalten. Er landet im Fehlerprotokoll der API.',
       ],
       itemHeading: 'Die Form eines Items',
@@ -677,7 +678,6 @@ export const de: DocContent = {
           'gibt dir die Quellen für diesen Lauf.',
           'sendet neue Zeilen in einem Stapel, dedupliziert gegen die gespeicherte Version.',
           'sagt dir, wo du bei jeder Quelle aufgehört hast.',
-          'kürzt alte Einträge — oder das Fehlen einer Aufbewahrung ist dokumentiert.',
           'Fehler pro Quelle gemeldet, statt den Lauf abstürzen zu lassen.',
           'listet deinen Provider nach einem Lauf.',
         ],

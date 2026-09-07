@@ -198,7 +198,6 @@ export const CONNECTOR_ENDPOINTS: readonly ConnectorEndpoint[] = [
   { call: 'GET /connector-api/<name>/sources/:id/versions' },
   { call: 'PATCH /connector-api/<name>/sources/:id/config' },
   { call: 'POST /connector-api/<name>/items' },
-  { call: 'DELETE /connector-api/<name>/sources/:id/old-items' },
   { call: 'POST /connector-api/<name>/errors' },
 ] as const
 
@@ -282,7 +281,6 @@ export const CHECKLIST_CODE = [
   'GET /connector-api/<name>/sources',
   'POST /connector-api/<name>/items',
   'GET /connector-api/<name>/sources/:id/state',
-  'DELETE /connector-api/<name>/sources/:id/old-items',
   'POST /connector-api/<name>/errors',
   'GET /connectors/providers',
 ] as const

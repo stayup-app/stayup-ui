@@ -628,7 +628,7 @@ export const pt: DocContent = {
       seed: 'Semear',
       announceDesc: 'registrar o seu nome de exibição + template, a cada execução',
       readDesc: 'as fontes a coletar, e onde você parou',
-      writeDesc: 'linhas novas, um merge de config, retenção, erros',
+      writeDesc: 'linhas novas, um merge de config, erros',
       seedDesc: 'acompanhar uma URL nova — a flag --add',
       warning:
         'O conector não guarda credenciais de banco de dados e não conhece nenhum nome de tabela. Sua chave só funciona sob /connector-api/<o próprio nome>/*: não pode escrever por outro provedor, nem alcançar os usuários, admins ou assinaturas.',
@@ -636,6 +636,8 @@ export const pt: DocContent = {
       authBody:
         'Um admin emite uma chave de conector para o nome do seu provedor (UI de admin → Chaves de conector, ou POST /ui/connector-keys). O segredo, stayup_conn_…, é mostrado uma única vez. Seu script o envia como Authorization: Bearer <chave> em toda chamada, e o lê — junto com a URL da instância — de STAYUP_API_KEY e STAYUP_API_URL.',
       endpointsHeading: 'Os endpoints',
+      retentionNote:
+        'A retenção não está nesta lista de propósito. Um connector nunca apaga — um admin define quanto tempo o conteúdo vive (global, ou por provider) na interface web em Manutenção, e uma tarefa agendada na API faz a purga.',
       endpointsIntro:
         'Todos sob /connector-api/<name>/, todos exigem a chave. Mais ou menos na ordem em que uma execução os usa.',
       columnCall: 'Chamada',
@@ -648,7 +650,6 @@ export const pt: DocContent = {
         'Toda versão já guardada para essa fonte — para um conector que preenche lacunas em vez de só retomar após a mais recente.',
         'Funde (shallow merge) chaves na config dessa fonte (p. ex. guardar o título do canal para o rótulo). Nunca uma substituição completa.',
         'Escreve um lote de linhas coletadas. content é uma string opaca que a API nunca analisa.',
-        'Poda as linhas mais antigas que retentionDays para essa fonte.',
         'Registra uma falha de coleta. Vai parar no registro de erros da API.',
       ],
       itemHeading: 'A forma de um item',
@@ -675,7 +676,6 @@ export const pt: DocContent = {
           'dá a você as fontes a coletar nesta execução.',
           'envia linhas novas em um lote, deduplicadas contra a versão guardada.',
           'diz onde você parou para cada fonte.',
-          'poda entradas antigas — ou a ausência de retenção está documentada.',
           'falhas por fonte reportadas em vez de derrubar a execução.',
           'lista o seu provedor após uma execução.',
         ],

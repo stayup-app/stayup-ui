@@ -678,7 +678,7 @@ export const en = {
       seed: 'Seed',
       announceDesc: 'register your display name + template, every run',
       readDesc: 'the sources to collect, and where you left off',
-      writeDesc: 'new rows, a config merge, retention, errors',
+      writeDesc: 'new rows, a config merge, errors',
       seedDesc: 'follow a new URL — the --add flag',
       warning:
         'The connector holds no database credentials and knows no table names. Its key only works under /connector-api/<its own name>/*; it cannot write for another provider, nor reach users, admins or subscriptions.',
@@ -686,6 +686,8 @@ export const en = {
       authBody:
         'An admin issues a connector key for your provider name (admin UI → Connector keys, or POST /ui/connector-keys). The secret, stayup_conn_…, is shown once. Your script sends it as Authorization: Bearer <key> on every call, and reads it — with the instance URL — from STAYUP_API_KEY and STAYUP_API_URL.',
       endpointsHeading: 'The endpoints',
+      retentionNote:
+        'Retention is deliberately not in this list. A connector never deletes — an admin sets how long content lives (globally, or per provider) in the web UI under Maintenance, and a scheduled job on the API runs the purge.',
       endpointsIntro:
         'All under /connector-api/<name>/, all needing the key. Roughly in the order a run uses them.',
       columnCall: 'Call',
@@ -698,7 +700,6 @@ export const en = {
         'Every version already stored for that source — for a connector that back-fills gaps rather than only resuming after the newest.',
         'Shallow-merge keys into that source’s config (e.g. store the channel title for labelling). Never a full replace.',
         'Write a batch of collected rows. content is an opaque string the API never parses.',
-        'Prune rows older than retentionDays for that source.',
         'Record a collection failure. It lands in the API’s error log.',
       ],
       itemHeading: 'The item shape',
@@ -725,7 +726,6 @@ export const en = {
           'gives you the sources to collect this run.',
           'sends new rows in one batch, deduped against the stored version.',
           'tells you where you left off for each source.',
-          'prunes old entries — or the absence of retention is documented.',
           'per-source failures reported instead of crashing the run.',
           'lists your provider after one run.',
         ],

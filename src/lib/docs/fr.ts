@@ -669,7 +669,7 @@ export const fr: DocContent = {
       seed: 'Amorcer',
       announceDesc: 'enregistrer ton nom affiché + template, à chaque run',
       readDesc: 'les sources à collecter, et où tu t’es arrêté',
-      writeDesc: 'les nouvelles lignes, une fusion de config, la rétention, les erreurs',
+      writeDesc: 'les nouvelles lignes, une fusion de config, les erreurs',
       seedDesc: 'suivre une nouvelle URL — le flag --add',
       warning:
         'Le connecteur ne détient aucun identifiant de base et ne connaît aucun nom de table. Sa clé ne marche que sous /connector-api/<son propre nom>/* : il ne peut pas écrire pour un autre provider, ni atteindre les utilisateurs, les admins ou les abonnements.',
@@ -677,6 +677,8 @@ export const fr: DocContent = {
       authBody:
         'Un admin émet une clé de connecteur pour le nom de ton provider (UI admin → Clés connecteur, ou POST /ui/connector-keys). Le secret, stayup_conn_…, n’est montré qu’une fois. Ton script l’envoie en Authorization: Bearer <clé> à chaque appel, et le lit — avec l’URL de l’instance — dans STAYUP_API_KEY et STAYUP_API_URL.',
       endpointsHeading: 'Les endpoints',
+      retentionNote:
+        'La rétention n’est volontairement pas dans cette liste. Un connecteur ne supprime jamais — un admin fixe la durée de vie du contenu (globale, ou par provider) dans l’UI web sous Maintenance, et une tâche planifiée sur l’API fait la purge.',
       endpointsIntro:
         'Tous sous /connector-api/<name>/, tous exigeant la clé. À peu près dans l’ordre où un run les utilise.',
       columnCall: 'Appel',
@@ -689,7 +691,6 @@ export const fr: DocContent = {
         'Toutes les versions déjà stockées pour cette source — pour un connecteur qui comble des trous plutôt que de seulement reprendre après la plus récente.',
         'Fusionne (shallow merge) des clés dans la config de cette source (ex. y ranger le titre du canal pour l’affichage). Jamais un remplacement complet.',
         'Écrit un lot de lignes collectées. content est une chaîne opaque que l’API ne lit jamais.',
-        'Purge les lignes plus vieilles que retentionDays pour cette source.',
         'Consigne un échec de collecte. Il atterrit dans le journal d’erreurs de l’API.',
       ],
       itemHeading: 'La forme d’un item',
@@ -716,7 +717,6 @@ export const fr: DocContent = {
           'te donne les sources à collecter ce run.',
           'envoie les nouvelles lignes en un lot, dédupées contre la version stockée.',
           'te dit où tu t’es arrêté pour chaque source.',
-          'élague les anciennes entrées — ou l’absence de rétention est documentée.',
           'échecs par source signalés au lieu de faire planter le run.',
           'liste ton provider après un run.',
         ],

@@ -631,7 +631,7 @@ export const es: DocContent = {
       seed: 'Sembrar',
       announceDesc: 'registrar tu nombre visible + plantilla, en cada ejecución',
       readDesc: 'las fuentes a recopilar, y dónde te quedaste',
-      writeDesc: 'filas nuevas, una fusión de config, retención, errores',
+      writeDesc: 'filas nuevas, una fusión de config, errores',
       seedDesc: 'seguir una URL nueva — el flag --add',
       warning:
         'El conector no tiene credenciales de base de datos y no conoce ningún nombre de tabla. Su clave solo funciona bajo /connector-api/<su propio nombre>/*: no puede escribir para otro proveedor, ni alcanzar a los usuarios, admins o suscripciones.',
@@ -639,6 +639,8 @@ export const es: DocContent = {
       authBody:
         'Un admin emite una clave de conector para el nombre de tu proveedor (UI de admin → Claves de conector, o POST /ui/connector-keys). El secreto, stayup_conn_…, se muestra una sola vez. Tu script lo envía como Authorization: Bearer <clave> en cada llamada, y lo lee — junto con la URL de la instancia — de STAYUP_API_KEY y STAYUP_API_URL.',
       endpointsHeading: 'Los endpoints',
+      retentionNote:
+        'La retención no está en esta lista a propósito. Un conector nunca borra: un admin define cuánto viven los contenidos (global o por proveedor) en la interfaz web, en Mantenimiento, y una tarea programada en la API hace la purga.',
       endpointsIntro:
         'Todos bajo /connector-api/<name>/, todos exigen la clave. Más o menos en el orden en que una ejecución los usa.',
       columnCall: 'Llamada',
@@ -651,7 +653,6 @@ export const es: DocContent = {
         'Todas las versiones ya guardadas para esa fuente — para un conector que rellena huecos en vez de solo retomar tras la más reciente.',
         'Fusiona (shallow merge) claves en la config de esa fuente (p. ej. guardar el título del canal para la etiqueta). Nunca un reemplazo completo.',
         'Escribe un lote de filas recopiladas. content es una cadena opaca que la API nunca parsea.',
-        'Poda las filas más antiguas que retentionDays para esa fuente.',
         'Registra un fallo de recopilación. Acaba en el registro de errores de la API.',
       ],
       itemHeading: 'La forma de un item',
@@ -678,7 +679,6 @@ export const es: DocContent = {
           'te da las fuentes a recopilar esta ejecución.',
           'envía filas nuevas en un lote, deduplicadas contra la versión guardada.',
           'te dice dónde te quedaste para cada fuente.',
-          'poda entradas antiguas — o la ausencia de retención está documentada.',
           'fallos por fuente reportados en vez de hacer caer la ejecución.',
           'lista tu proveedor tras una ejecución.',
         ],
