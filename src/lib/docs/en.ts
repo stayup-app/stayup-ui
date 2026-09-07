@@ -437,7 +437,7 @@ export const en = {
         'Clones the API, the connectors you picked, and — if you keep it — the admin web UI.',
         'Writes a docker-compose.yml with PostgreSQL, the API, one container per connector, and an Ofelia scheduler.',
         'Prompts you for the super admin account and for each connector’s schedule.',
-        'Applies the database schema, creates the super admin, and runs every connector once so it registers itself.',
+        'Applies the schema, creates the super admin, issues one connector key per provider, then runs every connector once so it registers itself.',
         'Starts the API, the UI and the scheduler.',
       ],
       note: 'Everything runs on your machine in Docker. Nothing is sent anywhere — the page builds the script in your browser.',
@@ -458,7 +458,7 @@ export const en = {
       connectors: 'Official connectors',
       customConnectors: 'Your own connectors',
       customHint:
-        'Any git repo with a root Dockerfile whose ENTRYPOINT runs the collector once, reads DATABASE_URL, and registers itself in provider_registry. See the provider guide.',
+        'Any git repo with a root Dockerfile whose ENTRYPOINT runs the collector once and reads STAYUP_API_URL / STAYUP_API_KEY. The key the script issues is scoped to the service name, so the connector’s provider name must match it. See the provider guide.',
       customConnectorAdd: 'Add a connector',
       customUrlPlaceholder: 'https://github.com/you/your-connector.git',
       customNamePlaceholder: 'name (optional)',

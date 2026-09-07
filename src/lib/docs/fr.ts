@@ -428,7 +428,7 @@ export const fr: DocContent = {
         'Clone l’API, les connecteurs choisis et — si tu le gardes — le web d’admin.',
         'Écrit un docker-compose.yml avec PostgreSQL, l’API, un conteneur par connecteur et un planificateur Ofelia.',
         'Te demande le compte super admin et la fréquence de chaque connecteur.',
-        'Applique le schéma, crée le super admin et lance chaque connecteur une fois pour qu’il s’enregistre.',
+        'Applique le schéma, crée le super admin, émet une clé de connecteur par provider, puis lance chaque connecteur une fois pour qu’il s’enregistre.',
         'Démarre l’API, le web d’admin et le planificateur.',
       ],
       note: 'Tout tourne sur ta machine dans Docker. Rien n’est envoyé nulle part — la page construit le script dans ton navigateur.',
@@ -449,7 +449,7 @@ export const fr: DocContent = {
       connectors: 'Connecteurs officiels',
       customConnectors: 'Tes connecteurs',
       customHint:
-        'N’importe quel dépôt git avec un Dockerfile à la racine dont l’ENTRYPOINT lance le collecteur une fois, lit DATABASE_URL et s’enregistre dans provider_registry. Voir le guide des providers.',
+        'N’importe quel dépôt git avec un Dockerfile à la racine dont l’ENTRYPOINT lance le collecteur une fois et lit STAYUP_API_URL / STAYUP_API_KEY. La clé émise par le script est scopée au nom de service, donc le nom de provider du connecteur doit correspondre. Voir le guide des providers.',
       customConnectorAdd: 'Ajouter un connecteur',
       customUrlPlaceholder: 'https://github.com/toi/ton-connecteur.git',
       customNamePlaceholder: 'nom (optionnel)',

@@ -79,6 +79,12 @@ export function deriveServiceName(gitUrl: string): string {
 
 interface ResolvedConnector {
   name: string
+  /** Nom du provider tel que le collecteur l'utilise dans `/connector-api/<provider>/*`
+   *  et dans `provider_registry` — c'est ce que scope la clé connecteur. Dérivé du
+   *  nom de service en repassant les `-` en `_` (ex. `github-trending` →
+   *  `github_trending`). Pour un connecteur perso, suppose que son `PROVIDER_TYPE`
+   *  suit la même règle. */
+  provider: string
   gitUrl: string
   cron: string
 }
@@ -87,7 +93,12 @@ function resolveConnectors(input: GeneratorInput): ResolvedConnector[] {
   const official = input.connectors.map((id) => {
     const c = OFFICIAL_CONNECTORS.find((o) => o.id === id)
     if (!c) throw new Error(`Unknown connector: ${id}`)
-    return { name: c.id, gitUrl: `https://github.com/${c.repo}.git`, cron: c.defaultCron }
+    return {
+      name: c.id,
+      provider: c.id.replace(/-/g, '_'),
+      gitUrl: `https://github.com/${c.repo}.git`,
+      cron: c.defaultCron,
+    }
   })
 
   const seen = new Set<string>(official.map((c) => c.name))
@@ -100,7 +111,7 @@ function resolveConnectors(input: GeneratorInput): ResolvedConnector[] {
     let i = 2
     while (seen.has(name)) name = `${wanted}-${i++}`
     seen.add(name)
-    return { name, gitUrl: url, cron: '0 0 * * *' }
+    return { name, provider: name.replace(/-/g, '_'), gitUrl: url, cron: '0 0 * * *' }
   })
 
   return [...official, ...custom]
@@ -118,24 +129,31 @@ function validate(input: GeneratorInput): void {
 }
 
 function composeConnectorBlock(c: ResolvedConnector, projectDir: string): string {
+  // Le connecteur ne touche plus la base : il parle à l'API. La clé est
+  // interpolée par Compose depuis `.env` (`_KEY_<provider>=…`, écrit par le
+  // script une fois l'API démarrée — voir la section « connector keys »).
   return `
   connector-${c.name}:
     build: ./connector-${c.name}
     image: ${projectDir}-connector-${c.name}
     environment:
-      DATABASE_URL: $DATABASE_URL
+      STAYUP_API_URL: http://api:3000
+      STAYUP_API_KEY: \\\${_KEY_${c.provider}:-}
     depends_on:
-      db:
-        condition: service_healthy
+      - api
     restart: "no"
     profiles: ["connectors"]`
 }
 
 function ofeliaBlock(c: ResolvedConnector, projectDir: string): string {
+  // `$_KEY_<provider>` est développé par le shell au moment où le script écrit
+  // ofelia.ini — donc après l'émission des clés.
   return `[job-run "stayup-${c.name}"]
 schedule = $${cronVar(c.name)}
 image = ${projectDir}-connector-${c.name}
 network = ${projectDir}_default
+environment = STAYUP_API_URL=http://api:3000
+environment = STAYUP_API_KEY=$_KEY_${c.provider}
 delete = true
 `
 }
@@ -207,6 +225,53 @@ export function buildSetupScript(input: GeneratorInput): string {
       )
       .join('\n') || ': # no connector selected'
 
+  // Chaque collecteur s'authentifie auprès de l'API avec une clé connecteur
+  // scopée à son provider — plus aucun accès direct à la base. On les émet ici,
+  // une fois l'API démarrée : login super admin puis POST /ui/connector-keys via
+  // `node` dans le conteneur api (fetch + JSON.stringify gèrent proprement des
+  // identifiants arbitraires, sans dépendre de curl/jq sur l'hôte). Les secrets
+  // `_KEY_<provider>=…` atterrissent dans `.env` (lu par Compose pour les
+  // services connector-*) et en variables du shell (pour le heredoc ofelia.ini).
+  const keyIssueNode = `const base = "http://localhost:3000";
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+(async () => {
+  let ready = false;
+  for (let i = 0; i < 60 && !ready; i++) {
+    try { const h = await fetch(base + "/"); ready = h.ok; } catch (e) {}
+    if (!ready) await sleep(1000);
+  }
+  if (!ready) { console.error("API not reachable on " + base); process.exit(1); }
+  const login = await fetch(base + "/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ username: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }),
+  });
+  if (!login.ok) { console.error("super admin login failed: HTTP " + login.status); process.exit(1); }
+  const token = (await login.json()).token;
+  for (const p of (process.env.PROVIDERS || "").split(" ").filter(Boolean)) {
+    const res = await fetch(base + "/ui/connector-keys", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer " + token },
+      body: JSON.stringify({ provider: p, name: p + " (stayup-setup.sh)" }),
+    });
+    if (!res.ok) { console.error("connector key failed for " + p + ": HTTP " + res.status); process.exit(1); }
+    console.log("_KEY_" + p + "=" + (await res.json()).key);
+  }
+})().catch((e) => { console.error(String((e && e.stack) || e)); process.exit(1); });`
+
+  const keyIssuance =
+    connectors.length === 0
+      ? ': # no connector selected — no keys to issue'
+      : `c_info "Issuing one connector key per provider…"
+KEYS_ENV="$(docker compose exec -T \\
+  -e ADMIN_EMAIL="$ADMIN_EMAIL" -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \\
+  -e PROVIDERS="${connectors.map((c) => c.provider).join(' ')}" \\
+  api node -e '${keyIssueNode}')"
+[ -n "$KEYS_ENV" ] || die "Could not issue connector keys — is the API up and the super admin valid?"
+printf '%s\\n' "$KEYS_ENV" >> .env
+while IFS='=' read -r _n _v; do [ -n "$_n" ] && printf -v "$_n" '%s' "$_v"; done <<< "$KEYS_ENV"
+c_ok "Connector keys issued (one per provider)"`
+
   const uiStart = includeAdminUi ? 'c_info "Starting the admin UI…"; docker compose up -d ui\n' : ''
   const uiUrlLine = includeAdminUi
     ? 'echo "  Admin  http://localhost:$UI_PORT/admin  (log in with the super admin above)"\n'
@@ -243,11 +308,17 @@ export function buildSetupScript(input: GeneratorInput): string {
       ? 'echo "  Sign-ups wait for an admin under /admin/users → Comptes en attente (approval mode)."\n'
       : ''
 
+  const customKeyNote =
+    input.customConnectors.length > 0
+      ? `echo "  Custom connectors: the issued key is scoped to the service name; if a"\necho "  connector's PROVIDER_TYPE differs, revoke it and create the right key in /admin."\n`
+      : ''
+
   return `#!/usr/bin/env bash
 #
 # StayUp — self-hosted setup (generated).
 # PostgreSQL + the API + the connectors you picked${includeAdminUi ? ' + the admin UI' : ''}.
-# Creates the super admin, runs each connector once, then starts the scheduler.
+# Creates the super admin, issues one connector key per provider, runs each
+# connector once, then starts the scheduler.
 #
 # Requires: Docker, Docker Compose v2, git. Linux / macOS / WSL only.
 #
@@ -307,7 +378,8 @@ JWT_SECRET="$(rand_hex 32)"
 DATABASE_URL="postgres://stayup:$POSTGRES_PASSWORD@db:5432/stayup"
 
 cat > .env <<EOF
-# Reference only — the same values are baked into docker-compose.yml.
+# Written by stayup-setup.sh. Compose reads the _KEY_* lines (appended later)
+# for the connector-* services; the rest mirrors docker-compose.yml.
 POSTGRES_DB=stayup
 POSTGRES_USER=stayup
 POSTGRES_PASSWORD=$POSTGRES_PASSWORD
@@ -366,12 +438,9 @@ volumes:
   pgdata:
 EOF
 
-cat > ofelia.ini <<EOF
-${ofeliaJobs}EOF
-
 # ─── Build & bring up ──────────────────────────────────────────────────────
-c_info "Building images — the first run can take a few minutes…"
-docker compose --profile connectors build
+c_info "Building the API${includeAdminUi ? ' and admin UI' : ''} image — the first build can take a few minutes…"
+docker compose build api${includeAdminUi ? ' ui' : ''}
 
 c_info "Starting PostgreSQL…"
 docker compose up -d db
@@ -387,6 +456,15 @@ c_ok "Super admin ready"
 c_info "Starting the API…"
 docker compose up -d api
 ${uiStart}
+# ─── Connector keys ───────────────────────────────────────────────────────────
+${keyIssuance}
+
+cat > ofelia.ini <<EOF
+${ofeliaJobs}EOF
+
+c_info "Building the connector image(s)…"
+docker compose --profile connectors build
+
 c_info "First run of each connector (registers its provider)…"
 ${firstRuns}
 
@@ -397,7 +475,7 @@ docker compose up -d scheduler
 c_ok "StayUp is up."
 echo
 echo "  API    http://localhost:$API_PORT/docs"
-${uiUrlLine}${oauthDoneNote}${approvalDoneNote}cat <<EOF
+${uiUrlLine}${oauthDoneNote}${approvalDoneNote}${customKeyNote}cat <<EOF
 
   • Point your StayUp desktop / mobile app's API URL at  http://localhost:${ports.api}
   • Add feeds from the app — every provider offers an existing-flux list and an add-a-new-one form.

@@ -400,7 +400,7 @@ export const ja: DocContent = {
         'API、選んだコネクター、そして残す場合は管理用 Web UI をクローンします。',
         'PostgreSQL、API、コネクターごとのコンテナ、Ofelia スケジューラーを含む docker-compose.yml を書き出します。',
         'スーパー管理者アカウントと各コネクターの実行間隔を尋ねます。',
-        'スキーマを適用し、スーパー管理者を作成し、各コネクターを一度実行して登録させます。',
+        'スキーマを適用し、スーパー管理者を作成し、provider ごとにコネクター鍵を発行し、その後各コネクターを一度実行して登録させます。',
         'API、UI、スケジューラーを起動します。',
       ],
       note: 'すべて Docker であなたのマシン上で動作します。どこにも送信されません — ページはブラウザ内でスクリプトを組み立てます。',
@@ -419,7 +419,7 @@ export const ja: DocContent = {
       connectors: '公式コネクター',
       customConnectors: '自作コネクター',
       customHint:
-        'ルートに Dockerfile を持つ任意の git リポジトリで、その ENTRYPOINT がコレクターを一度実行し、DATABASE_URL を読み、provider_registry に自身を登録すること。プロバイダーガイドを参照。',
+        'ルートに Dockerfile を持つ任意の git リポジトリで、その ENTRYPOINT がコレクターを一度実行し、STAYUP_API_URL / STAYUP_API_KEY を読むこと。スクリプトが発行する鍵はサービス名にスコープされるため、コネクターの provider 名がそれと一致している必要があります。プロバイダーガイドを参照。',
       customConnectorAdd: 'コネクターを追加',
       customUrlPlaceholder: 'https://github.com/you/your-connector.git',
       customNamePlaceholder: '名前（任意）',

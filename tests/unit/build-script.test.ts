@@ -85,6 +85,49 @@ describe('buildSetupScript — shape', () => {
   it('leaves no un-interpolated JS placeholder', () => {
     expect(script).not.toMatch(/\$\{[a-zA-Z]/) // no `${projectDir}` etc.
   })
+
+  it('wires connectors to the API with a per-provider key, not the database', () => {
+    for (const id of base.connectors) {
+      const provider = id.replace(/-/g, '_')
+      // The connector's compose service block: API URL + a key from .env, no DB.
+      const block = script.slice(
+        script.indexOf(`  connector-${id}:`),
+        script.indexOf(`  connector-${id}:`) + 400,
+      )
+      expect(block).toContain('STAYUP_API_URL: http://api:3000')
+      // In the compose heredoc the `$` is backslash-escaped so bash writes a
+      // literal `${_KEY_…}` for Compose to interpolate from .env.
+      expect(block).toContain(`STAYUP_API_KEY: \\\${_KEY_${provider}:-}`)
+      expect(block).not.toContain('DATABASE_URL')
+      // Ofelia job carries the same env for scheduled runs.
+      expect(script).toContain(`environment = STAYUP_API_KEY=$_KEY_${provider}`)
+    }
+    // github-trending's provider name is snake_case.
+    expect(script).toContain('STAYUP_API_KEY: \\${_KEY_github_trending:-}')
+  })
+
+  it('issues one connector key per provider, after the API is up, into .env', () => {
+    const i = (s: string) => script.indexOf(s)
+    expect(i('docker compose up -d api')).toBeGreaterThan(-1)
+    expect(i('Issuing one connector key per provider')).toBeGreaterThan(
+      i('docker compose up -d api'),
+    )
+    expect(script).toContain('api node -e ')
+    expect(script).toContain('/ui/connector-keys')
+    expect(script).toContain('/auth/login')
+    expect(script).toContain('-e PROVIDERS="changelog youtube rss scrap github_trending"')
+    expect(script).toContain('printf \'%s\\n\' "$KEYS_ENV" >> .env')
+    // .env and ofelia.ini are written before the first connector run needs the key.
+    expect(i('KEYS_ENV=')).toBeLessThan(i('cat > ofelia.ini'))
+    expect(i('cat > ofelia.ini')).toBeLessThan(i('First run of each connector'))
+  })
+
+  it('issues no key and stays valid when no connector is selected', () => {
+    const s = buildSetupScript({ ...base, connectors: [], customConnectors: [] })
+    expect(s).toContain('# no connector selected — no keys to issue')
+    expect(s).not.toContain('/ui/connector-keys')
+    expect(s).not.toMatch(/\$\{[a-zA-Z]/)
+  })
 })
 
 describe('buildSetupScript — auth', () => {

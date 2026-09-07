@@ -390,7 +390,7 @@ export const zh: DocContent = {
         '克隆 API、所选连接器，以及（如果保留）管理后台 Web 界面。',
         '写出一个包含 PostgreSQL、API、每个连接器一个容器以及 Ofelia 调度器的 docker-compose.yml。',
         '询问超级管理员账户以及每个连接器的运行频率。',
-        '应用数据库结构、创建超级管理员，并让每个连接器先运行一次以完成注册。',
+        '应用结构、创建超级管理员、为每个 provider 各签发一个连接器密钥，然后让每个连接器先运行一次以完成注册。',
         '启动 API、界面和调度器。',
       ],
       note: '一切都在你的机器上通过 Docker 运行。不会发送到任何地方——页面在你的浏览器中构建脚本。',
@@ -409,7 +409,7 @@ export const zh: DocContent = {
       connectors: '官方连接器',
       customConnectors: '你的连接器',
       customHint:
-        '任意包含根 Dockerfile 的 git 仓库，其 ENTRYPOINT 运行采集器一次、读取 DATABASE_URL 并在 provider_registry 中注册自身。参见 provider 指南。',
+        '任意包含根 Dockerfile 的 git 仓库，其 ENTRYPOINT 运行采集器一次并读取 STAYUP_API_URL / STAYUP_API_KEY。脚本签发的密钥按服务名限定作用域，因此连接器的 provider 名必须与之一致。参见 provider 指南。',
       customConnectorAdd: '添加连接器',
       customUrlPlaceholder: 'https://github.com/you/your-connector.git',
       customNamePlaceholder: '名称（可选）',

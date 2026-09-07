@@ -401,7 +401,7 @@ export const pt: DocContent = {
         'Clona a API, os conectores escolhidos e — se você mantiver — a interface web de administração.',
         'Escreve um docker-compose.yml com PostgreSQL, a API, um contêiner por conector e um agendador Ofelia.',
         'Pergunta a conta de superadministrador e a frequência de cada conector.',
-        'Aplica o esquema, cria o superadministrador e executa cada conector uma vez para que ele se registre.',
+        'Aplica o esquema, cria o superadministrador, emite uma chave de conector por provedor e então executa cada conector uma vez para que ele se registre.',
         'Inicia a API, a interface e o agendador.',
       ],
       note: 'Tudo roda na sua máquina no Docker. Nada é enviado a lugar nenhum — a página monta o script no seu navegador.',
@@ -420,7 +420,7 @@ export const pt: DocContent = {
       connectors: 'Conectores oficiais',
       customConnectors: 'Seus conectores',
       customHint:
-        'Qualquer repositório git com um Dockerfile na raiz cujo ENTRYPOINT executa o coletor uma vez, lê DATABASE_URL e se registra em provider_registry. Veja o guia de provedores.',
+        'Qualquer repositório git com um Dockerfile na raiz cujo ENTRYPOINT executa o coletor uma vez e lê STAYUP_API_URL / STAYUP_API_KEY. A chave que o script emite fica restrita ao nome do serviço, então o nome de provedor do conector precisa coincidir. Veja o guia de provedores.',
       customConnectorAdd: 'Adicionar um conector',
       customUrlPlaceholder: 'https://github.com/voce/seu-conector.git',
       customNamePlaceholder: 'nome (opcional)',

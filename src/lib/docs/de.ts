@@ -403,7 +403,7 @@ export const de: DocContent = {
         'Klont die API, die gewählten Konnektoren und — wenn du sie behältst — die Admin-Weboberfläche.',
         'Schreibt eine docker-compose.yml mit PostgreSQL, der API, einem Container pro Konnektor und einem Ofelia-Scheduler.',
         'Fragt nach dem Super-Admin-Konto und nach dem Zeitplan jedes Konnektors.',
-        'Wendet das Datenbankschema an, legt den Super-Admin an und führt jeden Konnektor einmal aus, damit er sich registriert.',
+        'Wendet das Schema an, legt den Super-Admin an, stellt einen Connector-Schlüssel pro Provider aus und führt dann jeden Konnektor einmal aus, damit er sich registriert.',
         'Startet die API, die Oberfläche und den Scheduler.',
       ],
       note: 'Alles läuft in Docker auf deinem Rechner. Nichts wird irgendwohin gesendet — die Seite baut das Skript in deinem Browser.',
@@ -422,7 +422,7 @@ export const de: DocContent = {
       connectors: 'Offizielle Konnektoren',
       customConnectors: 'Eigene Konnektoren',
       customHint:
-        'Ein beliebiges Git-Repo mit einem Dockerfile im Stamm, dessen ENTRYPOINT den Collector einmal ausführt, DATABASE_URL liest und sich in provider_registry registriert. Siehe Provider-Leitfaden.',
+        'Ein beliebiges Git-Repo mit einem Dockerfile im Stamm, dessen ENTRYPOINT den Collector einmal ausführt und STAYUP_API_URL / STAYUP_API_KEY liest. Der vom Skript ausgestellte Schlüssel ist auf den Servicenamen begrenzt, der Provider-Name des Konnektors muss also übereinstimmen. Siehe Provider-Leitfaden.',
       customConnectorAdd: 'Konnektor hinzufügen',
       customUrlPlaceholder: 'https://github.com/du/dein-konnektor.git',
       customNamePlaceholder: 'Name (optional)',
