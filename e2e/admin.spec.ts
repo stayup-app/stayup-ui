@@ -44,6 +44,11 @@ test.describe('Admin routes (unauthenticated)', () => {
     await page.goto('/admin/maintenance')
     await expect(page).toHaveURL('/admin/login')
   })
+
+  test('/admin/connector-keys redirects to /admin/login', async ({ page }) => {
+    await page.goto('/admin/connector-keys')
+    await expect(page).toHaveURL('/admin/login')
+  })
 })
 
 test.describe('Admin session is independent from the user session', () => {

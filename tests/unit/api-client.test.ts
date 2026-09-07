@@ -351,6 +351,41 @@ describe('content retention & cleanup', () => {
   })
 })
 
+describe('connector API keys', () => {
+  it('adminListConnectorKeys unwraps the keys array', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        keys: [{ id: 'k1', provider: 'rss', name: 'k', key_prefix: 'ab12cd34' }],
+      }),
+    })
+    const { adminListConnectorKeys } = await import('@/lib/api-client')
+    const keys = await adminListConnectorKeys(TEST_TOKEN)
+    expect(keys).toHaveLength(1)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/connector-keys')
+  })
+
+  it('adminCreateConnectorKey POSTs the body and returns the secret', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 'k2', provider: 'rss', name: 'k', key: 'stayup_conn_x' }),
+    })
+    const { adminCreateConnectorKey } = await import('@/lib/api-client')
+    const res = await adminCreateConnectorKey({ provider: 'rss', name: 'k' }, TEST_TOKEN)
+    expect(res.key).toBe('stayup_conn_x')
+    expect(mockFetch.mock.calls[0][1].method).toBe('POST')
+    expect(JSON.parse(mockFetch.mock.calls[0][1].body)).toEqual({ provider: 'rss', name: 'k' })
+  })
+
+  it('adminRevokeConnectorKey DELETEs by id', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
+    const { adminRevokeConnectorKey } = await import('@/lib/api-client')
+    await adminRevokeConnectorKey('k9', TEST_TOKEN)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/connector-keys/k9')
+    expect(mockFetch.mock.calls[0][1].method).toBe('DELETE')
+  })
+})
+
 describe('adminListFluxRequests / approve / reject', () => {
   it('unwraps the requests array', async () => {
     mockFetch.mockResolvedValueOnce({

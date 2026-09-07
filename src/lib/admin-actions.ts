@@ -19,10 +19,13 @@ import {
   adminListDataSources,
   adminListFluxRequests,
   adminListPendingUsers,
+  adminCreateConnectorKey,
   adminGetRetention,
+  adminListConnectorKeys,
   adminListProviders,
   adminRejectFluxRequest,
   adminRejectPendingUser,
+  adminRevokeConnectorKey,
   adminRunCleanup,
   adminSetProviderApproval,
   adminUpdateRetention,
@@ -30,6 +33,7 @@ import {
   adminUpdateAdmin,
   deleteUserRepository,
   type AdminPendingUser,
+  type ConnectorKey,
   type DataSourceProbe,
   type DataSourcesResponse,
   type RetentionSettings,
@@ -364,6 +368,41 @@ export async function adminRunCleanupAction(): Promise<{
   try {
     const result = await adminRunCleanup(token)
     return { total: result.total, purged: result.purged }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+// ─── Clés d'API des connectors ──────────────────────────────────────────────
+
+export async function adminListConnectorKeysAction(): Promise<ConnectorKey[]> {
+  const token = await getAdminToken()
+  if (!token) return []
+  return adminListConnectorKeys(token).catch(() => [])
+}
+
+export async function adminCreateConnectorKeyAction(input: {
+  provider: string
+  name: string
+}): Promise<{ error?: string; key?: string }> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    const created = await adminCreateConnectorKey(input, token)
+    revalidatePath('/admin/connector-keys')
+    return { key: created.key }
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+export async function adminRevokeConnectorKeyAction(id: string): Promise<{ error?: string }> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    await adminRevokeConnectorKey(id, token)
+    revalidatePath('/admin/connector-keys')
+    return {}
   } catch (err) {
     return { error: (err as Error).message }
   }

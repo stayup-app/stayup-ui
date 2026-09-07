@@ -29,6 +29,9 @@ const api = {
   adminGetRetention: vi.fn(),
   adminUpdateRetention: vi.fn(),
   adminRunCleanup: vi.fn(),
+  adminListConnectorKeys: vi.fn(),
+  adminCreateConnectorKey: vi.fn(),
+  adminRevokeConnectorKey: vi.fn(),
   deleteUserRepository: vi.fn(),
   adminChangeOwnPassword: vi.fn(),
   adminCreateAdmin: vi.fn(),
@@ -537,5 +540,64 @@ describe('content retention actions', () => {
 
     getAdminToken.mockResolvedValue(null)
     expect(await adminRunCleanupAction()).toEqual({ error: en.errors.notAuthenticated })
+  })
+})
+
+describe('connector key actions', () => {
+  it('adminListConnectorKeysAction returns keys, empty array when unauthenticated', async () => {
+    api.adminListConnectorKeys.mockResolvedValue([{ id: 'k1' }])
+    const { adminListConnectorKeysAction } = await import('@/lib/admin-actions')
+    expect(await adminListConnectorKeysAction()).toEqual([{ id: 'k1' }])
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminListConnectorKeysAction()).toEqual([])
+  })
+
+  it('adminListConnectorKeysAction swallows an API failure', async () => {
+    api.adminListConnectorKeys.mockRejectedValue(new Error('boom'))
+    const { adminListConnectorKeysAction } = await import('@/lib/admin-actions')
+    expect(await adminListConnectorKeysAction()).toEqual([])
+  })
+
+  it('adminCreateConnectorKeyAction returns the fresh secret and revalidates', async () => {
+    api.adminCreateConnectorKey.mockResolvedValue({ id: 'k2', key: 'stayup_conn_new' })
+    const { adminCreateConnectorKeyAction } = await import('@/lib/admin-actions')
+    expect(await adminCreateConnectorKeyAction({ provider: 'rss', name: 'k' })).toEqual({
+      key: 'stayup_conn_new',
+    })
+    expect(api.adminCreateConnectorKey).toHaveBeenCalledWith(
+      { provider: 'rss', name: 'k' },
+      'token',
+    )
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/connector-keys')
+  })
+
+  it('adminCreateConnectorKeyAction reports the API error and the auth error', async () => {
+    api.adminCreateConnectorKey.mockRejectedValue(new Error('provider and name are required'))
+    const { adminCreateConnectorKeyAction } = await import('@/lib/admin-actions')
+    expect(await adminCreateConnectorKeyAction({ provider: '', name: '' })).toEqual({
+      error: 'provider and name are required',
+    })
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminCreateConnectorKeyAction({ provider: 'rss', name: 'k' })).toEqual({
+      error: en.errors.notAuthenticated,
+    })
+  })
+
+  it('adminRevokeConnectorKeyAction revokes and revalidates', async () => {
+    const { adminRevokeConnectorKeyAction } = await import('@/lib/admin-actions')
+    expect(await adminRevokeConnectorKeyAction('k1')).toEqual({})
+    expect(api.adminRevokeConnectorKey).toHaveBeenCalledWith('k1', 'token')
+    expect(revalidatePath).toHaveBeenCalledWith('/admin/connector-keys')
+  })
+
+  it('adminRevokeConnectorKeyAction reports the API error and the auth error', async () => {
+    api.adminRevokeConnectorKey.mockRejectedValue(new Error('Key not found'))
+    const { adminRevokeConnectorKeyAction } = await import('@/lib/admin-actions')
+    expect(await adminRevokeConnectorKeyAction('nope')).toEqual({ error: 'Key not found' })
+
+    getAdminToken.mockResolvedValue(null)
+    expect(await adminRevokeConnectorKeyAction('k1')).toEqual({ error: en.errors.notAuthenticated })
   })
 })

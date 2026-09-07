@@ -547,3 +547,39 @@ export async function adminRunCleanup(
     { method: 'POST' },
   )
 }
+
+// ─── Admin — connector API keys ─────────────────────────────────────────────
+
+export type ConnectorKey = {
+  id: string
+  provider: string
+  name: string
+  key_prefix: string
+  created_at: string
+  last_used_at: string | null
+  revoked_at: string | null
+}
+
+export async function adminListConnectorKeys(token: string): Promise<ConnectorKey[]> {
+  const data = await apiFetch<{ keys: ConnectorKey[] }>('/ui/connector-keys', token, {
+    cache: 'no-store',
+  })
+  return data.keys
+}
+
+/** The plain `stayup_conn_…` secret in `key` is returned only here, once. */
+export async function adminCreateConnectorKey(
+  body: { provider: string; name: string },
+  token: string,
+): Promise<{ id: string; provider: string; name: string; key: string }> {
+  return apiFetch('/ui/connector-keys', token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function adminRevokeConnectorKey(id: string, token: string): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/ui/connector-keys/${id}`, token, {
+    method: 'DELETE',
+  })
+}
