@@ -277,6 +277,7 @@ export const zh: Translations = {
     url: 'URL',
     version: '版本',
     subscribers: '订阅者',
+    noSubscribers: '暂无订阅者',
     type: '类型',
     actions: '操作',
     addedOn: '添加于',

@@ -285,6 +285,7 @@ export const ja: Translations = {
     url: 'URL',
     version: 'バージョン',
     subscribers: '登録者',
+    noSubscribers: '登録者はいません',
     type: 'タイプ',
     actions: '操作',
     addedOn: '追加日',

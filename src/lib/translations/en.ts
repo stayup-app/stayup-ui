@@ -281,6 +281,7 @@ export const en = {
     url: 'URL',
     version: 'Version',
     subscribers: 'Subscribers',
+    noSubscribers: 'No subscribers',
     type: 'Type',
     actions: 'Actions',
     addedOn: 'Added on',

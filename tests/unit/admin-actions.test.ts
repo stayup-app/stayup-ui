@@ -22,6 +22,7 @@ const api = {
   adminDeleteRepository: vi.fn(),
   adminDeleteUser: vi.fn(),
   adminListFluxRequests: vi.fn(),
+  adminListRepositorySubscribers: vi.fn(),
   adminApproveFluxRequest: vi.fn(),
   adminRejectFluxRequest: vi.fn(),
   adminListProviders: vi.fn(),
@@ -475,5 +476,28 @@ describe('connector key actions', () => {
 
     getAdminToken.mockResolvedValue(null)
     expect(await adminRevokeConnectorKeyAction('k1')).toEqual({ error: en.errors.notAuthenticated })
+  })
+})
+
+describe('adminListRepositorySubscribersAction', () => {
+  it('returns the subscribers of a repository', async () => {
+    api.adminListRepositorySubscribers.mockResolvedValue([{ id: 'u1' }])
+    const { adminListRepositorySubscribersAction } = await import('@/lib/admin-actions')
+    await expect(adminListRepositorySubscribersAction(5)).resolves.toEqual({
+      subscribers: [{ id: 'u1' }],
+    })
+    expect(api.adminListRepositorySubscribers).toHaveBeenCalledWith(5, 'token')
+  })
+
+  it('returns the error when there is no admin session', async () => {
+    getAdminToken.mockResolvedValue(null)
+    const { adminListRepositorySubscribersAction } = await import('@/lib/admin-actions')
+    expect((await adminListRepositorySubscribersAction(5)).error).toBeTruthy()
+  })
+
+  it('returns the API error message', async () => {
+    api.adminListRepositorySubscribers.mockRejectedValue(new Error('nope'))
+    const { adminListRepositorySubscribersAction } = await import('@/lib/admin-actions')
+    await expect(adminListRepositorySubscribersAction(5)).resolves.toEqual({ error: 'nope' })
   })
 })

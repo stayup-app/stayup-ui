@@ -291,6 +291,7 @@ export const es: Translations = {
     url: 'URL',
     version: 'Versión',
     subscribers: 'Suscriptores',
+    noSubscribers: 'Sin suscriptores',
     type: 'Tipo',
     actions: 'Acciones',
     addedOn: 'Añadido el',

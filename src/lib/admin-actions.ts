@@ -14,6 +14,7 @@ import {
   adminDeleteRepository,
   adminDeleteUser,
   adminListFluxRequests,
+  adminListRepositorySubscribers,
   adminCreateConnectorKey,
   adminGetRetention,
   adminListConnectorKeys,
@@ -26,6 +27,7 @@ import {
   adminUpdateAdmin,
   deleteUserRepository,
   type ConnectorKey,
+  type RepositorySubscriber,
   type RetentionSettings,
 } from './api-client'
 import type { FluxRequest } from '@/types'
@@ -142,6 +144,18 @@ export async function adminDeleteUserFluxAction(
     await deleteUserRepository(userId, linkId, token)
     revalidatePath(`/admin/users/${userId}`)
     return {}
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
+}
+
+export async function adminListRepositorySubscribersAction(
+  repoId: number,
+): Promise<{ subscribers?: RepositorySubscriber[]; error?: string }> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    return { subscribers: await adminListRepositorySubscribers(repoId, token) }
   } catch (err) {
     return { error: (err as Error).message }
   }

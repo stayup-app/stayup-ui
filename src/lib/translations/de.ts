@@ -294,6 +294,7 @@ export const de: Translations = {
     url: 'URL',
     version: 'Version',
     subscribers: 'Abonnenten',
+    noSubscribers: 'Keine Abonnenten',
     type: 'Typ',
     actions: 'Aktionen',
     addedOn: 'Hinzugefügt am',

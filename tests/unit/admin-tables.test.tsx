@@ -19,6 +19,7 @@ const actions = vi.hoisted(() => ({
   adminDeleteUserAction: vi.fn(),
   adminUpdateUserAction: vi.fn(),
   adminDeleteRepositoryAction: vi.fn(),
+  adminListRepositorySubscribersAction: vi.fn(),
   adminClearRepositoryDataAction: vi.fn(),
   adminDeleteUserFluxAction: vi.fn(),
   adminDeleteAdminAction: vi.fn(),
@@ -218,6 +219,48 @@ describe('RepositoriesTable', () => {
     expect(screen.getByText('https://github.com/facebook/react')).toBeInTheDocument()
     expect(screen.getByText('Changelog')).toBeInTheDocument()
     expect(screen.getByText('3')).toBeInTheDocument()
+  })
+
+  it('shows who follows a repository when the subscriber count is clicked', async () => {
+    actions.adminListRepositorySubscribersAction.mockResolvedValue({
+      subscribers: [{ id: 'u1', name: 'Ada', email: 'ada@x.dev', subscribed_at: '2026-01-01' }],
+    })
+    const user = userEvent.setup()
+    withLang(<RepositoriesTable repositories={[REPO]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
+
+    expect(await screen.findByText('ada@x.dev')).toBeInTheDocument()
+    expect(screen.getByText('Ada')).toBeInTheDocument()
+    expect(actions.adminListRepositorySubscribersAction).toHaveBeenCalledWith(5)
+
+    await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
+    expect(screen.queryByText('ada@x.dev')).not.toBeInTheDocument()
+  })
+
+  it('says so when a repository has no subscriber left', async () => {
+    actions.adminListRepositorySubscribersAction.mockResolvedValue({ subscribers: [] })
+    const user = userEvent.setup()
+    withLang(<RepositoriesTable repositories={[{ ...REPO, subscriber_count: '1' }]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Subscribers (1)' }))
+
+    expect(await screen.findByText(en.admin.noSubscribers)).toBeInTheDocument()
+  })
+
+  it('shows the error when the subscribers cannot be loaded', async () => {
+    actions.adminListRepositorySubscribersAction.mockResolvedValue({ error: 'boom' })
+    const user = userEvent.setup()
+    withLang(<RepositoriesTable repositories={[REPO]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
+
+    expect(await screen.findByText('boom')).toBeInTheDocument()
+  })
+
+  it('offers no subscriber list for a repository nobody follows', () => {
+    withLang(<RepositoriesTable repositories={[{ ...REPO, subscriber_count: '0' }]} />)
+    expect(screen.queryByRole('button', { name: /^Subscribers/ })).not.toBeInTheDocument()
   })
 
   it('clears the repository data after confirmation', async () => {

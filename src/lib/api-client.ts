@@ -245,6 +245,25 @@ export async function adminChangeOwnPassword(
   })
 }
 
+export interface RepositorySubscriber {
+  id: string
+  name: string
+  email: string
+  subscribed_at: string
+}
+
+export async function adminListRepositorySubscribers(
+  repoId: number,
+  token: string,
+): Promise<RepositorySubscriber[]> {
+  const data = await apiFetch<{ subscribers: RepositorySubscriber[] }>(
+    `/ui/repositories/${repoId}/subscribers`,
+    token,
+    { cache: 'no-store' },
+  )
+  return data.subscribers
+}
+
 export async function adminListRepositories(token: string): Promise<AdminRepository[]> {
   const data = await apiFetch<{ repositories: AdminRepository[] }>('/ui/repositories', token, {
     cache: 'no-store',

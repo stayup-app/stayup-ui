@@ -290,6 +290,7 @@ export const pt: Translations = {
     url: 'URL',
     version: 'Versão',
     subscribers: 'Assinantes',
+    noSubscribers: 'Sem assinantes',
     type: 'Tipo',
     actions: 'Ações',
     addedOn: 'Adicionado em',

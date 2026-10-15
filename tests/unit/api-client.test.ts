@@ -89,6 +89,17 @@ describe('admin API functions', () => {
     )
   })
 
+  it('adminListRepositorySubscribers returns the subscribers of a repository', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ subscribers: [{ id: 'u1', name: 'Ada', email: 'a@x.dev' }] }),
+    })
+    const { adminListRepositorySubscribers } = await import('@/lib/api-client')
+    const result = await adminListRepositorySubscribers(7, TEST_TOKEN)
+    expect(result).toHaveLength(1)
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/repositories/7/subscribers')
+  })
+
   it('adminListRepositories returns repositories array', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,

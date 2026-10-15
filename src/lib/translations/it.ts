@@ -286,6 +286,7 @@ export const it: Translations = {
     url: 'URL',
     version: 'Versione',
     subscribers: 'Iscritti',
+    noSubscribers: 'Nessun iscritto',
     type: 'Tipo',
     actions: 'Azioni',
     addedOn: 'Aggiunto il',
