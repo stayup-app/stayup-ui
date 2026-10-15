@@ -99,6 +99,11 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/stayup_e2e
       JWT_SECRET: e2e-only-secret
+      # Dummy OAuth credentials: the login page only shows the buttons the API offers.
+      GOOGLE_CLIENT_ID: e2e
+      GOOGLE_CLIENT_SECRET: e2e
+      GITHUB_CLIENT_ID: e2e
+      GITHUB_CLIENT_SECRET: e2e
       STAYUP_API_URL: http://localhost:3000
       NEXT_PUBLIC_STAYUP_API_URL: http://localhost:3000
     steps:
