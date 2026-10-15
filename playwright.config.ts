@@ -1,5 +1,13 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// The specs register real accounts: never let them run against a shared API.
+const apiUrl = process.env.STAYUP_API_URL ?? ''
+if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(apiUrl)) {
+  throw new Error(
+    `E2E tests create accounts: STAYUP_API_URL must point to a local API, got "${apiUrl || 'nothing'}".`,
+  )
+}
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,

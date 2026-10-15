@@ -92,7 +92,7 @@ end-to-end tests use [Playwright](https://playwright.dev/).
 ```bash
 npm run test:unit                  # unit + component tests
 npm run test:unit -- --coverage     # with a coverage report
-npm run test:e2e                   # end-to-end (needs the app and DB running)
+npm run test:e2e                   # end-to-end, needs a local stayup-api (refuses any other API)
 ```
 
 ## Docker
