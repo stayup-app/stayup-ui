@@ -113,6 +113,17 @@ describe('protected routes', () => {
     expect(redirectTo).not.toHaveBeenCalled()
   })
 
+  it('lets a user through on a live session token', () => {
+    middleware(makeRequest('/feed', { user: tokenWithExp(3600) }))
+    expect(next).toHaveBeenCalled()
+    expect(redirectTo).not.toHaveBeenCalled()
+  })
+
+  it('redirects when the session token has expired', () => {
+    middleware(makeRequest('/feed', { user: tokenWithExp(-60) }))
+    expect(redirectPath()).toBe('/login')
+  })
+
   it('protects nested paths too', () => {
     middleware(makeRequest('/feed/flux/12'))
     expect(redirectPath()).toBe('/login')
@@ -120,44 +131,6 @@ describe('protected routes', () => {
 
   it('is unaffected by an admin session in the other cookie', () => {
     middleware(makeRequest('/feed', { admin: tokenWithRole('admin') }))
-    expect(redirectPath()).toBe('/login')
-  })
-
-  it('lets a user through on a live token in the instances cookie', () => {
-    const jar = {
-      stayup_instances: JSON.stringify([
-        { id: 'a', url: 'https://a.dev', name: 'A', token: tokenWithExp(3600) },
-      ]),
-    }
-    middleware(makeRequest('/feed', { jar }))
-    expect(next).toHaveBeenCalled()
-    expect(redirectTo).not.toHaveBeenCalled()
-  })
-
-  it('redirects when every instance token has expired', () => {
-    const jar = {
-      stayup_instances: JSON.stringify([
-        { id: 'a', url: 'https://a.dev', name: 'A', token: tokenWithExp(-60) },
-      ]),
-    }
-    middleware(makeRequest('/feed', { jar }))
-    expect(redirectPath()).toBe('/login')
-  })
-
-  it('reassembles a chunked instances cookie', () => {
-    const json = JSON.stringify([
-      { id: 'a', url: 'https://a.dev', name: 'A', token: tokenWithExp(3600) },
-    ])
-    const jar = {
-      stayup_instances_0: json.slice(0, 12),
-      stayup_instances_1: json.slice(12),
-    }
-    middleware(makeRequest('/feed', { jar }))
-    expect(next).toHaveBeenCalled()
-  })
-
-  it('treats a malformed instances cookie as no session', () => {
-    middleware(makeRequest('/feed', { jar: { stayup_instances: 'not json' } }))
     expect(redirectPath()).toBe('/login')
   })
 })

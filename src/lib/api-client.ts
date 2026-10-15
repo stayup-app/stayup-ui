@@ -18,10 +18,9 @@ async function apiFetch<T>(
   token: string,
   init?: RequestInit,
   attempt = 0,
-  baseUrlOverride?: string,
 ): Promise<T> {
   const isGet = !init?.method || init.method === 'GET'
-  const baseUrl = baseUrlOverride ?? (await getApiUrl())
+  const baseUrl = await getApiUrl()
 
   // `cache` and `next.revalidate` are mutually exclusive: setting both (which
   // the `init` spread before the cache one did) let a `no-store` response be
@@ -48,13 +47,13 @@ async function apiFetch<T>(
   } catch (err) {
     // A POST/DELETE may have been processed before the cut: replaying it would
     // create a duplicate. Only reads are retried.
-    if (isGet && attempt === 0) return apiFetch<T>(path, token, init, 1, baseUrlOverride)
+    if (isGet && attempt === 0) return apiFetch<T>(path, token, init, 1)
     throw err
   }
 
   if (!res.ok) {
     if (isGet && res.status >= 500 && attempt === 0) {
-      return apiFetch<T>(path, token, init, 1, baseUrlOverride)
+      return apiFetch<T>(path, token, init, 1)
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string }
     throw new ApiError(res.status, body.error ?? `StayUp API error ${res.status}: ${path}`)
@@ -65,17 +64,10 @@ async function apiFetch<T>(
 // ─── Auth config ──────────────────────────────────────────────────────────────
 
 export interface AuthConfig {
-  /** The instance's display name (INSTANCE_NAME on the API side), otherwise `null`. */
-  name?: string | null
-  registrationMode: 'open' | 'approval'
   emailPassword: boolean
   oauth: { google: boolean; github: boolean }
 }
 
-/** What a client needs to know before the login screen. `null` if the API does
- *  not respond or is too old to expose `/auth/config` — the caller then falls
- *  back to "everything is offered". Unauthenticated. `baseUrl` targets a
- *  specific instance (adding a secondary instance). */
 function isAuthConfig(v: unknown): v is AuthConfig {
   if (!v || typeof v !== 'object') return false
   const c = v as Record<string, unknown>
@@ -89,35 +81,17 @@ function isAuthConfig(v: unknown): v is AuthConfig {
   )
 }
 
-/** Result of an API URL probe: `unreachable` = nothing responds;
- *  `incompatible` = it responds but it is not a StayUp API. */
-export type ApiProbe =
-  | { ok: true; config: AuthConfig }
-  | { ok: false; reason: 'unreachable' | 'incompatible' }
-
-/** Checks that a URL points to a reachable StayUp API: `GET /auth/config` must
- *  answer 2xx with the expected shape. */
-export async function probeApiUrl(baseUrl?: string): Promise<ApiProbe> {
-  const base = (baseUrl ?? (await getApiUrl())).replace(/\/$/, '')
-  let res: Response
+/** What the login screen needs to know. `null` if the API does not respond —
+ *  the caller then falls back to "everything is offered". Unauthenticated. */
+export async function fetchAuthConfig(): Promise<AuthConfig | null> {
   try {
-    res = await fetch(`${base}/auth/config`, { cache: 'no-store' })
+    const res = await fetch(`${await getApiUrl()}/auth/config`, { cache: 'no-store' })
+    if (!res.ok) return null
+    const body: unknown = await res.json()
+    return isAuthConfig(body) ? body : null
   } catch {
-    return { ok: false, reason: 'unreachable' }
+    return null
   }
-  if (!res.ok) return { ok: false, reason: 'incompatible' }
-  let body: unknown
-  try {
-    body = await res.json()
-  } catch {
-    return { ok: false, reason: 'incompatible' }
-  }
-  return isAuthConfig(body) ? { ok: true, config: body } : { ok: false, reason: 'incompatible' }
-}
-
-export async function fetchAuthConfig(baseUrl?: string): Promise<AuthConfig | null> {
-  const probe = await probeApiUrl(baseUrl)
-  return probe.ok ? probe.config : null
 }
 
 // ─── Connectors ────────────────────────────────────────────────────────────────
@@ -127,21 +101,10 @@ export interface ConnectorProvider {
   displayName: string
   /** `auto`: adding a flux is immediate; `manual`: it goes through a request. */
   fluxApproval?: 'auto' | 'manual'
-  /** Raw display manifest (provider_registry.template), relayed as-is. */
-  template?: unknown
 }
 
-export async function getConnectorProviders(
-  token: string,
-  baseUrl?: string,
-): Promise<ConnectorProvider[]> {
-  const data = await apiFetch<{ providers: ConnectorProvider[] }>(
-    '/connectors/providers',
-    token,
-    undefined,
-    0,
-    baseUrl,
-  )
+export async function getConnectorProviders(token: string): Promise<ConnectorProvider[]> {
+  const data = await apiFetch<{ providers: ConnectorProvider[] }>('/connectors/providers', token)
   return data.providers
 }
 
@@ -161,18 +124,8 @@ export interface UserFeedResponse {
   connectors: Record<string, ConnectorItem[]>
 }
 
-export async function getUserFeed(
-  userId: string,
-  token: string,
-  baseUrl?: string,
-): Promise<UserFeedResponse> {
-  return apiFetch<UserFeedResponse>(
-    `/ui/users/${userId}/feed`,
-    token,
-    { cache: 'no-store' },
-    0,
-    baseUrl,
-  )
+export async function getUserFeed(userId: string, token: string): Promise<UserFeedResponse> {
+  return apiFetch<UserFeedResponse>(`/ui/users/${userId}/feed`, token, { cache: 'no-store' })
 }
 
 /** The API answers either `{ repository }` (flux created), or
@@ -186,30 +139,21 @@ export async function addUserRepository(
   userId: string,
   token: string,
   data: { provider: string; url: string; config: Record<string, unknown> },
-  baseUrl?: string,
 ): Promise<AddRepositoryResult> {
-  return apiFetch<AddRepositoryResult>(
-    `/ui/users/${userId}/repositories`,
-    token,
-    { method: 'POST', body: JSON.stringify(data) },
-    0,
-    baseUrl,
-  )
+  return apiFetch<AddRepositoryResult>(`/ui/users/${userId}/repositories`, token, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
 export async function deleteUserRepository(
   userId: string,
   linkId: string,
   token: string,
-  baseUrl?: string,
 ): Promise<void> {
-  await apiFetch<{ success: boolean }>(
-    `/ui/users/${userId}/repositories/${linkId}`,
-    token,
-    { method: 'DELETE' },
-    0,
-    baseUrl,
-  )
+  await apiFetch<{ success: boolean }>(`/ui/users/${userId}/repositories/${linkId}`, token, {
+    method: 'DELETE',
+  })
 }
 
 // ─── Admin ─────────────────────────────────────────────────────────────────────
@@ -248,85 +192,6 @@ export async function adminDeleteUser(userId: string, token: string): Promise<vo
     method: 'DELETE',
   })
 }
-
-// ─── Pending sign-ups (REGISTRATION_MODE=approval) ────────────────────────────
-
-export interface AdminPendingUser {
-  id: string
-  name: string
-  email: string
-  /** 'password' for an e-mail sign-up, otherwise the OAuth provider name. */
-  method: string
-  created_at: string
-}
-
-export async function adminListPendingUsers(token: string): Promise<AdminPendingUser[]> {
-  const data = await apiFetch<{ users: AdminPendingUser[] }>('/ui/users/pending', token, {
-    cache: 'no-store',
-  })
-  return data.users
-}
-
-export async function adminApprovePendingUser(id: string, token: string): Promise<void> {
-  await apiFetch<{ user: AdminUser }>(`/ui/users/pending/${id}/approve`, token, {
-    method: 'POST',
-  })
-}
-
-export async function adminRejectPendingUser(id: string, token: string): Promise<void> {
-  await apiFetch<{ success: boolean }>(`/ui/users/pending/${id}/reject`, token, {
-    method: 'POST',
-  })
-}
-
-// ─── Secondary data sources ──────────────────────────────────────────────────
-
-export interface DataSource {
-  id: number
-  name: string
-  engine: string
-  host: string
-  created_at: string
-}
-
-export interface DataSourcesResponse {
-  primary: { engine: string; host: string }
-  sources: DataSource[]
-}
-
-export type DataSourceProbe =
-  | { ok: true; engine: string; connectors: string[] }
-  | { ok: false; error: string }
-
-export async function adminListDataSources(token: string): Promise<DataSourcesResponse> {
-  return apiFetch<DataSourcesResponse>('/ui/data-sources', token, { cache: 'no-store' })
-}
-
-export async function adminTestDataSource(url: string, token: string): Promise<DataSourceProbe> {
-  return apiFetch<DataSourceProbe>('/ui/data-sources/test', token, {
-    method: 'POST',
-    body: JSON.stringify({ url }),
-  })
-}
-
-export async function adminAddDataSource(
-  input: { name: string; url: string },
-  token: string,
-): Promise<{ dataSource: DataSource & { connectors: string[] } }> {
-  return apiFetch<{ dataSource: DataSource & { connectors: string[] } }>(
-    '/ui/data-sources',
-    token,
-    { method: 'POST', body: JSON.stringify(input) },
-  )
-}
-
-export async function adminDeleteDataSource(id: number, token: string): Promise<void> {
-  await apiFetch<{ success: boolean }>(`/ui/data-sources/${id}`, token, {
-    method: 'DELETE',
-  })
-}
-
-// ─── Admin accounts (super-admin only) ─────────────────────────────────────────
 
 export interface AdminAccount {
   id: string
@@ -401,57 +266,23 @@ export async function adminClearRepositoryData(repoId: number, token: string): P
 
 // ─── Provider fluxes (list existing fluxes + subscribe) ─────────────────────
 
-export async function getProviderFluxes(
-  provider: string,
-  token: string,
-  baseUrl?: string,
-): Promise<ProviderFlux[]> {
-  const data = await apiFetch<{ fluxes: ProviderFlux[] }>(
-    `/providers/${provider}/fluxes`,
-    token,
-    { cache: 'no-store' },
-    0,
-    baseUrl,
-  )
+export async function getProviderFluxes(provider: string, token: string): Promise<ProviderFlux[]> {
+  const data = await apiFetch<{ fluxes: ProviderFlux[] }>(`/providers/${provider}/fluxes`, token, {
+    cache: 'no-store',
+  })
   return data.fluxes
 }
 
-export async function subscribeFlux(
-  provider: string,
-  id: number,
-  token: string,
-  dataSourceId?: number | null,
-  baseUrl?: string,
-): Promise<void> {
-  await apiFetch<{ success: boolean }>(
-    `/providers/${provider}/fluxes/${id}/subscribe`,
-    token,
-    {
-      method: 'POST',
-      ...(dataSourceId != null ? { body: JSON.stringify({ dataSourceId }) } : {}),
-    },
-    0,
-    baseUrl,
-  )
+export async function subscribeFlux(provider: string, id: number, token: string): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/providers/${provider}/fluxes/${id}/subscribe`, token, {
+    method: 'POST',
+  })
 }
 
-export async function unsubscribeFlux(
-  provider: string,
-  id: number,
-  token: string,
-  dataSourceId?: number | null,
-  baseUrl?: string,
-): Promise<void> {
-  await apiFetch<{ success: boolean }>(
-    `/providers/${provider}/fluxes/${id}/subscribe`,
-    token,
-    {
-      method: 'DELETE',
-      ...(dataSourceId != null ? { body: JSON.stringify({ dataSourceId }) } : {}),
-    },
-    0,
-    baseUrl,
-  )
+export async function unsubscribeFlux(provider: string, id: number, token: string): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/providers/${provider}/fluxes/${id}/subscribe`, token, {
+    method: 'DELETE',
+  })
 }
 
 // ─── Admin — providers & flux requests ────────────────────────────────────────

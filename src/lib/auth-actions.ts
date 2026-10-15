@@ -4,27 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { getApiUrl } from './apiUrl'
 import { getServerTranslations } from './serverLang'
-import { clearInstances, upsertPrimaryInstance } from './instances'
-import { ADMIN_COOKIE_NAME, decodeToken, getToken } from './session'
-
-// Admin sessions use their own cookie (ADMIN_COOKIE_NAME) so a browser can
-// hold a regular user session and an admin session at the same time.
-async function setTokenCookie(name: string, token: string) {
-  const exp = (
-    JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as {
-      exp: number
-    }
-  ).exp
-  const maxAge = Math.max(exp - Math.floor(Date.now() / 1000), 0)
-  const cookieStore = await cookies()
-  cookieStore.set(name, token, {
-    httpOnly: true,
-    sameSite: 'lax',
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge,
-  })
-}
+import { ADMIN_COOKIE_NAME, COOKIE_NAME, decodeToken, getToken, setTokenCookie } from './session'
 
 export async function loginAction(email: string, password: string): Promise<{ error?: string }> {
   const t = await getServerTranslations()
@@ -41,7 +21,7 @@ export async function loginAction(email: string, password: string): Promise<{ er
   }
 
   const { token } = (await res.json()) as { token: string }
-  await upsertPrimaryInstance(apiUrl, token)
+  await setTokenCookie(COOKIE_NAME, token)
   redirect('/feed')
 }
 
@@ -65,7 +45,7 @@ export async function registerAction(
   }
 
   const { token } = (await res.json()) as { token: string }
-  await upsertPrimaryInstance(apiUrl, token)
+  await setTokenCookie(COOKIE_NAME, token)
   redirect('/feed')
 }
 
@@ -92,7 +72,8 @@ export async function adminLoginAction(
 }
 
 export async function logoutAction(): Promise<void> {
-  await clearInstances()
+  const cookieStore = await cookies()
+  cookieStore.delete(COOKIE_NAME)
   redirect('/')
 }
 

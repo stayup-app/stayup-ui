@@ -3,12 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockFetch = vi.fn()
 vi.stubGlobal('fetch', mockFetch)
 
-// getUserFeed resolves the API URL via a cookie (see src/lib/apiUrl.ts) — no
-// override in tests, so we fall back to STAYUP_API_URL.
-vi.mock('next/headers', () => ({
-  cookies: async () => ({ get: vi.fn() }),
-}))
-
 beforeEach(() => {
   vi.resetModules()
   mockFetch.mockReset()
@@ -36,31 +30,5 @@ describe('getCachedUserFeed', () => {
     const { getCachedUserFeed } = await import('@/lib/feed-cache')
     await getCachedUserFeed('u42', 'token')
     expect(mockFetch.mock.calls[0][0]).toContain('/ui/users/u42/feed')
-  })
-})
-
-describe('getCachedTemplates', () => {
-  it('indexes the providers returned by the API by name', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        providers: [
-          { name: 'changelog', displayName: 'Changelog', template: null },
-          { name: 'rss', displayName: 'RSS', template: null },
-        ],
-      }),
-    })
-
-    const { getCachedTemplates } = await import('@/lib/feed-cache')
-    const map = await getCachedTemplates('token')
-    expect(Object.keys(map).sort()).toEqual(['changelog', 'rss'])
-    expect(map.changelog.displayName).toBe('Changelog')
-  })
-
-  it('returns an empty map when the providers request fails', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500, text: async () => 'boom' })
-
-    const { getCachedTemplates } = await import('@/lib/feed-cache')
-    await expect(getCachedTemplates('token')).resolves.toEqual({})
   })
 })

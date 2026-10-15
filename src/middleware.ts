@@ -1,7 +1,6 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { COOKIE_NAME, ADMIN_COOKIE_NAME } from '@/lib/constants'
-import { INSTANCES_COOKIE } from '@/lib/instances'
 import { decodeJwtPayload } from '@/lib/jwt'
 
 // Convenience redirects only: the payload is not signed, so `role` is not
@@ -20,28 +19,8 @@ function isLive(token: string | undefined): boolean {
   return exp === undefined || exp * 1000 > Date.now()
 }
 
-/** True if at least one live user session remains: a live token in the
- *  instances array, or the legacy single-instance cookie. */
 function hasLiveUserSession(request: NextRequest): boolean {
-  if (isLive(request.cookies.get(COOKIE_NAME)?.value)) return true
-
-  let raw = request.cookies.get(INSTANCES_COOKIE)?.value
-  if (!raw) {
-    const chunks: string[] = []
-    for (let i = 0; ; i++) {
-      const c = request.cookies.get(`${INSTANCES_COOKIE}_${i}`)?.value
-      if (c === undefined) break
-      chunks.push(c)
-    }
-    raw = chunks.join('')
-  }
-  if (!raw) return false
-  try {
-    const list = JSON.parse(raw) as { token?: string }[]
-    return Array.isArray(list) && list.some((i) => isLive(i?.token))
-  } catch {
-    return false
-  }
+  return isLive(request.cookies.get(COOKIE_NAME)?.value)
 }
 
 const PROTECTED_PATHS = ['/feed', '/profile']

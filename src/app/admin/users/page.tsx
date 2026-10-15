@@ -1,9 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getAdminSession, getAdminToken } from '@/lib/session'
 import { getServerTranslations } from '@/lib/serverLang'
-import { adminListPendingUsersAction } from '@/lib/admin-actions'
 import { adminListUsers } from '@/lib/api-client'
-import { PendingUsersTable } from '@/components/admin/PendingUsersTable'
 import { UsersTable } from '@/components/admin/UsersTable'
 
 export default async function AdminUsersPage() {
@@ -11,27 +9,14 @@ export default async function AdminUsersPage() {
   if (!session || session.role !== 'admin') redirect('/admin/login')
 
   const token = await getAdminToken()
-  const [users, pending, t] = await Promise.all([
+  const [users, t] = await Promise.all([
     adminListUsers(token as string).catch(() => []),
-    adminListPendingUsersAction(),
     getServerTranslations(),
   ])
   const p = t.admin.pages
 
   return (
     <div className="space-y-8">
-      {pending.length > 0 && (
-        <div className="space-y-3">
-          <div>
-            <h2 className="text-lg font-semibold">{p.pendingTitle}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {p.pendingCount.replace('{n}', String(pending.length))}
-            </p>
-          </div>
-          <PendingUsersTable users={pending} />
-        </div>
-      )}
-
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">{p.usersTitle}</h1>

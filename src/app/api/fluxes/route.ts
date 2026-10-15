@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
 import { ApiError, addUserRepository } from '@/lib/api-client'
 import { getServerTranslations } from '@/lib/serverLang'
-import { resolveInstance } from '@/lib/instances'
-import { decodeToken } from '@/lib/session'
+import { decodeToken, getToken } from '@/lib/session'
 import { z } from 'zod'
 
 // A single add path, whatever the provider: the client sends a URL already
 // built (from the connector template's `form`). If the provider is in
 // `manual` mode, the API answers 202 and the flux goes to the approval queue.
-// `?instanceId=` targets a specific API instance (multi-API) — default: primary.
 const createFluxSchema = z.object({
   provider: z.string().min(1),
   url: z.string().url().max(2000),
@@ -16,11 +14,10 @@ const createFluxSchema = z.object({
 
 export async function POST(request: Request) {
   const t = await getServerTranslations()
-  const instanceId = new URL(request.url).searchParams.get('instanceId')
-  const instance = await resolveInstance(instanceId)
-  if (!instance) return NextResponse.json({ error: t.errors.notAuthenticated }, { status: 401 })
+  const token = await getToken()
+  if (!token) return NextResponse.json({ error: t.errors.notAuthenticated }, { status: 401 })
 
-  const session = decodeToken(instance.token)
+  const session = decodeToken(token)
 
   const body = await request.json()
   const parsed = createFluxSchema.safeParse(body)
@@ -35,12 +32,7 @@ export async function POST(request: Request) {
   const config = { max_scraps: 5, retention_days: 15 }
 
   try {
-    const result = await addUserRepository(
-      session.userId,
-      instance.token,
-      { provider, url, config },
-      instance.url,
-    )
+    const result = await addUserRepository(session.userId, token, { provider, url, config })
     if (result.status === 'pending') {
       return NextResponse.json({ status: 'pending' }, { status: 202 })
     }

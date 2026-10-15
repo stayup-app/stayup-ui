@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import type { NextRequest } from 'next/server'
-import { getApiUrl } from '@/lib/apiUrl'
-import { upsertPrimaryInstance } from '@/lib/instances'
+import { COOKIE_NAME } from '@/lib/constants'
+import { setTokenCookie } from '@/lib/session'
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       redirect('/login?error=oauth_failed')
     }
 
-    await upsertPrimaryInstance(await getApiUrl(), token)
+    await setTokenCookie(COOKIE_NAME, token)
   } catch {
     redirect('/login?error=oauth_failed')
   }

@@ -6,11 +6,6 @@ import { FeedSidebar } from './FeedSidebar'
 import type { UserRepository, TaggedItem } from '@/types'
 import type { ProviderMeta } from '@/lib/providerTemplate'
 
-export interface InstanceRef {
-  id: string
-  name: string
-}
-
 function useDragResize(initial: number, min: number, max: number) {
   const [width, setWidth] = useState(initial)
   const widthRef = useRef(initial)
@@ -44,34 +39,17 @@ interface FeedClientLayoutProps {
   fluxes: UserRepository[]
   allItems: TaggedItem[]
   templates: Record<string, ProviderMeta>
-  instances: InstanceRef[]
-  primaryInstanceId: string
   children: ReactNode
 }
 
-/** Unread-count key per flux: `<instanceId>:<repository_id>`.
- *  `repository_id` is only unique within an instance. */
-export function unreadKey(instanceId: string | undefined, repositoryId: number | string): string {
-  return `${instanceId ?? ''}:${repositoryId}`
-}
-
-function FeedClientLayoutInner({
-  fluxes,
-  allItems,
-  templates,
-  instances,
-  children,
-}: Omit<FeedClientLayoutProps, 'primaryInstanceId'>) {
+function FeedClientLayoutInner({ fluxes, allItems, templates, children }: FeedClientLayoutProps) {
   const { readIds } = useReadContext()
   const { width: sidebarWidth, handleMouseDown: handleSidebarDrag } = useDragResize(220, 150, 420)
 
-  const unreadCountByRepoId: Record<string, number> = {}
+  const unreadCountByRepoId: Record<number, number> = {}
   for (const tagged of allItems) {
     if (!readIds.has(taggedItemId(tagged))) {
-      const key = unreadKey(
-        typeof tagged.item._instance_id === 'string' ? tagged.item._instance_id : '',
-        tagged.item.repository_id,
-      )
+      const key = tagged.item.repository_id
       unreadCountByRepoId[key] = (unreadCountByRepoId[key] ?? 0) + 1
     }
   }
@@ -81,7 +59,6 @@ function FeedClientLayoutInner({
       <FeedSidebar
         fluxes={fluxes}
         templates={templates}
-        instances={instances}
         unreadCountByRepoId={unreadCountByRepoId}
         width={sidebarWidth}
       />
@@ -95,24 +72,10 @@ function FeedClientLayoutInner({
   )
 }
 
-export function FeedClientLayout({
-  fluxes,
-  allItems,
-  templates,
-  instances,
-  primaryInstanceId,
-  children,
-}: FeedClientLayoutProps) {
+export function FeedClientLayout(props: FeedClientLayoutProps) {
   return (
-    <ReadProvider primaryInstanceId={primaryInstanceId}>
-      <FeedClientLayoutInner
-        fluxes={fluxes}
-        allItems={allItems}
-        templates={templates}
-        instances={instances}
-      >
-        {children}
-      </FeedClientLayoutInner>
+    <ReadProvider>
+      <FeedClientLayoutInner {...props} />
     </ReadProvider>
   )
 }

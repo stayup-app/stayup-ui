@@ -26,7 +26,6 @@ import {
   type ProviderTemplate,
 } from '@/lib/providerTemplate'
 import { providerIcon, providerAccent } from './providerIcons'
-import type { InstanceRef } from './FeedClientLayout'
 import type { ProviderFlux } from '@/types'
 
 interface ProviderTile {
@@ -42,19 +41,12 @@ type FormData = { provider: string; identifier: string }
 interface AddFluxDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  instances?: InstanceRef[]
 }
 
-export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDialogProps) {
+export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
   const router = useRouter()
   const { t } = useLanguage()
   const [serverError, setServerError] = useState<string | null>(null)
-  // Target instance for a new flux: the primary by default.
-  const [instanceId, setInstanceId] = useState('')
-  const activeInstanceId = instanceId || instances[0]?.id || ''
-  const instanceQuery = activeInstanceId
-    ? `?instanceId=${encodeURIComponent(activeInstanceId)}`
-    : ''
   const [tiles, setTiles] = useState<ProviderTile[]>([])
   const [tpls, setTpls] = useState<Record<string, ProviderTemplate | null>>({})
   const [approvals, setApprovals] = useState<Record<string, 'auto' | 'manual'>>({})
@@ -68,7 +60,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
 
   useEffect(() => {
     if (!open) return
-    fetch(`/api/providers${instanceQuery}`)
+    fetch(`/api/providers`)
       .then((r) => r.json())
       .then((data) => {
         const providers =
@@ -99,7 +91,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
         setTpls({})
         setApprovals({})
       })
-  }, [open, instanceQuery])
+  }, [open])
 
   const schema = z.object({
     provider: z.string().min(1),
@@ -125,7 +117,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
   useEffect(() => {
     if (!open || !provider) return
     setFluxesLoading(true)
-    fetch(`/api/providers/${provider}/fluxes${instanceQuery}`)
+    fetch(`/api/providers/${provider}/fluxes`)
       .then((r) => r.json())
       .then((data) => {
         const list = (data.fluxes as ProviderFlux[]) ?? []
@@ -137,7 +129,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
         setPickMode('new')
       })
       .finally(() => setFluxesLoading(false))
-  }, [open, provider, instanceQuery])
+  }, [open, provider])
 
   const available = fluxes.filter((f) => !f.is_subscribed)
   const currentForm = tpls[provider]?.form
@@ -158,13 +150,10 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
         setServerError(t.addFlux.selectError)
         return
       }
-      const res = await fetch(`/api/providers/${data.provider}/fluxes${instanceQuery}`, {
+      const res = await fetch(`/api/providers/${data.provider}/fluxes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: selectedFlux.id,
-          ...(selectedFlux.dataSourceId != null ? { dataSourceId: selectedFlux.dataSourceId } : {}),
-        }),
+        body: JSON.stringify({ id: selectedFlux.id }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
@@ -188,7 +177,7 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
     }
     const url = currentForm ? buildFluxUrl(currentForm, data.identifier) : data.identifier
 
-    const res = await fetch(`/api/fluxes${instanceQuery}`, {
+    const res = await fetch(`/api/fluxes`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ provider: data.provider, url }),
@@ -215,7 +204,6 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
       setSelectedFlux(null)
       setPickMode('existing')
       setPending(false)
-      setInstanceId('')
     }
     onOpenChange(value)
   }
@@ -237,28 +225,6 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
               </div>
             ) : (
               <>
-                {instances.length > 1 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="add-flux-instance">{t.addFlux.instance}</Label>
-                    <select
-                      id="add-flux-instance"
-                      value={activeInstanceId}
-                      onChange={(e) => {
-                        setInstanceId(e.target.value)
-                        setSelectedFlux(null)
-                      }}
-                      className="w-full rounded-[10px] border px-3 py-2 text-[13.5px]"
-                      style={{ background: 'var(--bg)', borderColor: 'var(--border-color)' }}
-                    >
-                      {instances.map((inst) => (
-                        <option key={inst.id} value={inst.id}>
-                          {inst.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
                 <div className="space-y-2">
                   <Label>{t.addFlux.provider}</Label>
                   <div className="grid grid-cols-2 gap-2">
@@ -337,23 +303,17 @@ export function AddFluxDialog({ open, onOpenChange, instances = [] }: AddFluxDia
                       <div className="max-h-48 space-y-1 overflow-y-auto">
                         {available.map((f) => (
                           <button
-                            key={`${f.dataSourceId ?? 'local'}:${f.id}`}
+                            key={f.id}
                             type="button"
                             onClick={() => setSelectedFlux(f)}
                             className={cn(
                               'block w-full truncate rounded-md border px-3 py-2 text-left text-sm transition-colors',
-                              selectedFlux?.id === f.id &&
-                                selectedFlux?.dataSourceId === f.dataSourceId
+                              selectedFlux?.id === f.id
                                 ? 'border-primary bg-primary/10'
                                 : 'border-border hover:bg-muted',
                             )}
                           >
                             {fluxLabel(f)}
-                            {f.dataSourceName && (
-                              <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                                {f.dataSourceName}
-                              </span>
-                            )}
                           </button>
                         ))}
                       </div>

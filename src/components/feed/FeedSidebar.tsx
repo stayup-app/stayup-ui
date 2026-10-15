@@ -12,7 +12,6 @@ import { useLanguage } from '@/context/LanguageContext'
 import type { Provider, UserRepository } from '@/types'
 import type { ProviderMeta } from '@/lib/providerTemplate'
 import { providerIcon, providerAccent } from './providerIcons'
-import { unreadKey, type InstanceRef } from './FeedClientLayout'
 
 /** A provider's metadata for the sidebar, derived from its template. */
 function getProviderMeta(provider: Provider, templates: Record<string, ProviderMeta>) {
@@ -29,15 +28,13 @@ function getProviderMeta(provider: Provider, templates: Record<string, ProviderM
 interface FeedSidebarProps {
   fluxes: UserRepository[]
   templates: Record<string, ProviderMeta>
-  instances?: InstanceRef[]
-  unreadCountByRepoId?: Record<string, number>
+  unreadCountByRepoId?: Record<number, number>
   width?: number
 }
 
 export function FeedSidebar({
   fluxes,
   templates,
-  instances = [],
   unreadCountByRepoId = {},
   width = 220,
 }: FeedSidebarProps) {
@@ -61,7 +58,6 @@ export function FeedSidebar({
   }, {})
 
   const providers = Object.keys(byProvider) as Provider[]
-  const multiInstance = instances.length > 1
 
   function isExpanded(provider: Provider) {
     return expanded[provider] !== false
@@ -76,9 +72,7 @@ export function FeedSidebar({
     e.stopPropagation()
     if (!confirm(t.feed.confirmDelete.replace('{id}', flux.identifier))) return
     setDeleting(flux.id)
-    await fetch(`/api/fluxes/${flux.id}?instanceId=${encodeURIComponent(flux.instanceId)}`, {
-      method: 'DELETE',
-    })
+    await fetch(`/api/fluxes/${flux.id}`, { method: 'DELETE' })
     startRefresh(() => router.refresh())
   }
 
@@ -157,8 +151,7 @@ export function FeedSidebar({
               const open = isExpanded(provider)
               const providerFluxes = byProvider[provider] ?? []
               const totalUnread = providerFluxes.reduce(
-                (sum, flux) =>
-                  sum + (unreadCountByRepoId[unreadKey(flux.instanceId, flux.repositoryId)] ?? 0),
+                (sum, flux) => sum + (unreadCountByRepoId[flux.repositoryId] ?? 0),
                 0,
               )
 
@@ -203,10 +196,9 @@ export function FeedSidebar({
                   {open && (
                     <div className="ml-7 mt-0.5 space-y-0.5 mb-1">
                       {providerFluxes.map((flux) => {
-                        const fluxHref = `/feed/flux/${flux.instanceId}:${flux.id}`
+                        const fluxHref = `/feed/flux/${flux.id}`
                         const isActive = pathname === fluxHref
-                        const fluxUnread =
-                          unreadCountByRepoId[unreadKey(flux.instanceId, flux.repositoryId)] ?? 0
+                        const fluxUnread = unreadCountByRepoId[flux.repositoryId] ?? 0
 
                         return (
                           <div
@@ -233,14 +225,6 @@ export function FeedSidebar({
                               )}
                             >
                               <span className="truncate">{flux.identifier}</span>
-                              {multiInstance && flux.instanceName && (
-                                <span
-                                  className="shrink-0 rounded bg-[var(--surface-2)] px-1 text-[11px] text-dim"
-                                  title={flux.instanceName}
-                                >
-                                  {flux.instanceName}
-                                </span>
-                              )}
                               {fluxUnread > 0 && (
                                 <span
                                   className="text-[12px] font-mono px-1 rounded shrink-0"
@@ -271,7 +255,7 @@ export function FeedSidebar({
         )}
       </div>
 
-      <AddFluxDialog open={addOpen} onOpenChange={setAddOpen} instances={instances} />
+      <AddFluxDialog open={addOpen} onOpenChange={setAddOpen} />
     </aside>
   )
 }

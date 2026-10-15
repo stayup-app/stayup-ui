@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { fanoutFeed, toFeedRepositories } from '@/lib/feed-fanout'
+import { loadFeed, toFeedRepositories } from '@/lib/feed'
 import { FeedClientView } from '@/components/feed/FeedClientView'
 import type { TaggedItem } from '@/types'
 
@@ -14,20 +14,17 @@ function getItemDate(tagged: TaggedItem): string {
 }
 
 export default async function FeedPage() {
-  const { connectors, repositories, templates, instanceErrors } = await fanoutFeed()
+  const { connectors, repositories, templates } = await loadFeed()
 
   const items: TaggedItem[] = Object.entries(connectors)
     .flatMap(([provider, providerItems]) => providerItems.map((item) => ({ provider, item })))
-    .sort(
-      (a, b) => new Date(getItemDate(b)).getTime() - new Date(getItemDate(a)).getTime(),
-    ) as TaggedItem[]
+    .sort((a, b) => new Date(getItemDate(b)).getTime() - new Date(getItemDate(a)).getTime())
 
   return (
     <FeedClientView
       items={items}
       repositories={toFeedRepositories(repositories)}
       templates={templates}
-      instanceErrors={instanceErrors}
     />
   )
 }

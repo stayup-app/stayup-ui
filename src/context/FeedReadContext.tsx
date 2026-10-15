@@ -5,18 +5,18 @@ import type { TaggedItem } from '@/types'
 
 const LS_KEY = 'STAYUP_READ_ITEMS'
 
-/** Key for a read item: `<instanceId>:<provider>:<id>`. The instance segment
- *  disambiguates when two API instances have overlapping row ids. */
+/** Key for a read item: `<provider>:<id>`. */
 export function taggedItemId(item: TaggedItem): string {
-  const instanceId = typeof item.item._instance_id === 'string' ? item.item._instance_id : ''
-  return `${instanceId}:${item.provider}:${item.item.id}`
+  return `${item.provider}:${item.item.id}`
 }
 
-/** Re-prefixes "pre-multi-instance" keys (`provider:id`) with the primary's id.
- *  Keys that already have 3 segments pass through unchanged. */
-export function migrateReadIds(stored: string[], primaryInstanceId: string): string[] {
-  if (!primaryInstanceId) return stored
-  return stored.map((id) => (id.split(':').length === 2 ? `${primaryInstanceId}:${id}` : id))
+/** Drops the instance segment of keys stored by versions that supported several
+ *  API instances (`<instanceId>:<provider>:<id>`), keeping the read state. */
+export function migrateReadIds(stored: string[]): string[] {
+  return stored.map((id) => {
+    const parts = id.split(':')
+    return parts.length === 3 ? parts.slice(1).join(':') : id
+  })
 }
 
 interface ReadContextValue {
@@ -35,25 +35,19 @@ export function useReadContext() {
   return useContext(ReadContext)
 }
 
-export function ReadProvider({
-  children,
-  primaryInstanceId = '',
-}: {
-  children: ReactNode
-  primaryInstanceId?: string
-}) {
+export function ReadProvider({ children }: { children: ReactNode }) {
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LS_KEY)
       if (stored) {
-        setReadIds(new Set(migrateReadIds(JSON.parse(stored) as string[], primaryInstanceId)))
+        setReadIds(new Set(migrateReadIds(JSON.parse(stored) as string[])))
       }
     } catch {
       /* ignore */
     }
-  }, [primaryInstanceId])
+  }, [])
 
   const markRead = useCallback((item: TaggedItem) => {
     const id = taggedItemId(item)

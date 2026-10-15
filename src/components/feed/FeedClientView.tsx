@@ -6,7 +6,6 @@ import type { TaggedItem, FeedRepository } from '@/types'
 import type { ProviderMeta } from '@/lib/providerTemplate'
 import { UnifiedFeedList } from './UnifiedFeedList'
 import { FeedContentViewer } from './FeedContentViewer'
-import { ReconnectModal } from './ReconnectModal'
 import { useReadContext, taggedItemId } from '@/context/FeedReadContext'
 import { useLanguage } from '@/context/LanguageContext'
 import { cn } from '@/lib/utils'
@@ -46,21 +45,11 @@ interface FeedClientViewProps {
   items: TaggedItem[]
   repositories: FeedRepository[]
   templates: Record<string, ProviderMeta>
-  instanceErrors?: {
-    instanceId: string
-    instanceName: string
-    reason: 'expired' | 'auth' | 'unreachable'
-  }[]
 }
 
 type FilterMode = 'all' | 'unread'
 
-export function FeedClientView({
-  items,
-  repositories,
-  templates,
-  instanceErrors = [],
-}: FeedClientViewProps) {
+export function FeedClientView({ items, repositories, templates }: FeedClientViewProps) {
   const { readIds, markRead, markAllRead } = useReadContext()
   const { t } = useLanguage()
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
@@ -146,26 +135,9 @@ export function FeedClientView({
     [items, readIds],
   )
 
-  // Dead session (expired or rejected token) → reconnect modal. Transient
-  // failure (network / 5xx) → a simple retry banner.
-  const unreachable = instanceErrors.filter((e) => e.reason === 'unreachable')
-  const dead = instanceErrors.filter((e) => e.reason === 'expired' || e.reason === 'auth')
-
   return (
     <div className="flex flex-1 min-h-0">
-      <ReconnectModal instances={dead} />
       <div className="shrink-0 flex flex-col" style={{ width: listWidth }}>
-        {unreachable.length > 0 && (
-          <div
-            className="px-3 py-2 text-[13px] shrink-0"
-            style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
-          >
-            {t.feed.instanceUnreachable.replace(
-              '{names}',
-              unreachable.map((e) => e.instanceName).join(', '),
-            )}
-          </div>
-        )}
         {/* Filter bar */}
         <div
           className="flex items-center gap-1 px-3 py-2 shrink-0"

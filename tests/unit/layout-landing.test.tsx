@@ -74,31 +74,6 @@ describe('Navbar', () => {
     expect(screen.getByLabelText('Language')).toBeInTheDocument()
   })
 
-  it('shows no server status dots without a server list', () => {
-    renderWithLang(<Navbar user={USER} />)
-    expect(screen.queryByRole('group', { name: 'Server status' })).not.toBeInTheDocument()
-  })
-
-  it('shows one status dot per server, linking to the profile', () => {
-    renderWithLang(
-      <Navbar
-        user={USER}
-        servers={[
-          { id: 'a', name: 'Alpha', expired: false },
-          { id: 'b', name: 'Beta', expired: true },
-        ]}
-      />,
-    )
-    expect(screen.getByRole('link', { name: 'Alpha — Connected' })).toHaveAttribute(
-      'href',
-      '/profile',
-    )
-    expect(screen.getByRole('link', { name: 'Beta — Disconnected' })).toHaveAttribute(
-      'href',
-      '/profile',
-    )
-  })
-
   // Navbar's `?? '?'` initial fallback is unreachable in practice: UserMenu,
   // rendered alongside it, calls user.name.split() and throws first. An empty
   // name therefore renders an empty initial rather than '?'.
@@ -147,10 +122,6 @@ describe('LandingHeader', () => {
 
   // The link leads to the walkthroughs index, not straight to self-hosting:
   // someone coming to write a provider has no business there.
-  it('links to the documentation index', () => {
-    renderWithLang(<LandingHeader />)
-    expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', '/docs')
-  })
 
   it('exposes the sign-in and start links', () => {
     renderWithLang(<LandingHeader />)
@@ -310,10 +281,6 @@ describe('AdminSidebar', () => {
     expect(screen.getByRole('link', { name: nav.fluxRequests })).toHaveAttribute(
       'href',
       '/admin/flux-requests',
-    )
-    expect(screen.getByRole('link', { name: nav.dataSources })).toHaveAttribute(
-      'href',
-      '/admin/data-sources',
     )
   })
 

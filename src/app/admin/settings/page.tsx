@@ -1,15 +1,13 @@
 import { redirect } from 'next/navigation'
 import { getAdminSession } from '@/lib/session'
 import { getServerTranslations } from '@/lib/serverLang'
-import { getApiUrl } from '@/lib/apiUrl'
 import { AdminPasswordForm } from '@/components/admin/AdminPasswordForm'
-import { ApiUrlForm } from '@/components/profile/ApiUrlForm'
 
 export default async function AdminSettingsPage() {
   const session = await getAdminSession()
   if (!session || session.role !== 'admin') redirect('/admin/login')
 
-  const [t, apiUrl] = await Promise.all([getServerTranslations(), getApiUrl()])
+  const t = await getServerTranslations()
 
   return (
     <div className="space-y-6 max-w-md">
@@ -18,7 +16,6 @@ export default async function AdminSettingsPage() {
         <p className="text-sm text-muted-foreground mt-1">{session.email}</p>
       </div>
       <AdminPasswordForm />
-      <ApiUrlForm currentApiUrl={apiUrl} />
     </div>
   )
 }

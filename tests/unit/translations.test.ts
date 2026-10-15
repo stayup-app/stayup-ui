@@ -31,11 +31,9 @@ describe('translation dictionaries', () => {
     }
   })
 
-  // The "Docs" link was restored when the self-hosting page arrived: this test
-  // checked for its absence, it now checks for its presence everywhere.
-  it('exposes the documentation link in every language', () => {
-    for (const [lang, dict] of Object.entries(dictionaries)) {
-      expect(dict.landing.header.docs, lang).toBeTruthy()
+  it('has no documentation link in the landing header', () => {
+    for (const dict of Object.values(dictionaries)) {
+      expect(Object.keys(dict.landing.header)).not.toContain('docs')
     }
   })
 

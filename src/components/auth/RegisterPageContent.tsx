@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { RegisterForm } from './RegisterForm'
 import { OAuthButtons } from './OAuthButtons'
-import { ApiUrlForm } from '@/components/profile/ApiUrlForm'
 import { useLanguage } from '@/context/LanguageContext'
 import type { AuthConfig } from '@/lib/api-client'
 
@@ -17,7 +15,6 @@ export function RegisterPageContent({
 }) {
   const { t } = useLanguage()
   const a = t.auth
-  const [showServer, setShowServer] = useState(false)
 
   const oauth = config?.oauth ?? { github: true, google: true }
   const hasOAuth = oauth.github || oauth.google
@@ -54,10 +51,6 @@ export function RegisterPageContent({
 
       <RegisterForm />
 
-      {config?.registrationMode === 'approval' && (
-        <p className="mt-3 text-[12px] text-muted-foreground">{a.pendingApprovalHint}</p>
-      )}
-
       <p className="text-center text-[13px] text-muted-foreground mt-5">
         {a.alreadyAccount}{' '}
         <Link
@@ -68,29 +61,6 @@ export function RegisterPageContent({
           {a.signIn}
         </Link>
       </p>
-
-      <div className="mt-6 border-t border-[var(--border-soft)] pt-4 text-center">
-        <button
-          type="button"
-          onClick={() => setShowServer((v) => !v)}
-          className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {a.server} · {hostOf(apiUrl)}
-        </button>
-        {showServer && (
-          <div className="mt-3 text-left">
-            <ApiUrlForm currentApiUrl={apiUrl} />
-          </div>
-        )}
-      </div>
     </div>
   )
-}
-
-function hostOf(url: string): string {
-  try {
-    return new URL(url).host
-  } catch {
-    return url
-  }
 }

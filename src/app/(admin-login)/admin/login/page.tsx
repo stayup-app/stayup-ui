@@ -1,11 +1,8 @@
 import Link from 'next/link'
 import { AdminLoginContent } from '@/components/admin/AdminLoginContent'
 import { AuroraWordmark } from '@/components/ui/aurora-mark'
-import { getApiUrl } from '@/lib/apiUrl'
 
-export default async function AdminLoginPage() {
-  const apiUrl = await getApiUrl()
-
+export default function AdminLoginPage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center p-4"
@@ -15,7 +12,7 @@ export default async function AdminLoginPage() {
         <AuroraWordmark size={15} />
       </Link>
 
-      <AdminLoginContent apiUrl={apiUrl} />
+      <AdminLoginContent />
     </div>
   )
 }

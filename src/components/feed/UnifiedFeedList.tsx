@@ -8,12 +8,6 @@ import { taggedItemId } from '@/context/FeedReadContext'
 import { TemplatedEntry } from './TemplatedEntry'
 import { providerIcon, providerAccent, providerLabel } from './providerIcons'
 
-/** Per-row source key: `<instanceId>:<repository_id>` — `repository_id`
- *  is only unique within an instance. */
-function sourceKey(instanceId: string | undefined, repositoryId: number | string): string {
-  return `${instanceId ?? ''}:${repositoryId}`
-}
-
 interface UnifiedFeedListProps {
   items: TaggedItem[]
   selectedIndex: number | null
@@ -43,7 +37,7 @@ export function UnifiedFeedList({
 
   const sourceMap = Object.fromEntries(
     repositories.map((r) => [
-      sourceKey(r.instanceId, r.repository_id),
+      r.repository_id,
       { url: r.url, config: r.config ?? {}, type: r.provider ?? '' },
     ]),
   )
@@ -55,13 +49,7 @@ export function UnifiedFeedList({
         const color = providerAccent(meta)
         const isSelected = selectedIndex === i
         const isRead = readIds?.has(taggedItemId(tagged)) ?? false
-        const source =
-          sourceMap[
-            sourceKey(
-              typeof tagged.item._instance_id === 'string' ? tagged.item._instance_id : '',
-              tagged.item.repository_id,
-            )
-          ]
+        const source = sourceMap[tagged.item.repository_id]
 
         return (
           <div

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { en } from '@/lib/translations'
+import { PROVIDERS } from '@/lib/providers'
 
 const cookieGet = vi.fn()
 const cookieSet = vi.fn()
@@ -52,14 +53,11 @@ function bareRequest(url = 'http://localhost/api/x') {
   return { url } as Request
 }
 
-/** Cookie jar backing `readInstances()`: the legacy primary
- *  (`stayup_token` + `stayup_api_url`) is enough for instance resolution. */
+/** Cookie jar holding the session token. */
 function signedIn() {
-  cookieGet.mockImplementation((name: string) => {
-    if (name === 'stayup_token') return { value: TOKEN }
-    if (name === 'stayup_api_url') return { value: 'https://api.test' }
-    return undefined
-  })
+  cookieGet.mockImplementation((name: string) =>
+    name === 'stayup_token' ? { value: TOKEN } : undefined,
+  )
 }
 
 beforeEach(() => {
@@ -96,16 +94,11 @@ describe('POST /api/fluxes', () => {
     )
 
     expect(res.status).toBe(201)
-    expect(api.addUserRepository).toHaveBeenCalledWith(
-      'u1',
-      expect.any(String),
-      {
-        provider: 'changelog',
-        url: 'https://github.com/facebook/react/',
-        config: { max_scraps: 5, retention_days: 15 },
-      },
-      'https://api.test',
-    )
+    expect(api.addUserRepository).toHaveBeenCalledWith('u1', expect.any(String), {
+      provider: 'changelog',
+      url: 'https://github.com/facebook/react/',
+      config: { max_scraps: 5, retention_days: 15 },
+    })
   })
 
   it('returns 400 when the url is missing', async () => {
@@ -159,11 +152,7 @@ describe('/api/providers/[provider]/fluxes', () => {
     const { GET } = await import('@/app/api/providers/[provider]/fluxes/route')
     const res = await GET(bareRequest(), { params })
     expect(await res.json()).toEqual({ fluxes: [{ id: 1, url: 'https://a.dev' }] })
-    expect(api.getProviderFluxes).toHaveBeenCalledWith(
-      'rss',
-      expect.any(String),
-      'https://api.test',
-    )
+    expect(api.getProviderFluxes).toHaveBeenCalledWith('rss', expect.any(String))
   })
 
   it('GET degrades to an empty list on API failure', async () => {
@@ -176,13 +165,7 @@ describe('/api/providers/[provider]/fluxes', () => {
     const { POST } = await import('@/app/api/providers/[provider]/fluxes/route')
     const res = await POST(jsonRequest({ id: 7 }), { params })
     expect(res.status).toBe(201)
-    expect(api.subscribeFlux).toHaveBeenCalledWith(
-      'rss',
-      7,
-      expect.any(String),
-      undefined,
-      'https://api.test',
-    )
+    expect(api.subscribeFlux).toHaveBeenCalledWith('rss', 7, expect.any(String))
   })
 
   it('POST returns 400 without an id', async () => {
@@ -200,13 +183,7 @@ describe('/api/providers/[provider]/fluxes', () => {
     const { DELETE } = await import('@/app/api/providers/[provider]/fluxes/route')
     const res = await DELETE(jsonRequest({ id: 7 }), { params })
     expect(res.status).toBe(200)
-    expect(api.unsubscribeFlux).toHaveBeenCalledWith(
-      'rss',
-      7,
-      expect.any(String),
-      undefined,
-      'https://api.test',
-    )
+    expect(api.unsubscribeFlux).toHaveBeenCalledWith('rss', 7, expect.any(String))
   })
 })
 
@@ -224,12 +201,7 @@ describe('DELETE /api/fluxes/[id]', () => {
     const { DELETE } = await import('@/app/api/fluxes/[id]/route')
     const res = await DELETE(bareRequest(), { params })
     expect(await res.json()).toEqual({ success: true })
-    expect(api.deleteUserRepository).toHaveBeenCalledWith(
-      'u1',
-      'link1',
-      expect.any(String),
-      'https://api.test',
-    )
+    expect(api.deleteUserRepository).toHaveBeenCalledWith('u1', 'link1', expect.any(String))
   })
 
   it('returns 404 when the link is unknown', async () => {
@@ -250,22 +222,24 @@ describe('GET /api/providers', () => {
   it('returns 401 without a session cookie', async () => {
     cookieGet.mockReturnValue(undefined)
     const { GET } = await import('@/app/api/providers/route')
-    expect((await GET(bareRequest())).status).toBe(401)
+    expect((await GET()).status).toBe(401)
   })
 
   it('returns the discovered providers', async () => {
     api.getConnectorProviders.mockResolvedValue([{ name: 'youtube', displayName: 'YouTube' }])
     const { GET } = await import('@/app/api/providers/route')
-    expect(await (await GET(bareRequest())).json()).toEqual({
-      providers: [{ name: 'youtube', displayName: 'YouTube' }],
+    expect(await (await GET()).json()).toEqual({
+      providers: [
+        { name: 'youtube', displayName: 'YouTube', template: PROVIDERS.youtube.template },
+      ],
     })
-    expect(api.getConnectorProviders).toHaveBeenCalledWith(expect.any(String), 'https://api.test')
+    expect(api.getConnectorProviders).toHaveBeenCalledWith(expect.any(String))
   })
 
   it('degrades to an empty list when the API fails', async () => {
     api.getConnectorProviders.mockRejectedValue(new Error('down'))
     const { GET } = await import('@/app/api/providers/route')
-    expect(await (await GET(bareRequest())).json()).toEqual({ providers: [] })
+    expect(await (await GET()).json()).toEqual({ providers: [] })
   })
 })
 
@@ -281,13 +255,13 @@ describe('GET /api/auth/callback', () => {
     expect(cookieSet).not.toHaveBeenCalled()
   })
 
-  it('stores the session in the instances cookie and redirects to the feed', async () => {
+  it('stores the session cookie and redirects to the feed', async () => {
     const token = makeToken()
     const { GET } = await import('@/app/api/auth/callback/route')
     await expect(GET(requestWithToken(token))).rejects.toThrow('NEXT_REDIRECT:/feed')
     expect(cookieSet).toHaveBeenCalledWith(
-      'stayup_instances',
-      expect.stringContaining(token),
+      'stayup_token',
+      token,
       expect.objectContaining({ httpOnly: true, path: '/' }),
     )
   })

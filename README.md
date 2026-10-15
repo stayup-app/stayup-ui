@@ -9,25 +9,20 @@
 
 Next.js web interface for StayUp — an aggregator for everything you follow.
 
-Follow the sources that matter to you (GitHub releases, YouTube channels, RSS
-feeds, scraped web pages, and any provider added to the API) and read every
-update in a single unified feed.
+Follow the sources that matter to you (GitHub releases and trending, YouTube
+channels, RSS feeds, scraped web pages) and read every update in a single
+unified feed. The app talks to one StayUp API, set with `STAYUP_API_URL`.
 
 ## Features
 
 - **Unified feed** — all your sources merged into one chronological list, with
   read/unread tracking and keyboard navigation (`↑` / `↓`)
-- **Provider-agnostic rendering** — the feed renders each provider from the
-  display template the API relays, so a new provider needs no UI code
-- **Multiple API instances** — point the app at any `stayup-api` (checked before
-  it's saved, with an account-creation flow if needed); switch between the ones
-  you've added
+- **Per-provider rendering** — each provider's rows are rendered from a template
+  bundled with the app (`src/lib/providers.ts`)
 - **Flux requests** — for providers in manual-approval mode, users request a new
   source and admins review it
 - **Admin panel** — users, admins, providers (display name, ordering, approval
-  mode), repositories, connector API keys, and secondary databases
-- **Docs site** — self-hosting, provider, admin and script-generator guides at
-  `/docs`
+  mode), repositories and connector API keys
 - **i18n** — English, French, German, Spanish, Italian, Portuguese, Japanese and
   Chinese, switchable at runtime
 - **Auth** — email/password plus Google and GitHub OAuth
@@ -35,7 +30,7 @@ update in a single unified feed.
 ## Requirements
 
 - Node.js 22+
-- A running [`stayup-api`](https://github.com/stayup-app/stayup-api) instance
+- A running [`stayup-api`](https://github.com/stayup-app/stayup-api)
 - PostgreSQL (auth only) — provided by the bundled Docker Compose setup
 
 ## Getting started
@@ -116,12 +111,11 @@ src/
 │   ├── (admin-login)/# admin sign-in
 │   ├── (protected)/  # feed, profile, scrap — auth required
 │   ├── admin/        # admin panel (users, admins, providers, repositories,
-│   │                 #   connector keys, data sources, settings)
-│   ├── docs/         # public documentation site
+│   │                 #   connector keys, settings)
 │   └── api/          # route handlers
 ├── components/       # React components, grouped by domain
 ├── context/          # React contexts (language, read state)
-├── lib/              # API client, server actions, translations, docs content
+├── lib/              # API client, server actions, translations, provider templates
 ├── types/            # shared TypeScript types
 └── middleware.ts     # route protection
 ```

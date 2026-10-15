@@ -1,22 +1,11 @@
 'use client'
 
-import { useState } from 'react'
 import { AdminLoginForm } from './AdminLoginForm'
-import { ApiUrlForm } from '@/components/profile/ApiUrlForm'
 import { LanguageSwitcher } from '@/components/ui/language-switcher'
 import { useLanguage } from '@/context/LanguageContext'
 
-function hostOf(url: string): string {
-  try {
-    return new URL(url).host
-  } catch {
-    return url
-  }
-}
-
-export function AdminLoginContent({ apiUrl }: { apiUrl: string }) {
+export function AdminLoginContent() {
   const { t } = useLanguage()
-  const [showServer, setShowServer] = useState(false)
 
   return (
     <div
@@ -36,21 +25,9 @@ export function AdminLoginContent({ apiUrl }: { apiUrl: string }) {
 
       <AdminLoginForm />
 
-      <div className="mt-6 border-t border-[var(--border-soft)] pt-4 flex items-center justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => setShowServer((v) => !v)}
-          className="text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {t.auth.server} · {hostOf(apiUrl)}
-        </button>
+      <div className="mt-6 border-t border-[var(--border-soft)] pt-4 flex justify-end">
         <LanguageSwitcher />
       </div>
-      {showServer && (
-        <div className="mt-3 text-left">
-          <ApiUrlForm currentApiUrl={apiUrl} />
-        </div>
-      )}
     </div>
   )
 }

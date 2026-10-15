@@ -1,7 +1,6 @@
 import { cookies } from 'next/headers'
 import { COOKIE_NAME, ADMIN_COOKIE_NAME } from './constants'
 import { getApiUrl } from './apiUrl'
-import { primaryInstance } from './instances'
 
 export { COOKIE_NAME, ADMIN_COOKIE_NAME }
 
@@ -72,17 +71,36 @@ export async function isAdminTokenValid(token: string): Promise<boolean> {
 }
 
 export async function getSession(): Promise<AppSession | null> {
-  const primary = await primaryInstance()
-  if (!primary) return null
+  const token = await getToken()
+  if (!token) return null
   try {
-    return decodeToken(primary.token)
+    return decodeToken(token)
   } catch {
     return null
   }
 }
 
 export async function getToken(): Promise<string | null> {
-  return (await primaryInstance())?.token ?? null
+  const cookieStore = await cookies()
+  return cookieStore.get(COOKIE_NAME)?.value ?? null
+}
+
+/** Stores a token in the named session cookie, expiring with the token. */
+export async function setTokenCookie(name: string, token: string): Promise<void> {
+  const exp = (
+    JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString()) as {
+      exp: number
+    }
+  ).exp
+  const maxAge = Math.max(exp - Math.floor(Date.now() / 1000), 0)
+  const cookieStore = await cookies()
+  cookieStore.set(name, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge,
+  })
 }
 
 // Admin sessions use a separate cookie from user sessions, so the same

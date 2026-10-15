@@ -18,17 +18,6 @@ export function TemplatedEntry({ template, item, source, color }: TemplatedEntry
   const view = resolveItemView(template, item, source)
   const layout = template.list?.layout ?? 'row'
   const date = view.timestamp ? formatDate(view.timestamp) : ''
-  // Source badge: instance name (multi-API, only set if >1 instance), otherwise
-  // the secondary database name (multi-database) — one or the other, not both.
-  const srcName =
-    (typeof item._instance_name === 'string' && item._instance_name) ||
-    (typeof item._data_source_name === 'string' && item._data_source_name) ||
-    ''
-  const srcBadge = srcName ? (
-    <span className="shrink-0 rounded bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] text-dim">
-      {srcName}
-    </span>
-  ) : null
 
   if (layout === 'media') {
     return (
@@ -73,7 +62,6 @@ export function TemplatedEntry({ template, item, source, color }: TemplatedEntry
               </span>
             )}
             {date && <span className="text-[13px] font-mono shrink-0 text-dim">{date}</span>}
-            {srcBadge}
           </div>
         </div>
       </div>
@@ -89,7 +77,6 @@ export function TemplatedEntry({ template, item, source, color }: TemplatedEntry
           {view.title || '—'}
         </span>
         <div className="flex items-center gap-2 shrink-0">
-          {srcBadge}
           {date && <span className="text-[13px] font-mono text-dim">{date}</span>}
         </div>
       </div>

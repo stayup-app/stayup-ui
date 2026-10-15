@@ -546,70 +546,9 @@ describe('admin account API wrappers', () => {
   })
 })
 
-describe('data-source API wrappers', () => {
-  it('adminListDataSources reads /ui/data-sources', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ primary: { engine: 'postgres', host: 'db' }, sources: [] }),
-    })
-    const { adminListDataSources } = await import('@/lib/api-client')
-    const res = await adminListDataSources(TEST_TOKEN)
-    expect(res.primary.engine).toBe('postgres')
-    expect(mockFetch.mock.calls[0][0]).toContain('/ui/data-sources')
-  })
-
-  it('adminTestDataSource POSTs the url to /ui/data-sources/test', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ ok: true, engine: 'postgres', connectors: ['rss'] }),
-    })
-    const { adminTestDataSource } = await import('@/lib/api-client')
-    await adminTestDataSource('postgres://x', TEST_TOKEN)
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/ui/data-sources/test')
-    expect(init.method).toBe('POST')
-    expect(JSON.parse(init.body)).toEqual({ url: 'postgres://x' })
-  })
-
-  it('adminAddDataSource POSTs name + url', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ dataSource: { id: 1 } }) })
-    const { adminAddDataSource } = await import('@/lib/api-client')
-    await adminAddDataSource({ name: 'A', url: 'postgres://x' }, TEST_TOKEN)
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/ui/data-sources')
-    expect(init.method).toBe('POST')
-  })
-
-  it('adminDeleteDataSource DELETEs by id', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
-    const { adminDeleteDataSource } = await import('@/lib/api-client')
-    await adminDeleteDataSource(7, TEST_TOKEN)
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/ui/data-sources/7')
-    expect(init.method).toBe('DELETE')
-  })
-
-  it('subscribeFlux carries a dataSourceId when given', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
-    const { subscribeFlux } = await import('@/lib/api-client')
-    await subscribeFlux('rss', 3, TEST_TOKEN, 5)
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/providers/rss/fluxes/3/subscribe')
-    expect(JSON.parse(init.body)).toEqual({ dataSourceId: 5 })
-  })
-
-  it('subscribeFlux sends no body for a local flux', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
-    const { subscribeFlux } = await import('@/lib/api-client')
-    await subscribeFlux('rss', 3, TEST_TOKEN)
-    expect(mockFetch.mock.calls[0][1].body).toBeUndefined()
-  })
-})
-
 describe('fetchAuthConfig', () => {
   it('returns the parsed config on success', async () => {
     const cfg = {
-      registrationMode: 'approval',
       emailPassword: true,
       oauth: { github: true, google: false },
     }
@@ -633,79 +572,14 @@ describe('fetchAuthConfig', () => {
   })
 })
 
-describe('probeApiUrl', () => {
-  it('reports "unreachable" when nothing answers', async () => {
-    mockFetch.mockRejectedValueOnce(new TypeError('fetch failed'))
-    const { probeApiUrl } = await import('@/lib/api-client')
-    await expect(probeApiUrl('https://nope.example.com')).resolves.toEqual({
-      ok: false,
-      reason: 'unreachable',
-    })
-  })
-
-  it('reports "incompatible" on a non-2xx answer', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: false, status: 500, json: async () => ({}) })
-    const { probeApiUrl } = await import('@/lib/api-client')
-    await expect(probeApiUrl('https://example.com')).resolves.toEqual({
-      ok: false,
-      reason: 'incompatible',
-    })
-  })
-
-  it('reports "incompatible" when the JSON is not an auth config', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ hello: 'world' }) })
-    const { probeApiUrl } = await import('@/lib/api-client')
-    await expect(probeApiUrl('https://example.com')).resolves.toEqual({
-      ok: false,
-      reason: 'incompatible',
-    })
-  })
-
-  it('returns the config when the shape checks out', async () => {
-    const cfg = {
-      name: 'Mine',
-      registrationMode: 'open',
-      emailPassword: true,
-      oauth: { github: false, google: true },
-    }
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => cfg })
-    const { probeApiUrl } = await import('@/lib/api-client')
-    await expect(probeApiUrl('https://example.com')).resolves.toEqual({ ok: true, config: cfg })
-  })
-})
-
-describe('pending sign-up API wrappers', () => {
-  it('adminListPendingUsers reads /ui/users/pending', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        users: [
-          { id: 'p-1', name: 'Ada', email: 'ada@x.dev', method: 'password', created_at: 'x' },
-        ],
-      }),
-    })
-    const { adminListPendingUsers } = await import('@/lib/api-client')
-    const result = await adminListPendingUsers(TEST_TOKEN)
-    expect(result).toHaveLength(1)
-    expect(result[0].method).toBe('password')
-    expect(mockFetch.mock.calls[0][0]).toContain('/ui/users/pending')
-  })
-
-  it('adminApprovePendingUser POSTs the approve endpoint', async () => {
-    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ user: { id: 'u-9' } }) })
-    const { adminApprovePendingUser } = await import('@/lib/api-client')
-    await adminApprovePendingUser('p-1', TEST_TOKEN)
-    const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/ui/users/pending/p-1/approve')
-    expect(init.method).toBe('POST')
-  })
-
-  it('adminRejectPendingUser POSTs the reject endpoint', async () => {
+describe('subscribeFlux', () => {
+  it('POSTs the subscribe endpoint without a body', async () => {
     mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ success: true }) })
-    const { adminRejectPendingUser } = await import('@/lib/api-client')
-    await adminRejectPendingUser('p-1', TEST_TOKEN)
+    const { subscribeFlux } = await import('@/lib/api-client')
+    await subscribeFlux('rss', 3, TEST_TOKEN)
     const [url, init] = mockFetch.mock.calls[0]
-    expect(url).toContain('/ui/users/pending/p-1/reject')
+    expect(url).toContain('/providers/rss/fluxes/3/subscribe')
     expect(init.method).toBe('POST')
+    expect(init.body).toBeUndefined()
   })
 })

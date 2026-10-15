@@ -171,20 +171,6 @@ describe('LoginPageContent', () => {
     expect(screen.queryByRole('link', { name: /GitHub/i })).not.toBeInTheDocument()
     expect(screen.queryByText('or')).not.toBeInTheDocument()
   })
-
-  it('reveals the server field behind the host line', async () => {
-    const user = userEvent.setup()
-    renderWithLang(<LoginPageContent apiUrl="https://api.test" />)
-
-    expect(screen.queryByLabelText('API URL')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /Server · api\.test/ }))
-    expect(screen.getByLabelText('API URL')).toBeInTheDocument()
-  })
-
-  it('shows the raw string when the API URL is not a URL', () => {
-    renderWithLang(<LoginPageContent apiUrl="not-a-url" />)
-    expect(screen.getByRole('button', { name: /Server · not-a-url/ })).toBeInTheDocument()
-  })
 })
 
 describe('RegisterPageContent', () => {
@@ -192,20 +178,6 @@ describe('RegisterPageContent', () => {
     renderWithLang(<RegisterPageContent apiUrl="https://api.test" />)
     expect(screen.getByLabelText('Name')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
-  })
-
-  it('warns about admin approval when the instance requires it', () => {
-    renderWithLang(
-      <RegisterPageContent
-        apiUrl="https://api.test"
-        config={{ ...noOAuth, oauth: { github: true, google: true }, registrationMode: 'approval' }}
-      />,
-    )
-    expect(
-      screen.getByText(
-        'Your account will need an administrator to approve it before you can sign in.',
-      ),
-    ).toBeInTheDocument()
   })
 })
 
@@ -246,15 +218,10 @@ describe('AdminLoginForm', () => {
 })
 
 describe('AdminLoginContent', () => {
-  it('shows the login form, the language switcher, and reveals the API URL field behind the host line', async () => {
-    const user = userEvent.setup()
-    renderWithLang(<AdminLoginContent apiUrl="https://api.test" />)
+  it('shows the login form and the language switcher', () => {
+    renderWithLang(<AdminLoginContent />)
 
     expect(screen.getByRole('button', { name: al.submit })).toBeInTheDocument()
     expect(screen.getByLabelText(en.common.language)).toBeInTheDocument()
-
-    expect(screen.queryByLabelText('API URL')).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /Server · api\.test/ }))
-    expect(screen.getByLabelText('API URL')).toBeInTheDocument()
   })
 })
