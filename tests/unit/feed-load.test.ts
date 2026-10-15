@@ -52,8 +52,11 @@ describe('loadFeed', () => {
     expect(Object.keys(feed.templates).sort()).toEqual([
       'changelog',
       'github_trending',
+      'podcast',
+      'reddit',
       'rss',
       'scrap',
+      'social',
       'youtube',
     ])
   })
