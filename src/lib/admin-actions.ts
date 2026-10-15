@@ -13,6 +13,7 @@ import {
   adminDeleteAdmin,
   adminDeleteRepository,
   adminDeleteUser,
+  adminListErrorLogs,
   adminListFluxRequests,
   adminListRepositorySubscribers,
   adminCreateConnectorKey,
@@ -27,6 +28,7 @@ import {
   adminUpdateAdmin,
   deleteUserRepository,
   type ConnectorKey,
+  type ErrorLog,
   type RepositorySubscriber,
   type RetentionSettings,
 } from './api-client'
@@ -238,6 +240,12 @@ export async function adminGetRetentionAction(): Promise<RetentionSettings | nul
   const token = await getAdminToken()
   if (!token) return null
   return adminGetRetention(token).catch(() => null)
+}
+
+export async function adminListErrorLogsAction(): Promise<ErrorLog[] | null> {
+  const token = await getAdminToken()
+  if (!token) return null
+  return adminListErrorLogs(token).catch(() => null)
 }
 
 export async function adminUpdateRetentionAction(body: {

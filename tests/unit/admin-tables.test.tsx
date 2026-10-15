@@ -221,24 +221,41 @@ describe('RepositoriesTable', () => {
     expect(screen.getByText('3')).toBeInTheDocument()
   })
 
-  it('shows who follows a repository when the subscriber count is clicked', async () => {
+  it('opens a popin listing who follows a repository when the subscriber count is clicked', async () => {
     actions.adminListRepositorySubscribersAction.mockResolvedValue({
-      subscribers: [{ id: 'u1', name: 'Ada', email: 'ada@x.dev', subscribed_at: '2026-01-01' }],
+      subscribers: [
+        { id: 'u1', name: 'Ada', email: 'ada@x.dev', subscribed_at: '2026-01-01T00:00:00Z' },
+      ],
     })
     const user = userEvent.setup()
     withLang(<RepositoriesTable repositories={[REPO]} />)
 
     await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
 
-    expect(await screen.findByText('ada@x.dev')).toBeInTheDocument()
-    expect(screen.getByText('Ada')).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('https://github.com/facebook/react')).toBeInTheDocument()
+    expect(await within(dialog).findByText('ada@x.dev')).toBeInTheDocument()
+    expect(within(dialog).getByText('Ada')).toBeInTheDocument()
+    expect(within(dialog).getByRole('columnheader', { name: 'Email' })).toBeInTheDocument()
+    expect(
+      within(dialog).getByRole('columnheader', { name: en.admin.subscribedSince }),
+    ).toBeInTheDocument()
     expect(actions.adminListRepositorySubscribersAction).toHaveBeenCalledWith(5)
-
-    await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
-    expect(screen.queryByText('ada@x.dev')).not.toBeInTheDocument()
   })
 
-  it('says so when a repository has no subscriber left', async () => {
+  it('closes the popin', async () => {
+    actions.adminListRepositorySubscribersAction.mockResolvedValue({ subscribers: [] })
+    const user = userEvent.setup()
+    withLang(<RepositoriesTable repositories={[REPO]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Subscribers (3)' }))
+    await screen.findByRole('dialog')
+    await user.keyboard('{Escape}')
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('says so in the popin when a repository has no subscriber left', async () => {
     actions.adminListRepositorySubscribersAction.mockResolvedValue({ subscribers: [] })
     const user = userEvent.setup()
     withLang(<RepositoriesTable repositories={[{ ...REPO, subscriber_count: '1' }]} />)
@@ -248,7 +265,7 @@ describe('RepositoriesTable', () => {
     expect(await screen.findByText(en.admin.noSubscribers)).toBeInTheDocument()
   })
 
-  it('shows the error when the subscribers cannot be loaded', async () => {
+  it('shows the error in the popin when the subscribers cannot be loaded', async () => {
     actions.adminListRepositorySubscribersAction.mockResolvedValue({ error: 'boom' })
     const user = userEvent.setup()
     withLang(<RepositoriesTable repositories={[REPO]} />)

@@ -100,6 +100,17 @@ describe('admin API functions', () => {
     expect(mockFetch.mock.calls[0][0]).toContain('/ui/repositories/7/subscribers')
   })
 
+  it('adminListErrorLogs reads the latest failures with a limit', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ logs: [{ id: 1, error: 'HTTP 500' }] }),
+    })
+    const { adminListErrorLogs } = await import('@/lib/api-client')
+    const result = await adminListErrorLogs(TEST_TOKEN, 25)
+    expect(result).toEqual([{ id: 1, error: 'HTTP 500' }])
+    expect(mockFetch.mock.calls[0][0]).toContain('/ui/maintenance/logs?limit=25')
+  })
+
   it('adminListRepositories returns repositories array', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,

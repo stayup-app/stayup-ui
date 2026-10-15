@@ -375,6 +375,22 @@ export type RetentionSettings = {
   providers: RetentionProvider[]
 }
 
+export type ErrorLog = {
+  id: number
+  repository_id: number | null
+  url: string | null
+  provider: string | null
+  error: string
+  executed_at: string
+}
+
+export async function adminListErrorLogs(token: string, limit = 100): Promise<ErrorLog[]> {
+  const data = await apiFetch<{ logs: ErrorLog[] }>(`/ui/maintenance/logs?limit=${limit}`, token, {
+    cache: 'no-store',
+  })
+  return data.logs
+}
+
 export async function adminGetRetention(token: string): Promise<RetentionSettings> {
   return apiFetch<RetentionSettings>('/ui/maintenance/retention', token, { cache: 'no-store' })
 }
