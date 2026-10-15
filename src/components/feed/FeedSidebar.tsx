@@ -3,7 +3,16 @@
 import { useEffect, useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ChevronDown, ChevronRight, Plus, Trash2, LayoutGrid, RefreshCw } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderInput,
+  Folder,
+  Plus,
+  Trash2,
+  LayoutGrid,
+  RefreshCw,
+} from 'lucide-react'
 import { AddFluxDialog } from './AddFluxDialog'
 import { ImportExportButtons } from './ImportExportButtons'
 import { LinkPendingSpinner } from '@/components/ui/link-pending-spinner'
@@ -52,10 +61,16 @@ export function FeedSidebar({
     if (!isRefreshing) setDeleting(null)
   }, [isRefreshing])
 
-  const byProvider = fluxes.reduce<Partial<Record<Provider, UserRepository[]>>>((acc, flux) => {
-    ;(acc[flux.provider] ??= []).push(flux)
-    return acc
-  }, {})
+  const folderNames = [
+    ...new Set(fluxes.map((f) => f.folder).filter((f): f is string => !!f)),
+  ].sort()
+
+  const byProvider = fluxes
+    .filter((flux) => !flux.folder)
+    .reduce<Partial<Record<Provider, UserRepository[]>>>((acc, flux) => {
+      ;(acc[flux.provider] ??= []).push(flux)
+      return acc
+    }, {})
 
   const providers = Object.keys(byProvider) as Provider[]
 
@@ -76,8 +91,81 @@ export function FeedSidebar({
     startRefresh(() => router.refresh())
   }
 
+  async function handleFolder(flux: UserRepository, e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    const name = window.prompt(t.feed.folderPrompt, flux.folder ?? '')
+    if (name === null) return
+    await fetch(`/api/fluxes/${flux.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ folder: name.trim() || null }),
+    })
+    startRefresh(() => router.refresh())
+  }
+
   function handleRefresh() {
     startRefresh(() => router.refresh())
+  }
+
+  function renderFlux(flux: UserRepository, meta: ReturnType<typeof getProviderMeta>) {
+    const fluxHref = `/feed/flux/${flux.id}`
+    const isActive = pathname === fluxHref
+    const fluxUnread = unreadCountByRepoId[flux.repositoryId] ?? 0
+
+    return (
+      <div
+        key={flux.id}
+        className={cn(
+          'group flex items-center rounded-md transition-colors',
+          isActive ? '' : 'hover:bg-accent',
+        )}
+        style={isActive ? { background: 'var(--surface-3)' } : undefined}
+      >
+        {isActive && (
+          <div
+            className="w-0.5 h-4 rounded-full mr-1 shrink-0"
+            style={{ background: meta.color }}
+          />
+        )}
+        <Link
+          href={fluxHref}
+          className={cn(
+            'flex flex-1 items-center gap-1 px-2 py-1 text-[14px] font-mono min-w-0',
+            isActive
+              ? 'text-foreground font-medium'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+        >
+          <span className="truncate">{flux.identifier}</span>
+          {fluxUnread > 0 && (
+            <span
+              className="text-[12px] font-mono px-1 rounded shrink-0"
+              style={{ background: meta.dimColor, color: meta.color }}
+            >
+              {fluxUnread}
+            </span>
+          )}
+          <LinkPendingSpinner />
+        </Link>
+        <button
+          onClick={(e) => handleFolder(flux, e)}
+          className="shrink-0 p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground transition-opacity"
+          aria-label={t.feed.moveToFolder}
+          title={t.feed.moveToFolder}
+        >
+          <FolderInput className="h-3 w-3" />
+        </button>
+        <button
+          onClick={(e) => handleDelete(flux, e)}
+          disabled={deleting === flux.id}
+          className="shrink-0 p-1 mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity disabled:opacity-50"
+          aria-label={t.feed.deleteAriaLabel}
+        >
+          <Trash2 className="h-3 w-3" />
+        </button>
+      </div>
+    )
   }
 
   const isAllActive = pathname === '/feed'
@@ -131,7 +219,7 @@ export function FeedSidebar({
           </div>
         </div>
 
-        {providers.length === 0 ? (
+        {providers.length === 0 && folderNames.length === 0 ? (
           <div className="py-6 text-center px-2">
             <p className="text-[14px] text-muted-foreground mb-3">{t.feed.noFlux}</p>
             <button
@@ -144,6 +232,46 @@ export function FeedSidebar({
           </div>
         ) : (
           <nav className="space-y-0.5">
+            {folderNames.map((folder) => {
+              const href = `/feed/folder/${encodeURIComponent(folder)}`
+              const folderFluxes = fluxes.filter((f) => f.folder === folder)
+              const unread = folderFluxes.reduce(
+                (sum, flux) => sum + (unreadCountByRepoId[flux.repositoryId] ?? 0),
+                0,
+              )
+              const active = pathname === href
+              return (
+                <div key={`folder-${folder}`} className="mb-1">
+                  <Link
+                    href={href}
+                    className={cn(
+                      'flex items-center gap-2 px-2 py-1.5 text-[15px] rounded-md transition-colors',
+                      active
+                        ? 'text-foreground font-medium'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                    style={active ? { background: 'var(--surface-3)' } : undefined}
+                  >
+                    <Folder className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate flex-1">{folder}</span>
+                    {unread > 0 && (
+                      <span
+                        className="text-[12px] font-mono px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}
+                      >
+                        {unread}
+                      </span>
+                    )}
+                    <LinkPendingSpinner />
+                  </Link>
+                  <div className="ml-7 mt-0.5 space-y-0.5">
+                    {folderFluxes.map((flux) =>
+                      renderFlux(flux, getProviderMeta(flux.provider, templates)),
+                    )}
+                  </div>
+                </div>
+              )
+            })}
             {providers.map((provider) => {
               const meta = getProviderMeta(provider, templates)
               const categoryHref = `/feed/category/${provider}`
@@ -195,57 +323,7 @@ export function FeedSidebar({
 
                   {open && (
                     <div className="ml-7 mt-0.5 space-y-0.5 mb-1">
-                      {providerFluxes.map((flux) => {
-                        const fluxHref = `/feed/flux/${flux.id}`
-                        const isActive = pathname === fluxHref
-                        const fluxUnread = unreadCountByRepoId[flux.repositoryId] ?? 0
-
-                        return (
-                          <div
-                            key={flux.id}
-                            className={cn(
-                              'group flex items-center rounded-md transition-colors',
-                              isActive ? '' : 'hover:bg-accent',
-                            )}
-                            style={isActive ? { background: 'var(--surface-3)' } : undefined}
-                          >
-                            {isActive && (
-                              <div
-                                className="w-0.5 h-4 rounded-full mr-1 shrink-0"
-                                style={{ background: meta.color }}
-                              />
-                            )}
-                            <Link
-                              href={fluxHref}
-                              className={cn(
-                                'flex flex-1 items-center gap-1 px-2 py-1 text-[14px] font-mono min-w-0',
-                                isActive
-                                  ? 'text-foreground font-medium'
-                                  : 'text-muted-foreground hover:text-foreground',
-                              )}
-                            >
-                              <span className="truncate">{flux.identifier}</span>
-                              {fluxUnread > 0 && (
-                                <span
-                                  className="text-[12px] font-mono px-1 rounded shrink-0"
-                                  style={{ background: meta.dimColor, color: meta.color }}
-                                >
-                                  {fluxUnread}
-                                </span>
-                              )}
-                              <LinkPendingSpinner />
-                            </Link>
-                            <button
-                              onClick={(e) => handleDelete(flux, e)}
-                              disabled={deleting === flux.id}
-                              className="shrink-0 p-1 mr-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity disabled:opacity-50"
-                              aria-label={t.feed.deleteAriaLabel}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )
-                      })}
+                      {providerFluxes.map((flux) => renderFlux(flux, meta))}
                     </div>
                   )}
                 </div>

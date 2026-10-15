@@ -1,10 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Star } from 'lucide-react'
 import type { TaggedItem, FeedRepository } from '@/types'
 import type { ProviderMeta } from '@/lib/providerTemplate'
 import { formatDate } from '@/lib/utils'
 import { useLanguage } from '@/context/LanguageContext'
+import { useReadContext, taggedItemId } from '@/context/FeedReadContext'
 import { TemplatedDetail } from './TemplatedDetail'
 import { providerAccent, providerLabel } from './providerIcons'
 
@@ -22,6 +24,7 @@ interface FeedContentViewerProps {
 
 export function FeedContentViewer({ item, repositories, templates }: FeedContentViewerProps) {
   const { t } = useLanguage()
+  const { savedIds, toggleSaved } = useReadContext()
   const [fontSizeOffset, setFontSizeOffset] = useState(0)
 
   useEffect(() => {
@@ -53,6 +56,23 @@ export function FeedContentViewer({ item, repositories, templates }: FeedContent
         background: 'hsl(var(--background))',
       }}
     >
+      {item && (
+        <button
+          onClick={() => toggleSaved(item)}
+          className="mr-auto w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+          aria-pressed={savedIds.has(taggedItemId(item))}
+          aria-label={
+            savedIds.has(taggedItemId(item)) ? t.feed.removeFromSaved : t.feed.saveForLater
+          }
+          title={savedIds.has(taggedItemId(item)) ? t.feed.removeFromSaved : t.feed.saveForLater}
+        >
+          <Star
+            size={16}
+            fill={savedIds.has(taggedItemId(item)) ? 'currentColor' : 'none'}
+            style={savedIds.has(taggedItemId(item)) ? { color: 'var(--teal)' } : undefined}
+          />
+        </button>
+      )}
       <span className="text-[13px] font-mono text-muted-foreground mr-1">A</span>
       <button
         onClick={() => changeFontSize(-1)}

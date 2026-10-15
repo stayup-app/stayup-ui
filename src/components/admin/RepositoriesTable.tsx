@@ -85,6 +85,8 @@ export function RepositoriesTable({ repositories }: { repositories: AdminReposit
           <TableRow>
             <TableHead>{t.admin.type}</TableHead>
             <TableHead>{t.admin.url}</TableHead>
+            <TableHead>{t.admin.health}</TableHead>
+            <TableHead>{t.admin.lastItem}</TableHead>
             <TableHead className="text-center">{t.admin.subscribers}</TableHead>
             <TableHead className="text-right">{t.admin.actions}</TableHead>
           </TableRow>
@@ -99,6 +101,18 @@ export function RepositoriesTable({ repositories }: { repositories: AdminReposit
               </TableCell>
               <TableCell className="max-w-xs truncate text-sm font-mono text-muted-foreground">
                 {repo.url}
+              </TableCell>
+              <TableCell>
+                {repo.failures_since_item > 0 ? (
+                  <Badge variant="destructive" title={repo.last_error ?? undefined}>
+                    {t.admin.healthFailing.replace('{n}', String(repo.failures_since_item))}
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">{t.admin.healthOk}</Badge>
+                )}
+              </TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {repo.last_item_at ? formatDate(repo.last_item_at) : t.admin.neverCollected}
               </TableCell>
               <TableCell className="text-center text-sm">
                 {Number(repo.subscriber_count) > 0 ? (
@@ -161,7 +175,7 @@ export function RepositoriesTable({ repositories }: { repositories: AdminReposit
           ))}
           {repositories.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+              <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                 {t.admin.noFlux}
               </TableCell>
             </TableRow>

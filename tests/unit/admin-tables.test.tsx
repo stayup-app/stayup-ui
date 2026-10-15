@@ -206,6 +206,10 @@ describe('RepositoriesTable', () => {
     type: 'changelog',
     config: {},
     subscriber_count: '3',
+    last_item_at: '2026-03-05T10:00:00Z',
+    failures_since_item: 0,
+    last_error: null,
+    last_error_at: null,
   }
 
   it('shows the empty state', () => {

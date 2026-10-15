@@ -4,6 +4,8 @@ import { createContext, useContext, useState, useEffect, useCallback, type React
 import type { TaggedItem } from '@/types'
 
 const LS_KEY = 'STAYUP_READ_ITEMS'
+/** The API takes at most this many ids per request. */
+const SYNC_BATCH = 1000
 
 /** Key for a read item: `<provider>:<id>`. */
 export function taggedItemId(item: TaggedItem): string {
@@ -19,16 +21,49 @@ export function migrateReadIds(stored: string[]): string[] {
   })
 }
 
+function itemNumber(key: string): number {
+  return Number(key.slice(key.lastIndexOf(':') + 1))
+}
+
+function persist(ids: Set<string>) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify([...ids]))
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Tells the API these keys are read. Best effort: whatever fails to go through
+ *  is uploaded again at the next load, since the server then lacks it. */
+async function syncRead(keys: string[]) {
+  const ids = keys.map(itemNumber).filter(Number.isInteger)
+  for (let i = 0; i < ids.length; i += SYNC_BATCH) {
+    try {
+      await fetch('/api/state/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ids.slice(i, i + SYNC_BATCH) }),
+      })
+    } catch {
+      /* ignore */
+    }
+  }
+}
+
 interface ReadContextValue {
   readIds: Set<string>
+  savedIds: Set<string>
   markRead: (item: TaggedItem) => void
   markAllRead: (items: TaggedItem[]) => void
+  toggleSaved: (item: TaggedItem) => void
 }
 
 const ReadContext = createContext<ReadContextValue>({
   readIds: new Set(),
+  savedIds: new Set(),
   markRead: () => {},
   markAllRead: () => {},
+  toggleSaved: () => {},
 })
 
 export function useReadContext() {
@@ -37,15 +72,40 @@ export function useReadContext() {
 
 export function ReadProvider({ children }: { children: ReactNode }) {
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
+  // The server is the source of truth across devices; the local copy only makes
+  // the first paint instant, and is what gets uploaded the first time.
   useEffect(() => {
+    let local: string[] = []
     try {
       const stored = localStorage.getItem(LS_KEY)
-      if (stored) {
-        setReadIds(new Set(migrateReadIds(JSON.parse(stored) as string[])))
-      }
+      if (stored) local = migrateReadIds(JSON.parse(stored) as string[])
     } catch {
       /* ignore */
+    }
+    if (local.length > 0) setReadIds(new Set(local))
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/state')
+        if (!res.ok) return
+        const state = (await res.json()) as { read?: string[]; saved?: string[] }
+        if (cancelled || !Array.isArray(state.read)) return
+        const server = new Set(state.read)
+        const merged = new Set([...server, ...local])
+        setReadIds(merged)
+        setSavedIds(new Set(Array.isArray(state.saved) ? state.saved : []))
+        persist(merged)
+        const missing = local.filter((key) => !server.has(key))
+        if (missing.length > 0) void syncRead(missing)
+      } catch {
+        /* offline: the local copy stands */
+      }
+    })()
+    return () => {
+      cancelled = true
     }
   }, [])
 
@@ -55,11 +115,8 @@ export function ReadProvider({ children }: { children: ReactNode }) {
       if (prev.has(id)) return prev
       const next = new Set(prev)
       next.add(id)
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify([...next]))
-      } catch {
-        /* ignore */
-      }
+      persist(next)
+      void syncRead([id])
       return next
     })
   }, [])
@@ -68,17 +125,30 @@ export function ReadProvider({ children }: { children: ReactNode }) {
     setReadIds((prev) => {
       const next = new Set(prev)
       items.forEach((item) => next.add(taggedItemId(item)))
-      try {
-        localStorage.setItem(LS_KEY, JSON.stringify([...next]))
-      } catch {
-        /* ignore */
-      }
+      persist(next)
+      void syncRead(items.map(taggedItemId).filter((key) => !prev.has(key)))
+      return next
+    })
+  }, [])
+
+  const toggleSaved = useCallback((item: TaggedItem) => {
+    const id = taggedItemId(item)
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      const saved = !prev.has(id)
+      if (saved) next.add(id)
+      else next.delete(id)
+      fetch(`/api/items/${item.item.id}/saved`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ saved }),
+      }).catch(() => {})
       return next
     })
   }, [])
 
   return (
-    <ReadContext.Provider value={{ readIds, markRead, markAllRead }}>
+    <ReadContext.Provider value={{ readIds, savedIds, markRead, markAllRead, toggleSaved }}>
       {children}
     </ReadContext.Provider>
   )

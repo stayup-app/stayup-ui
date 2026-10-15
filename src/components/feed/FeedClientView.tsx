@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import { CheckCheck } from 'lucide-react'
+import { CheckCheck, Search, X } from 'lucide-react'
 import type { TaggedItem, FeedRepository } from '@/types'
 import type { ProviderMeta } from '@/lib/providerTemplate'
 import { UnifiedFeedList } from './UnifiedFeedList'
@@ -47,24 +47,74 @@ interface FeedClientViewProps {
   templates: Record<string, ProviderMeta>
 }
 
-type FilterMode = 'all' | 'unread'
+type FilterMode = 'all' | 'unread' | 'saved'
+
+/** A search is only sent from this many characters on (the API refuses less). */
+const MIN_QUERY = 2
+
+/** Rows coming back from the API carry their provider column: they are tagged
+ *  the same way the page tags the feed's rows. */
+function tagRows(rows: unknown): TaggedItem[] {
+  if (!Array.isArray(rows)) return []
+  return rows.map((row: TaggedItem['item'] & { provider: string }) => ({
+    provider: row.provider,
+    item: row,
+  }))
+}
 
 export function FeedClientView({ items, repositories, templates }: FeedClientViewProps) {
   const { readIds, markRead, markAllRead } = useReadContext()
   const { t } = useLanguage()
   const [filterMode, setFilterMode] = useState<FilterMode>('all')
+  const [query, setQuery] = useState('')
+  // Rows that do not come from the page (saved items, search results). `null`
+  // while the page's own items are shown.
+  const [remote, setRemote] = useState<TaggedItem[] | null>(null)
+  const searching = query.trim().length >= MIN_QUERY
   const { width: listWidth, handleMouseDown: handleListDrag } = useDragResize(380, 260, 600)
   // Track open item by ID so it stays stable when filteredItems changes
   const [openItemId, setOpenItemId] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!searching && filterMode !== 'saved') {
+      setRemote(null)
+      return
+    }
+    let cancelled = false
+    const url = searching ? `/api/search?q=${encodeURIComponent(query.trim())}` : '/api/saved'
+    // Typing fires this on every key: wait for a pause.
+    const timer = setTimeout(
+      async () => {
+        try {
+          const res = await fetch(url)
+          const body = res.ok ? ((await res.json()) as { items?: unknown }) : null
+          if (!cancelled) setRemote(tagRows(body?.items))
+        } catch {
+          if (!cancelled) setRemote([])
+        }
+      },
+      searching ? 300 : 0,
+    )
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [searching, query, filterMode])
+
+  // What the list draws from: the page's items, or the remote rows.
+  const pool = useMemo(
+    () => remote ?? (searching || filterMode === 'saved' ? [] : items),
+    [remote, searching, filterMode, items],
+  )
+
   // In "unread" mode: show unread items + the currently open item so it doesn't
   // vanish while the user is reading it. It disappears only when another item is opened.
   const filteredItems = useMemo(() => {
-    if (filterMode === 'unread') {
-      return items.filter((item) => !readIds.has(getItemId(item)) || getItemId(item) === openItemId)
+    if (filterMode === 'unread' && !searching) {
+      return pool.filter((item) => !readIds.has(getItemId(item)) || getItemId(item) === openItemId)
     }
-    return items
-  }, [items, readIds, filterMode, openItemId])
+    return pool
+  }, [pool, readIds, filterMode, searching, openItemId])
 
   // Refs so the keyboard handler always reads current values without re-registering
   const filteredItemsRef = useRef(filteredItems)
@@ -98,9 +148,9 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
   // keeps it visible during the same render cycle (readIds updates after).
   useEffect(() => {
     if (openItemId === null) return
-    const item = items.find((i) => getItemId(i) === openItemId)
+    const item = pool.find((i) => getItemId(i) === openItemId)
     if (item) markRead(item)
-  }, [openItemId, items, markRead])
+  }, [openItemId, pool, markRead])
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -181,6 +231,18 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
               </span>
             )}
           </button>
+          <button
+            onClick={() => setFilterMode('saved')}
+            className={cn(
+              'flex items-center gap-1.5 px-2 py-1 rounded text-[15px] transition-colors',
+              filterMode === 'saved'
+                ? 'text-foreground font-medium'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+            style={filterMode === 'saved' ? { background: 'var(--surface-3)' } : undefined}
+          >
+            {t.feed.filterSaved}
+          </button>
           <div className="flex-1" />
           {unreadCount > 0 && (
             <button
@@ -189,6 +251,30 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
               className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
             >
               <CheckCheck size={16} />
+            </button>
+          )}
+        </div>
+
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 shrink-0"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <Search size={14} className="text-muted-foreground shrink-0" />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={t.feed.searchPlaceholder}
+            aria-label={t.feed.searchPlaceholder}
+            className="flex-1 min-w-0 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              aria-label={t.feed.clearSearch}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X size={14} />
             </button>
           )}
         </div>

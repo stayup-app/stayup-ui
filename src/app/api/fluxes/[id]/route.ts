@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { deleteUserRepository } from '@/lib/api-client'
+import { deleteUserRepository, setRepositoryFolder } from '@/lib/api-client'
 import { decodeToken, getToken } from '@/lib/session'
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -19,4 +19,17 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     }
     throw err
   }
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const token = await getToken()
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { folder } = (await request.json()) as { folder?: unknown }
+  if (folder !== null && typeof folder !== 'string') {
+    return NextResponse.json({ error: 'folder must be a string or null' }, { status: 400 })
+  }
+  const { id } = await params
+  await setRepositoryFolder(decodeToken(token).userId, id, folder, token)
+  return NextResponse.json({ success: true })
 }

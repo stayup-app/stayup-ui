@@ -12,6 +12,7 @@ export interface UserRepository {
   identifier: string // short form derived from url (e.g. "vercel/next.js", "melvynxdev")
   config: Record<string, unknown> // from repository.config (JSONB)
   createdAt: string
+  folder?: string | null // the user's own grouping, if any
 }
 
 // ─── A connector's content ──────────────────────────────────────────────────

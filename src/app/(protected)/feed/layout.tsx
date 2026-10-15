@@ -18,6 +18,7 @@ export default async function FeedLayout({ children }: { children: React.ReactNo
     }),
     config: repo.config ?? {},
     createdAt: repo.created_at,
+    folder: repo.folder ?? null,
   }))
 
   const allItems: TaggedItem[] = Object.entries(connectors).flatMap(([provider, providerItems]) =>

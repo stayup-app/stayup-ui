@@ -117,6 +117,7 @@ export interface UserRepositoryItem {
   url: string
   provider: string
   config: Record<string, unknown>
+  folder?: string | null
 }
 
 export interface UserFeedResponse {
@@ -156,6 +157,70 @@ export async function deleteUserRepository(
   })
 }
 
+/** Read and saved items, as `<provider>:<id>` keys. */
+export interface ItemState {
+  read: string[]
+  saved: string[]
+}
+
+export function getItemState(userId: string, token: string): Promise<ItemState> {
+  return apiFetch<ItemState>(`/ui/users/${userId}/state`, token, { cache: 'no-store' })
+}
+
+export async function markItemsRead(userId: string, ids: number[], token: string): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/ui/users/${userId}/items/read`, token, {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  })
+}
+
+export async function setItemSaved(
+  userId: string,
+  itemId: number,
+  saved: boolean,
+  token: string,
+): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/ui/users/${userId}/items/${itemId}/saved`, token, {
+    method: 'PUT',
+    body: JSON.stringify({ saved }),
+  })
+}
+
+/** Rows come back with their `provider` column, which tags them for the feed. */
+export type ProviderItem = ConnectorItem & { provider: string }
+
+export async function listSavedItems(userId: string, token: string): Promise<ProviderItem[]> {
+  const data = await apiFetch<{ items: ProviderItem[] }>(`/ui/users/${userId}/saved`, token, {
+    cache: 'no-store',
+  })
+  return data.items
+}
+
+export async function searchItems(
+  userId: string,
+  query: string,
+  token: string,
+): Promise<ProviderItem[]> {
+  const data = await apiFetch<{ items: ProviderItem[] }>(
+    `/ui/users/${userId}/search?q=${encodeURIComponent(query)}`,
+    token,
+    { cache: 'no-store' },
+  )
+  return data.items
+}
+
+export async function setRepositoryFolder(
+  userId: string,
+  linkId: string,
+  folder: string | null,
+  token: string,
+): Promise<void> {
+  await apiFetch<{ success: boolean }>(`/ui/users/${userId}/repositories/${linkId}`, token, {
+    method: 'PATCH',
+    body: JSON.stringify({ folder }),
+  })
+}
+
 // ─── Admin ─────────────────────────────────────────────────────────────────────
 
 export interface AdminUser {
@@ -171,6 +236,12 @@ export interface AdminRepository {
   type: string
   config: Record<string, unknown>
   subscriber_count: string
+  /** Collection health: when the source last produced an item, and the failures
+   *  logged since then. */
+  last_item_at: string | null
+  failures_since_item: number
+  last_error: string | null
+  last_error_at: string | null
 }
 
 export async function adminListUsers(token: string): Promise<AdminUser[]> {
