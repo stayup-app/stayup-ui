@@ -24,6 +24,7 @@ const api = {
   adminListFluxRequests: vi.fn(),
   adminListRepositorySubscribers: vi.fn(),
   adminListErrorLogs: vi.fn(),
+  adminClearErrorLogs: vi.fn(),
   adminApproveFluxRequest: vi.fn(),
   adminRejectFluxRequest: vi.fn(),
   adminListProviders: vi.fn(),
@@ -520,5 +521,27 @@ describe('adminListErrorLogsAction', () => {
     api.adminListErrorLogs.mockRejectedValue(new Error('down'))
     const { adminListErrorLogsAction } = await import('@/lib/admin-actions')
     await expect(adminListErrorLogsAction()).resolves.toBeNull()
+  })
+})
+
+describe('adminClearErrorLogsAction', () => {
+  it('empties the log and revalidates the maintenance page', async () => {
+    api.adminClearErrorLogs.mockResolvedValue({ deleted: 3 })
+    const { adminClearErrorLogsAction } = await import('@/lib/admin-actions')
+    await expect(adminClearErrorLogsAction()).resolves.toEqual({})
+    expect(api.adminClearErrorLogs).toHaveBeenCalledWith('token')
+  })
+
+  it('refuses without an admin session', async () => {
+    getAdminToken.mockResolvedValue(null)
+    const { adminClearErrorLogsAction } = await import('@/lib/admin-actions')
+    expect((await adminClearErrorLogsAction()).error).toBeTruthy()
+    expect(api.adminClearErrorLogs).not.toHaveBeenCalled()
+  })
+
+  it('returns the API error message', async () => {
+    api.adminClearErrorLogs.mockRejectedValue(new Error('nope'))
+    const { adminClearErrorLogsAction } = await import('@/lib/admin-actions')
+    await expect(adminClearErrorLogsAction()).resolves.toEqual({ error: 'nope' })
   })
 })

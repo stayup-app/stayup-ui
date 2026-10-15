@@ -416,6 +416,9 @@ export const ja: Translations = {
       logSource: 'ソース',
       logError: 'エラー',
       logsLoadError: 'エラーログを読み込めませんでした。',
+      clearLogs: 'ログを消去',
+      confirmClearLogs: 'ログのエラーをすべて削除しますか？',
+      clearingLogs: '消去中…',
     },
     connectorKeys: {
       newKey: '新しいキー',

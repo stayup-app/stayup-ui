@@ -111,6 +111,15 @@ describe('admin API functions', () => {
     expect(mockFetch.mock.calls[0][0]).toContain('/ui/maintenance/logs?limit=25')
   })
 
+  it('adminClearErrorLogs DELETEs the log', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ deleted: 4 }) })
+    const { adminClearErrorLogs } = await import('@/lib/api-client')
+    await expect(adminClearErrorLogs(TEST_TOKEN)).resolves.toEqual({ deleted: 4 })
+    const [url, init] = mockFetch.mock.calls[0]
+    expect(url).toContain('/ui/maintenance/logs')
+    expect(init.method).toBe('DELETE')
+  })
+
   it('adminListRepositories returns repositories array', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,

@@ -428,6 +428,9 @@ export const fr: Translations = {
       logSource: 'Source',
       logError: 'Erreur',
       logsLoadError: 'Impossible de charger le journal des erreurs.',
+      clearLogs: 'Vider le journal',
+      confirmClearLogs: 'Supprimer toutes les erreurs du journal ?',
+      clearingLogs: 'Suppression…',
     },
     connectorKeys: {
       newKey: 'Nouvelle clé',

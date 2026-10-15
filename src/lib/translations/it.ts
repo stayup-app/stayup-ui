@@ -418,6 +418,9 @@ export const it: Translations = {
       logSource: 'Fonte',
       logError: 'Errore',
       logsLoadError: 'Impossibile caricare il registro degli errori.',
+      clearLogs: 'Svuota il registro',
+      confirmClearLogs: 'Eliminare tutti gli errori dal registro?',
+      clearingLogs: 'Svuotamento…',
     },
     connectorKeys: {
       newKey: 'Nuova chiave',

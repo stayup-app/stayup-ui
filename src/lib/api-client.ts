@@ -391,6 +391,10 @@ export async function adminListErrorLogs(token: string, limit = 100): Promise<Er
   return data.logs
 }
 
+export async function adminClearErrorLogs(token: string): Promise<{ deleted: number }> {
+  return apiFetch<{ deleted: number }>('/ui/maintenance/logs', token, { method: 'DELETE' })
+}
+
 export async function adminGetRetention(token: string): Promise<RetentionSettings> {
   return apiFetch<RetentionSettings>('/ui/maintenance/retention', token, { cache: 'no-store' })
 }

@@ -1,6 +1,9 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Table,
   TableBody,
@@ -10,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useLanguage } from '@/context/LanguageContext'
+import { adminClearErrorLogsAction } from '@/lib/admin-actions'
 import { providerDisplayName } from '@/lib/utils'
 import type { ErrorLog } from '@/lib/api-client'
 
@@ -19,15 +23,56 @@ function formatDateTime(value: string): string {
 }
 
 export function ErrorLogPanel({ logs }: { logs: ErrorLog[] | null }) {
+  const router = useRouter()
   const { t } = useLanguage()
   const mp = t.admin.maintenance
+  const [confirming, setConfirming] = useState(false)
+  const [clearing, setClearing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function clear() {
+    setClearing(true)
+    setError(null)
+    const result = await adminClearErrorLogsAction()
+    setClearing(false)
+    setConfirming(false)
+    if (result.error) setError(result.error)
+    else router.refresh()
+  }
 
   return (
     <section className="space-y-3">
-      <div>
-        <h2 className="text-sm font-semibold">{mp.logsHeading}</h2>
-        <p className="text-[12px] text-muted-foreground mt-0.5">{mp.logsHint}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-sm font-semibold">{mp.logsHeading}</h2>
+          <p className="text-[12px] text-muted-foreground mt-0.5">{mp.logsHint}</p>
+        </div>
+        {logs !== null && logs.length > 0 && (
+          <div className="flex shrink-0 items-center gap-2">
+            {confirming ? (
+              <>
+                <span className="text-xs text-muted-foreground">{mp.confirmClearLogs}</span>
+                <Button variant="destructive" size="sm" disabled={clearing} onClick={clear}>
+                  {clearing ? mp.clearingLogs : t.admin.confirm}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={clearing}
+                  onClick={() => setConfirming(false)}
+                >
+                  {t.admin.cancel}
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
+                {mp.clearLogs}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       {logs === null ? (
         <p className="text-sm text-destructive">{mp.logsLoadError}</p>

@@ -405,6 +405,9 @@ export const zh: Translations = {
       logSource: '来源',
       logError: '错误',
       logsLoadError: '无法加载错误日志。',
+      clearLogs: '清空日志',
+      confirmClearLogs: '要删除日志中的所有错误吗？',
+      clearingLogs: '清空中…',
     },
     connectorKeys: {
       newKey: '新建密钥',

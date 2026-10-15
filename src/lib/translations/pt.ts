@@ -421,6 +421,9 @@ export const pt: Translations = {
       logSource: 'Fonte',
       logError: 'Erro',
       logsLoadError: 'Não foi possível carregar o registo de erros.',
+      clearLogs: 'Limpar o registo',
+      confirmClearLogs: 'Eliminar todos os erros do registo?',
+      clearingLogs: 'A limpar…',
     },
     connectorKeys: {
       newKey: 'Nova chave',

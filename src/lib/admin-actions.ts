@@ -13,6 +13,7 @@ import {
   adminDeleteAdmin,
   adminDeleteRepository,
   adminDeleteUser,
+  adminClearErrorLogs,
   adminListErrorLogs,
   adminListFluxRequests,
   adminListRepositorySubscribers,
@@ -246,6 +247,18 @@ export async function adminListErrorLogsAction(): Promise<ErrorLog[] | null> {
   const token = await getAdminToken()
   if (!token) return null
   return adminListErrorLogs(token).catch(() => null)
+}
+
+export async function adminClearErrorLogsAction(): Promise<{ error?: string }> {
+  const token = await getAdminToken()
+  if (!token) return { error: (await getServerTranslations()).errors.notAuthenticated }
+  try {
+    await adminClearErrorLogs(token)
+    revalidatePath('/admin/maintenance')
+    return {}
+  } catch (err) {
+    return { error: (err as Error).message }
+  }
 }
 
 export async function adminUpdateRetentionAction(body: {

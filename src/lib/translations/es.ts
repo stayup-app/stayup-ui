@@ -422,6 +422,9 @@ export const es: Translations = {
       logSource: 'Fuente',
       logError: 'Error',
       logsLoadError: 'No se pudo cargar el registro de errores.',
+      clearLogs: 'Vaciar el registro',
+      confirmClearLogs: '¿Eliminar todos los errores del registro?',
+      clearingLogs: 'Vaciando…',
     },
     connectorKeys: {
       newKey: 'Nueva clave',

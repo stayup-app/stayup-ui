@@ -411,6 +411,9 @@ export const en = {
       logSource: 'Source',
       logError: 'Error',
       logsLoadError: 'Could not load the error log.',
+      clearLogs: 'Clear the log',
+      confirmClearLogs: 'Delete every error from the log?',
+      clearingLogs: 'Clearing…',
     },
     connectorKeys: {
       newKey: 'New key',

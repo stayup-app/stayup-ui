@@ -426,6 +426,9 @@ export const de: Translations = {
       logSource: 'Quelle',
       logError: 'Fehler',
       logsLoadError: 'Das Fehlerprotokoll konnte nicht geladen werden.',
+      clearLogs: 'Protokoll leeren',
+      confirmClearLogs: 'Alle Fehler aus dem Protokoll löschen?',
+      clearingLogs: 'Wird geleert…',
     },
     connectorKeys: {
       newKey: 'Neuer Schlüssel',
