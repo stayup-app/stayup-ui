@@ -5,6 +5,7 @@ import { ChangeEmailForm } from '@/components/profile/ChangeEmailForm'
 import { ChangePasswordForm } from '@/components/profile/ChangePasswordForm'
 import { DangerCard } from '@/components/profile/DangerCard'
 import { IdentityCard } from '@/components/profile/IdentityCard'
+import { FormCard } from '@/components/profile/FormCard'
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar'
 import { LanguageProvider } from '@/context/LanguageContext'
 
@@ -186,5 +187,18 @@ describe('ProfileSidebar', () => {
     expect(screen.getByText('Mon profil')).toBeInTheDocument()
     expect(screen.getByText('Facturation')).toBeInTheDocument()
     expect(screen.getByText('Mon profil')).toHaveStyle({ fontWeight: 500 })
+  })
+})
+
+describe('FormCard', () => {
+  it('renders its title, description and children', () => {
+    render(
+      <FormCard title="Titre" desc="Description">
+        <p>contenu</p>
+      </FormCard>,
+    )
+    expect(screen.getByText('Titre')).toBeInTheDocument()
+    expect(screen.getByText('Description')).toBeInTheDocument()
+    expect(screen.getByText('contenu')).toBeInTheDocument()
   })
 })

@@ -121,8 +121,11 @@ describe('FeedReadContext', () => {
     setItem.mockRestore()
   })
 
-  it('exposes inert defaults outside a provider', () => {
+  it('exposes inert defaults outside a provider', async () => {
+    const user = userEvent.setup()
     render(<Probe />)
+    await user.click(screen.getByText('read one'))
+    await user.click(screen.getByText('read all'))
     expect(screen.getByTestId('ids')).toHaveTextContent('')
   })
 
