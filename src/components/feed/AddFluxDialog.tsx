@@ -49,7 +49,6 @@ export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
   const [serverError, setServerError] = useState<string | null>(null)
   const [tiles, setTiles] = useState<ProviderTile[]>([])
   const [tpls, setTpls] = useState<Record<string, ProviderTemplate | null>>({})
-  const [approvals, setApprovals] = useState<Record<string, 'auto' | 'manual'>>({})
   // Existing fluxes of the selected provider — same add flow for every provider.
   const [fluxes, setFluxes] = useState<ProviderFlux[]>([])
   const [fluxesLoading, setFluxesLoading] = useState(false)
@@ -72,7 +71,6 @@ export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
           }[]) ?? []
         const parsed = providers.map((p) => ({ ...p, tpl: normalizeTemplate(p.template) }))
         setTpls(Object.fromEntries(parsed.map((p) => [p.name, p.tpl])))
-        setApprovals(Object.fromEntries(parsed.map((p) => [p.name, p.fluxApproval ?? 'auto'])))
         setTiles(
           parsed.map(({ name, displayName, tpl }) => {
             const color = providerAccent({ name, displayName: displayName ?? name, template: tpl })
@@ -89,7 +87,6 @@ export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
       .catch(() => {
         setTiles([])
         setTpls({})
-        setApprovals({})
       })
   }, [open])
 
@@ -122,11 +119,11 @@ export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
       .then((data) => {
         const list = (data.fluxes as ProviderFlux[]) ?? []
         setFluxes(list)
-        setPickMode(list.some((f) => !f.is_subscribed) ? 'existing' : 'new')
+        setPickMode('existing')
       })
       .catch(() => {
         setFluxes([])
-        setPickMode('new')
+        setPickMode('existing')
       })
       .finally(() => setFluxesLoading(false))
   }, [open, provider])
@@ -329,11 +326,6 @@ export function AddFluxDialog({ open, onOpenChange }: AddFluxDialogProps) {
                     />
                     {errors.identifier && (
                       <p className="text-sm text-destructive">{errors.identifier.message}</p>
-                    )}
-                    {approvals[provider] === 'manual' && (
-                      <p className="text-xs text-muted-foreground">
-                        {t.addFlux.requestSentDescription}
-                      </p>
                     )}
                   </div>
                 )}

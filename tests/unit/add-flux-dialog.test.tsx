@@ -67,6 +67,11 @@ async function chooseProvider(user: ReturnType<typeof userEvent.setup>, name: st
   await user.click(await screen.findByRole('button', { name }))
 }
 
+// The dialog opens on "Choose an existing feed": adding a new one is an explicit click.
+async function chooseNew(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: 'Add a new one' }))
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   routeFetch()
@@ -80,16 +85,31 @@ describe('AddFluxDialog', () => {
     }
   })
 
-  it('shows the "add a new one" input by default when no flux is available', async () => {
+  it('opens on "choose an existing feed", even when no flux is available', async () => {
+    const user = userEvent.setup()
     renderDialog()
+    await screen.findByRole('button', { name: 'Add a new one' })
+    expect(screen.queryByLabelText('GitHub repo (owner/repo or URL)')).not.toBeInTheDocument()
+
+    await chooseNew(user)
     // The changelog template provides its field's label.
     expect(await screen.findByLabelText('GitHub repo (owner/repo or URL)')).toBeInTheDocument()
+  })
+
+  it('does not show the "request sent" message before submitting', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+    await chooseProvider(user, 'Scrap')
+    await chooseNew(user)
+    await screen.findByLabelText('URL')
+    expect(screen.queryByText(/Your request has been sent/)).not.toBeInTheDocument()
   })
 
   it('requires an identifier before submitting a new flux', async () => {
     const user = userEvent.setup()
     renderDialog()
     await screen.findByRole('button', { name: 'Changelog' })
+    await chooseNew(user)
 
     await user.click(screen.getByRole('button', { name: 'Add' }))
     expect(await screen.findByText('This field is required')).toBeInTheDocument()
@@ -100,6 +120,7 @@ describe('AddFluxDialog', () => {
     const user = userEvent.setup()
     const { onOpenChange } = renderDialog()
 
+    await chooseNew(user)
     const input = await screen.findByLabelText('GitHub repo (owner/repo or URL)')
     await user.type(input, 'facebook/react')
     await user.click(screen.getByRole('button', { name: 'Add' }))
@@ -121,6 +142,7 @@ describe('AddFluxDialog', () => {
     const user = userEvent.setup()
     const { onOpenChange } = renderDialog()
 
+    await chooseNew(user)
     await user.type(
       await screen.findByLabelText('GitHub repo (owner/repo or URL)'),
       'facebook/react',
@@ -148,6 +170,7 @@ describe('AddFluxDialog', () => {
     const user = userEvent.setup()
     renderDialog()
     await chooseProvider(user, 'YouTube')
+    await chooseNew(user)
     expect(await screen.findByLabelText('YouTube channel (@handle or URL)')).toBeInTheDocument()
   })
 
@@ -191,7 +214,8 @@ describe('AddFluxDialog', () => {
       renderDialog()
 
       await chooseProvider(user, 'RSS')
-      // Falls back to the "add new" input.
+      // The list is empty: "add new" is still one click away.
+      await chooseNew(user)
       expect(await screen.findByLabelText('RSS/Atom feed URL')).toBeInTheDocument()
     })
   })
@@ -205,6 +229,7 @@ describe('AddFluxDialog', () => {
       renderDialog()
 
       await chooseProvider(user, 'Podcast')
+      await chooseNew(user)
       const input = await screen.findByLabelText('URL')
       await user.type(input, 'https://example.com/feed.xml')
       await user.click(screen.getByRole('button', { name: 'Add' }))
