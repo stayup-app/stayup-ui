@@ -85,7 +85,7 @@ describe('Badge', () => {
   })
 
   it('exposes badgeVariants as a class builder', () => {
-    expect(badgeVariants({ variant: 'youtube' })).toContain('var(--rose)')
+    expect(badgeVariants({ variant: 'youtube' })).toContain('(--rose)')
   })
 })
 
@@ -224,12 +224,12 @@ describe('Label', () => {
 describe('Separator', () => {
   it('renders horizontally by default', () => {
     render(<Separator data-testid="sep" />)
-    expect(screen.getByTestId('sep').className).toContain('h-[1px]')
+    expect(screen.getByTestId('sep').className).toContain('h-px')
   })
 
   it('renders vertically when asked', () => {
     render(<Separator orientation="vertical" data-testid="sep" />)
-    expect(screen.getByTestId('sep').className).toContain('w-[1px]')
+    expect(screen.getByTestId('sep').className).toContain('w-px')
   })
 })
 

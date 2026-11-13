@@ -165,4 +165,77 @@ describe('import', () => {
     )
     expect(mockFetch).not.toHaveBeenCalled()
   })
+
+  it('opens the file picker from the import button', async () => {
+    const user = userEvent.setup()
+    renderButtons([])
+    const input = screen.getByTestId('import-file-input') as HTMLInputElement
+    const click = vi.spyOn(input, 'click')
+
+    await user.click(screen.getByLabelText('Import feeds'))
+
+    expect(click).toHaveBeenCalled()
+  })
+
+  it('counts nothing as added when the API refuses, and does not refresh', async () => {
+    mockFetch.mockResolvedValue({ ok: false, json: async () => ({}) })
+    const user = userEvent.setup()
+    renderButtons([])
+
+    const xml = buildOpml(
+      [
+        { provider: 'rss', url: 'https://blog.example.com/feed.xml', identifier: 'blog' },
+        { provider: 'scrap', url: 'https://news.example.com', identifier: 'news.example.com' },
+      ],
+      'StayUp',
+    )
+    await user.upload(screen.getByTestId('import-file-input'), opmlFile(xml))
+
+    // The scrap lookup fails too, so that entry ends up unavailable.
+    await waitFor(() => expect(screen.getByText(/1 unavailable/)).toBeInTheDocument())
+    expect(screen.queryByText(/added/)).not.toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('reports a failed scrap subscription without counting it', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ fluxes: [{ id: 3, url: 'https://news.example.com' }] }),
+      })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({}) })
+    const user = userEvent.setup()
+    renderButtons([])
+
+    const xml = buildOpml(
+      [{ provider: 'scrap', url: 'https://news.example.com', identifier: 'news.example.com' }],
+      'StayUp',
+    )
+    await user.upload(screen.getByTestId('import-file-input'), opmlFile(xml))
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument())
+    expect(screen.queryByText(/added|unavailable/)).not.toBeInTheDocument()
+  })
+
+  it('dismisses the error and the result messages', async () => {
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({}) })
+    const user = userEvent.setup()
+    renderButtons([])
+
+    await user.upload(screen.getByTestId('import-file-input'), opmlFile('not opml'))
+    await user.click(await screen.findByRole('button', { name: 'Close' }))
+    expect(
+      screen.queryByText('This file could not be read as a valid OPML file.'),
+    ).not.toBeInTheDocument()
+
+    const xml = buildOpml(
+      [{ provider: 'rss', url: 'https://blog.example.com/feed.xml', identifier: 'blog' }],
+      'StayUp',
+    )
+    await user.upload(screen.getByTestId('import-file-input'), opmlFile(xml))
+    await waitFor(() => expect(screen.getByText(/1 added/)).toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Close' }))
+    expect(screen.queryByText(/1 added/)).not.toBeInTheDocument()
+  })
 })

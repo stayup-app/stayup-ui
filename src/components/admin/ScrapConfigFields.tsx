@@ -51,7 +51,7 @@ export function ScrapConfigFields({
             value={form.articles_selector}
             onChange={(e) => setForm((f) => ({ ...f, articles_selector: e.target.value }))}
             placeholder="ex: h2.post-title a"
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-hidden focus:ring-1 focus:ring-ring"
           />
         </div>
         <div className="space-y-1">
@@ -61,7 +61,7 @@ export function ScrapConfigFields({
             value={form.content_selector}
             onChange={(e) => setForm((f) => ({ ...f, content_selector: e.target.value }))}
             placeholder="ex: article.post-content"
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-hidden focus:ring-1 focus:ring-ring"
           />
         </div>
       </div>
@@ -79,7 +79,7 @@ export function ScrapConfigFields({
               }
             }}
             placeholder="ex: div.ads, .sidebar"
-            className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+            className="flex-1 rounded-md border bg-background px-3 py-1.5 text-sm font-mono focus:outline-hidden focus:ring-1 focus:ring-ring"
           />
           <Button type="button" size="sm" variant="outline" onClick={addExclude}>
             {t.common.add}
@@ -114,7 +114,7 @@ export function ScrapConfigFields({
             min="1"
             value={form.max_scraps}
             onChange={(e) => setForm((f) => ({ ...f, max_scraps: e.target.value }))}
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-hidden focus:ring-1 focus:ring-ring"
           />
         </div>
         <div className="space-y-1">
@@ -124,7 +124,7 @@ export function ScrapConfigFields({
             min="1"
             value={form.retention_days}
             onChange={(e) => setForm((f) => ({ ...f, retention_days: e.target.value }))}
-            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border bg-background px-3 py-1.5 text-sm focus:outline-hidden focus:ring-1 focus:ring-ring"
           />
         </div>
       </div>

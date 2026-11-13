@@ -30,6 +30,7 @@ export function FeedContentViewer({ item, repositories, templates }: FeedContent
   useEffect(() => {
     try {
       const stored = localStorage.getItem(LS_FONT_KEY)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount (SSR)
       if (stored) setFontSizeOffset(parseInt(stored, 10) || 0)
     } catch {
       /* ignore */

@@ -63,12 +63,12 @@ beforeEach(() => {
 describe('FeedClientView', () => {
   it('shows the total count on the All filter', () => {
     renderView([item(1), item(2)])
-    expect(screen.getByRole('button', { name: /All 2/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /All\s*2/ })).toBeInTheDocument()
   })
 
   it('shows the unread count on the Unread filter', () => {
     renderView([item(1), item(2)])
-    expect(screen.getByRole('button', { name: /Unread 2/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Unread\s*2/ })).toBeInTheDocument()
   })
 
   it('opens an item on click and marks it read', async () => {
@@ -79,7 +79,7 @@ describe('FeedClientView', () => {
 
     expect(await within(panes().viewer).findByText(/release 1/)).toBeInTheDocument()
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: /Unread 1/ })).toBeInTheDocument(),
+      expect(screen.getByRole('button', { name: /Unread\s*1/ })).toBeInTheDocument(),
     )
   })
 
@@ -238,13 +238,13 @@ describe('FeedClientLayout', () => {
 
   it('passes per-repository unread counts to the sidebar', () => {
     renderLayout([item(1), item(2)])
-    expect(screen.getByRole('link', { name: /facebook\/react 2/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /facebook\/react\s*2/ })).toBeInTheDocument()
   })
 
   it('excludes already-read items from the counts', () => {
     localStorage.setItem('STAYUP_READ_ITEMS', JSON.stringify([':changelog:1']))
     renderLayout([item(1), item(2)])
-    expect(screen.getByRole('link', { name: /facebook\/react 1/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /facebook\/react\s*1/ })).toBeInTheDocument()
   })
 
   it('resizes the sidebar by dragging its divider', () => {

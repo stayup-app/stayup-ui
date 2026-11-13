@@ -122,4 +122,75 @@ describe('MaintenancePanel', () => {
 
     expect(await screen.findByText('Nothing to remove.')).toBeInTheDocument()
   })
+
+  it('treats a missing total as nothing removed', async () => {
+    actions.adminRunCleanupAction.mockResolvedValue({})
+    const user = userEvent.setup()
+    withLang(<MaintenancePanel settings={SETTINGS} />)
+
+    await user.click(screen.getByRole('button', { name: 'Run cleanup' }))
+
+    expect(await screen.findByText('Nothing to remove.')).toBeInTheDocument()
+    expect(refresh).toHaveBeenCalled()
+  })
+
+  it('shows the error when the cleanup fails', async () => {
+    actions.adminRunCleanupAction.mockResolvedValue({ error: 'cleanup failed' })
+    const user = userEvent.setup()
+    withLang(<MaintenancePanel settings={SETTINGS} />)
+
+    await user.click(screen.getByRole('button', { name: 'Run cleanup' }))
+
+    expect(await screen.findByText('cleanup failed')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('rejects an empty global default while the purge is enabled', async () => {
+    const user = userEvent.setup()
+    withLang(<MaintenancePanel settings={SETTINGS} />)
+
+    await user.clear(screen.getByLabelText('Retention (days)'))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(
+      await screen.findByText('Enter a whole number of days ≥ 1, or leave empty.'),
+    ).toBeInTheDocument()
+    expect(actions.adminUpdateRetentionAction).not.toHaveBeenCalled()
+  })
+
+  it('rejects an invalid provider override', async () => {
+    const user = userEvent.setup()
+    withLang(<MaintenancePanel settings={SETTINGS} />)
+
+    await user.type(screen.getByLabelText('RSS'), '0')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(
+      await screen.findByText('Enter a whole number of days ≥ 1, or leave empty.'),
+    ).toBeInTheDocument()
+    expect(actions.adminUpdateRetentionAction).not.toHaveBeenCalled()
+  })
+
+  it('shows the error when saving fails', async () => {
+    actions.adminUpdateRetentionAction.mockResolvedValue({ error: 'save failed' })
+    const user = userEvent.setup()
+    withLang(<MaintenancePanel settings={SETTINGS} />)
+
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByText('save failed')).toBeInTheDocument()
+    expect(screen.queryByText('Saved.')).not.toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('starts disabled when there is no global default, and lists no providers', () => {
+    withLang(<MaintenancePanel settings={{ default: null, providers: [] }} />)
+
+    expect(screen.getByLabelText('Retention (days)')).toBeDisabled()
+    expect(screen.getByLabelText('Retention (days)')).toHaveValue(null)
+    expect(
+      screen.getByText('No global purge. Only providers with their own value are cleaned.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('No providers')).toBeInTheDocument()
+  })
 })

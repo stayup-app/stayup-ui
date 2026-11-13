@@ -176,7 +176,7 @@ export function DownloadSection({ version }: { version: string }) {
                   {fmt.install.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm">
                       <span
-                        className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                        className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                         style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}
                       >
                         {i + 1}
@@ -207,7 +207,7 @@ export function DownloadSection({ version }: { version: string }) {
             {d.platforms.windows.install.map((step, i) => (
               <li key={i} className="flex gap-3 text-sm">
                 <span
-                  className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                  className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                   style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}
                 >
                   {i + 1}
@@ -235,7 +235,7 @@ export function DownloadSection({ version }: { version: string }) {
                   {fmt.install.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm">
                       <span
-                        className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                        className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                         style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}
                       >
                         {i + 1}
@@ -272,7 +272,7 @@ export function DownloadSection({ version }: { version: string }) {
                   {fmt.uninstall.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm">
                       <span
-                        className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                        className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                         style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
                       >
                         {i + 1}
@@ -317,7 +317,7 @@ export function DownloadSection({ version }: { version: string }) {
             {d.platforms.windows.uninstall.map((step, i) => (
               <li key={i} className="flex gap-3 text-sm">
                 <span
-                  className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                  className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                   style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
                 >
                   {i + 1}
@@ -359,7 +359,7 @@ export function DownloadSection({ version }: { version: string }) {
                   {fmt.uninstall.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm">
                       <span
-                        className="flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
+                        className="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-mono font-medium mt-0.5"
                         style={{ background: 'var(--rose-dim)', color: 'var(--rose)' }}
                       >
                         {i + 1}

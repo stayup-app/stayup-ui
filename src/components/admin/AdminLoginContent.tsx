@@ -25,7 +25,7 @@ export function AdminLoginContent() {
 
       <AdminLoginForm />
 
-      <div className="mt-6 border-t border-[var(--border-soft)] pt-4 flex justify-end">
+      <div className="mt-6 border-t border-(--border-soft) pt-4 flex justify-end">
         <LanguageSwitcher />
       </div>
     </div>

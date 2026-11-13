@@ -98,15 +98,22 @@ describe('AvatarImage', () => {
   // probe reports success, which jsdom never does — so drive the probe manually.
   function stubImageLoading(succeed: boolean) {
     const original = globalThis.Image
+    // Radix reads the outcome from `event.currentTarget` (complete + naturalWidth).
+    type ProbeHandler = (event: { currentTarget: ProbeImage }) => void
     class ProbeImage {
-      private listeners: Record<string, Array<() => void>> = {}
-      addEventListener(event: string, handler: () => void) {
+      complete = false
+      naturalWidth = 0
+      private listeners: Record<string, ProbeHandler[]> = {}
+      addEventListener(event: string, handler: ProbeHandler) {
         ;(this.listeners[event] ??= []).push(handler)
       }
       removeEventListener() {}
       set src(_value: string) {
         setTimeout(() => {
-          for (const handler of this.listeners[succeed ? 'load' : 'error'] ?? []) handler()
+          this.complete = true
+          this.naturalWidth = succeed ? 1 : 0
+          for (const handler of this.listeners[succeed ? 'load' : 'error'] ?? [])
+            handler({ currentTarget: this })
         }, 0)
       }
     }

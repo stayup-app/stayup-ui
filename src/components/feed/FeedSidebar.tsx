@@ -58,6 +58,7 @@ export function FeedSidebar({
   // The per-item "deleting" indicator stays lit until the refreshed list has
   // actually landed, not just until the DELETE request resolves.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears the indicator once the refresh transition ends
     if (!isRefreshing) setDeleting(null)
   }, [isRefreshing])
 

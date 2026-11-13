@@ -185,6 +185,52 @@ describe('/api/providers/[provider]/fluxes', () => {
     expect(res.status).toBe(200)
     expect(api.unsubscribeFlux).toHaveBeenCalledWith('rss', 7, expect.any(String))
   })
+
+  it('answers 401 to every method without a session', async () => {
+    cookieGet.mockReturnValue(undefined)
+    const { GET, POST, DELETE } = await import('@/app/api/providers/[provider]/fluxes/route')
+    expect((await GET(bareRequest(), { params })).status).toBe(401)
+    expect((await POST(jsonRequest({ id: 7 }), { params })).status).toBe(401)
+    expect((await DELETE(jsonRequest({ id: 7 }), { params })).status).toBe(401)
+    expect(api.subscribeFlux).not.toHaveBeenCalled()
+  })
+
+  it('POST and DELETE treat an unreadable body as a missing id', async () => {
+    const broken = {
+      json: async () => {
+        throw new SyntaxError('bad json')
+      },
+    } as unknown as Request
+    const { POST, DELETE } = await import('@/app/api/providers/[provider]/fluxes/route')
+    expect((await POST(broken, { params })).status).toBe(400)
+    expect((await DELETE(broken, { params })).status).toBe(400)
+  })
+
+  it('POST maps any other failure to 500', async () => {
+    api.subscribeFlux.mockRejectedValue(new Error('boom'))
+    const { POST } = await import('@/app/api/providers/[provider]/fluxes/route')
+    const res = await POST(jsonRequest({ id: 7 }), { params })
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'boom' })
+  })
+
+  it('POST falls back to a generic message when the error has none', async () => {
+    api.subscribeFlux.mockRejectedValue({})
+    const { POST } = await import('@/app/api/providers/[provider]/fluxes/route')
+    const res = await POST(jsonRequest({ id: 7 }), { params })
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'Erreur' })
+  })
+
+  it('DELETE returns 400 without an id and 404 when the API refuses', async () => {
+    const { DELETE } = await import('@/app/api/providers/[provider]/fluxes/route')
+    expect((await DELETE(jsonRequest({}), { params })).status).toBe(400)
+
+    api.unsubscribeFlux.mockRejectedValue(new Error('not found'))
+    const res = await DELETE(jsonRequest({ id: 7 }), { params })
+    expect(res.status).toBe(404)
+    expect(await res.json()).toEqual({ error: 'not found' })
+  })
 })
 
 describe('DELETE /api/fluxes/[id]', () => {

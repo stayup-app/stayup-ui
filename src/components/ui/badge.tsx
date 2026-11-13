@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono tracking-wide',
+  'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 font-mono tracking-wide',
   {
     variants: {
       variant: {
@@ -11,12 +11,12 @@ const badgeVariants = cva(
         secondary: 'border border-border bg-secondary text-secondary-foreground',
         destructive: 'border-transparent bg-destructive/10 text-destructive',
         outline: 'border border-border text-foreground',
-        changelog: 'border-transparent bg-[var(--teal-dim)] text-[var(--teal)]',
-        youtube: 'border-transparent bg-[var(--rose-dim)] text-[var(--rose)]',
-        rss: 'border-transparent bg-[var(--amber-dim)] text-[var(--amber)]',
-        scrap: 'border-transparent bg-[var(--green-dim)] text-[var(--green)]',
-        success: 'border-transparent bg-[var(--green-dim)] text-[var(--green)]',
-        warning: 'border-transparent bg-[var(--amber-dim)] text-[var(--amber)]',
+        changelog: 'border-transparent bg-(--teal-dim) text-(--teal)',
+        youtube: 'border-transparent bg-(--rose-dim) text-(--rose)',
+        rss: 'border-transparent bg-(--amber-dim) text-(--amber)',
+        scrap: 'border-transparent bg-(--green-dim) text-(--green)',
+        success: 'border-transparent bg-(--green-dim) text-(--green)',
+        warning: 'border-transparent bg-(--amber-dim) text-(--amber)',
       },
     },
     defaultVariants: {

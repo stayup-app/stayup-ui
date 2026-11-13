@@ -110,8 +110,8 @@ describe('FeedSidebar', () => {
       unreadCountByRepoId: { 1: 3, 2: 4 },
     })
 
-    expect(screen.getByRole('link', { name: /Changelog 7/ })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /facebook\/react 3/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Changelog\s*7/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /facebook\/react\s*3/ })).toBeInTheDocument()
   })
 
   it('omits the unread badge when everything is read', () => {

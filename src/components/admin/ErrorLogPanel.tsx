@@ -103,7 +103,7 @@ export function ErrorLogPanel({ logs }: { logs: ErrorLog[] | null }) {
                     {log.url ?? '—'}
                   </span>
                 </TableCell>
-                <TableCell className="text-sm font-mono break-words">{log.error}</TableCell>
+                <TableCell className="text-sm font-mono wrap-break-word">{log.error}</TableCell>
               </TableRow>
             ))}
           </TableBody>

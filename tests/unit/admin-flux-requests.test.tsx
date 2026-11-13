@@ -181,6 +181,30 @@ describe('FluxRequestsTable', () => {
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByText('Approve request')).toBeInTheDocument()
   })
+
+  it('closes the approve dialog on cancel', async () => {
+    const user = userEvent.setup()
+    withLang(<FluxRequestsTable requests={[request()]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Approve' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+  })
+
+  it('labels rejected and unknown statuses', () => {
+    withLang(
+      <FluxRequestsTable
+        requests={[
+          request({ id: 'r1', status: 'rejected' }),
+          request({ id: 'r2', status: 'archived' as FluxRequest['status'] }),
+        ]}
+      />,
+    )
+    expect(screen.getByText('Rejected')).toBeInTheDocument()
+    expect(screen.getByText('archived')).toBeInTheDocument()
+  })
 })
 
 describe('FluxRequestApproveDialog', () => {

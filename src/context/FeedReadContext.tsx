@@ -84,6 +84,7 @@ export function ReadProvider({ children }: { children: ReactNode }) {
     } catch {
       /* ignore */
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage is only readable after mount (SSR)
     if (local.length > 0) setReadIds(new Set(local))
 
     let cancelled = false

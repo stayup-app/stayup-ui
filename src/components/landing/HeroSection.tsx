@@ -85,8 +85,8 @@ export function HeroSection({ isLoggedIn, version = '0.3.8' }: HeroSectionProps)
                 color: 'var(--teal)',
               }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse" />v
-              {version} — {t.landing.hero.tagline}
+              <span className="w-1.5 h-1.5 rounded-full bg-(--green) animate-pulse" />v{version} —{' '}
+              {t.landing.hero.tagline}
             </div>
 
             <h1 className="font-serif text-[62px] leading-[1.02] tracking-tightest mb-5 font-normal">

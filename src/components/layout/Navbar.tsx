@@ -28,7 +28,7 @@ export function Navbar({ user }: NavbarProps) {
 
   return (
     <header
-      className="sticky top-0 z-40 h-[52px] flex items-center shrink-0 backdrop-blur"
+      className="sticky top-0 z-40 h-[52px] flex items-center shrink-0 backdrop-blur-sm"
       style={{
         background: 'var(--bg)',
         borderBottom: '1px solid var(--border-soft)',

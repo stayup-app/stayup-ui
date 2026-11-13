@@ -119,6 +119,88 @@ describe('ConnectorKeysPanel', () => {
     confirmSpy.mockRestore()
   })
 
+  async function openAndCreate(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'New key' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Provider'), 'rss')
+    await user.type(within(dialog).getByLabelText('Label'), 'k')
+    await user.click(within(dialog).getByRole('button', { name: 'Create' }))
+    return dialog
+  }
+
+  it('falls back to a generic message when no key comes back', async () => {
+    actions.adminCreateConnectorKeyAction.mockResolvedValue({})
+    const user = userEvent.setup()
+    withLang(<ConnectorKeysPanel keys={[]} />)
+    const dialog = await openAndCreate(user)
+
+    expect(await within(dialog).findByText('Could not create the key.')).toBeInTheDocument()
+  })
+
+  it('copies the secret to the clipboard', async () => {
+    const user = userEvent.setup()
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()
+    withLang(<ConnectorKeysPanel keys={[]} />)
+    const dialog = await openAndCreate(user)
+
+    await user.click(await within(dialog).findByRole('button', { name: 'Copy' }))
+
+    expect(writeText).toHaveBeenCalledWith('stayup_conn_deadbeef')
+    expect(await within(dialog).findByRole('button', { name: 'Copied' })).toBeInTheDocument()
+  })
+
+  it('stays on Copy when the clipboard refuses', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('denied'))
+    withLang(<ConnectorKeysPanel keys={[]} />)
+    const dialog = await openAndCreate(user)
+
+    await user.click(await within(dialog).findByRole('button', { name: 'Copy' }))
+
+    expect(within(dialog).getByRole('button', { name: 'Copy' })).toBeInTheDocument()
+  })
+
+  it('closes on Done and starts from an empty form next time', async () => {
+    const user = userEvent.setup()
+    withLang(<ConnectorKeysPanel keys={[]} />)
+    const dialog = await openAndCreate(user)
+
+    await user.click(await within(dialog).findByRole('button', { name: 'Done' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'New key' }))
+    const reopened = await screen.findByRole('dialog')
+    expect(within(reopened).getByLabelText('Provider')).toHaveValue('')
+    expect(within(reopened).queryByText('stayup_conn_deadbeef')).not.toBeInTheDocument()
+  })
+
+  it('clears the form when the dialog is dismissed', async () => {
+    const user = userEvent.setup()
+    withLang(<ConnectorKeysPanel keys={[]} />)
+    await user.click(screen.getByRole('button', { name: 'New key' }))
+    const dialog = await screen.findByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Provider'), 'rss')
+
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'New key' }))
+    expect(within(await screen.findByRole('dialog')).getByLabelText('Provider')).toHaveValue('')
+  })
+
+  it('shows the error when revoking fails', async () => {
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    actions.adminRevokeConnectorKeyAction.mockResolvedValue({ error: 'revoke failed' })
+    const user = userEvent.setup()
+    withLang(<ConnectorKeysPanel keys={[KEY]} />)
+
+    await user.click(screen.getByRole('button', { name: 'Revoke' }))
+
+    expect(await screen.findByText('revoke failed')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+    confirmSpy.mockRestore()
+  })
+
   it('marks an already-revoked key and offers no revoke button', () => {
     withLang(
       <ConnectorKeysPanel

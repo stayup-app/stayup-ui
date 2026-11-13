@@ -427,4 +427,39 @@ describe('AdminsTable', () => {
 
     await waitFor(() => expect(actions.adminDeleteAdminAction).toHaveBeenCalledWith('a-ops'))
   })
+
+  it('shows the error when the deletion fails and does not refresh', async () => {
+    actions.adminDeleteAdminAction.mockResolvedValue({ error: 'cannot delete' })
+    const user = userEvent.setup()
+    withLang(<AdminsTable admins={ADMINS} currentAdminId="a-super" />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Confirm' }))
+
+    expect(await screen.findByText('cannot delete')).toBeInTheDocument()
+    expect(refresh).not.toHaveBeenCalled()
+  })
+
+  it('backs out of the confirmation with Cancel', async () => {
+    const user = userEvent.setup()
+    withLang(<AdminsTable admins={ADMINS} currentAdminId="a-super" />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(actions.adminDeleteAdminAction).not.toHaveBeenCalled()
+  })
+
+  it('refreshes after an admin is edited', async () => {
+    actions.adminUpdateAdminAction.mockResolvedValue({})
+    const user = userEvent.setup()
+    withLang(<AdminsTable admins={ADMINS} currentAdminId="a-super" />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(actions.adminUpdateAdminAction).toHaveBeenCalled())
+    await waitFor(() => expect(refresh).toHaveBeenCalled())
+  })
 })

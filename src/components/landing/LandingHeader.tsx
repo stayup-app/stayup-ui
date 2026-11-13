@@ -118,7 +118,7 @@ export function LandingHeader() {
             ))}
           </nav>
 
-          <div className="mt-3 flex flex-col gap-3 border-t border-[var(--border-soft)] pt-4">
+          <div className="mt-3 flex flex-col gap-3 border-t border-(--border-soft) pt-4">
             <Link
               href="/login"
               onClick={closeMenu}

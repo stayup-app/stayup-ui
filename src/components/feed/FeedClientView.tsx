@@ -77,6 +77,7 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
 
   useEffect(() => {
     if (!searching && filterMode !== 'saved') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- drop the remote rows when leaving search/saved mode
       setRemote(null)
       return
     }
@@ -118,9 +119,11 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
 
   // Refs so the keyboard handler always reads current values without re-registering
   const filteredItemsRef = useRef(filteredItems)
-  filteredItemsRef.current = filteredItems
   const openItemIdRef = useRef(openItemId)
-  openItemIdRef.current = openItemId
+  useEffect(() => {
+    filteredItemsRef.current = filteredItems
+    openItemIdRef.current = openItemId
+  }, [filteredItems, openItemId])
 
   // Derive selectedIndex from openItemId — stable even when list shrinks
   const selectedIndex = useMemo(() => {
@@ -266,7 +269,7 @@ export function FeedClientView({ items, repositories, templates }: FeedClientVie
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.feed.searchPlaceholder}
             aria-label={t.feed.searchPlaceholder}
-            className="flex-1 min-w-0 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+            className="flex-1 min-w-0 bg-transparent text-[15px] outline-hidden placeholder:text-muted-foreground"
           />
           {query && (
             <button

@@ -6,20 +6,20 @@ import './globals.css'
 
 const instrumentSans = Instrument_Sans({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-instrument-sans',
   weight: ['400', '500', '600', '700'],
 })
 
 const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
-  variable: '--font-serif',
+  variable: '--font-instrument-serif',
   weight: '400',
   style: ['normal', 'italic'],
 })
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
-  variable: '--font-mono',
+  variable: '--font-jetbrains-mono',
   weight: ['400', '500', '600'],
 })
 
